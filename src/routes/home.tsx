@@ -1,932 +1,15 @@
-import { styled } from "styled-components";
-import { useState, useEffect } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { useI18n } from "../i18n/i18n";
+import { styled } from "styled-components";
+import { ChevronDownIcon, MicrophoneIcon, SparklesIcon } from "@heroicons/react/24/outline";
 import { supabase } from "../supabase";
-import heroBg from "../assets/hero_bg.jpg";
-import homeBg from "../assets/home_bg.jpg";
-import yinyangBg from "../assets/yinyang_bg.mp4";
-import LoadingScreen from "../components/loading_screen";
+import { useI18n } from "../i18n/i18n";
 import { ServiceCard } from "../components/service_card";
-import { MoreCard } from "../components/more_card";
 import { AIServiceCard } from "../components/ai_service_card";
-import { CardsCarousel } from "../components/cards_carousel";
-import { SectionTitle } from "../components/section_title";
-import { 
-  SparklesIcon, 
-  PencilSquareIcon, 
-  MicrophoneIcon, 
-  MapPinIcon,
-  ChevronDownIcon,
-  ChevronUpIcon
-} from '@heroicons/react/24/outline';
 import starBg from "../assets/star_bg.png";
 
-// Import mysterious fonts for multiple languages from Google Fonts
-const fontLinks = [
-  // Korean mysterious fonts
-  'https://fonts.googleapis.com/css2?family=Song+Myung&family=Jua&family=Gugi&family=Stylish:wght@400&family=Kirang+Haerang&display=swap',
-  // Korean clean fonts  
-  'https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@400;500;600;700&family=Noto+Sans+KR:wght@300;400;500;600;700&display=swap',
-  // Latin mysterious fonts
-  'https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Crimson+Text:wght@400;600;700&family=Cormorant+Garamond:wght@400;500;600;700&display=swap',
-  // Japanese fonts
-  'https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@400;500;600;700&family=Sawarabi+Mincho&display=swap',
-  // Chinese fonts
-  'https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;500;600;700&family=Ma+Shan+Zheng&display=swap'
-];
-
-fontLinks.forEach(href => {
-  const link = document.createElement('link');
-  link.href = href;
-  link.rel = 'stylesheet';
-  document.head.appendChild(link);
-});
-
-// Language-specific font configurations
-const getFontFamily = (language: string, type: 'heading' | 'body' | 'accent' | 'price') => {
-  const fontConfigs = {
-    ko: {
-      heading: "'Song Myung', 'Stylish', 'Kirang Haerang', serif",
-      body: "'Noto Sans KR', 'Jua', sans-serif",
-      accent: "'Gugi', 'Song Myung', cursive",
-      price: "'Noto Serif KR', 'Song Myung', serif"
-    },
-    en: {
-      heading: "'Cinzel', 'Cormorant Garamond', serif",
-      body: "system-ui, -apple-system, 'Segoe UI', sans-serif",
-      accent: "'Crimson Text', 'Cinzel', serif",
-      price: "'Cinzel', 'Cormorant Garamond', serif"
-    },
-    ja: {
-      heading: "'Sawarabi Mincho', 'Noto Serif JP', serif",
-      body: "'Noto Sans JP', 'Hiragino Sans', sans-serif",
-      accent: "'Noto Serif JP', 'Sawarabi Mincho', serif",
-      price: "'Noto Serif JP', serif"
-    },
-    zh: {
-      heading: "'Ma Shan Zheng', 'Noto Serif SC', serif",
-      body: "'Noto Sans SC', 'PingFang SC', sans-serif",
-      accent: "'Ma Shan Zheng', 'Noto Serif SC', serif",
-      price: "'Noto Serif SC', serif"
-    },
-    es: {
-      heading: "'Cinzel', 'Cormorant Garamond', serif",
-      body: "system-ui, -apple-system, 'Segoe UI', sans-serif",
-      accent: "'Crimson Text', 'Cinzel', serif",
-      price: "'Cinzel', 'Cormorant Garamond', serif"
-    }
-  };
-  
-  return fontConfigs[language as keyof typeof fontConfigs]?.[type] || fontConfigs.en[type];
-};
-
-const Wrapper = styled.div<{ $language: string }>`
-  width: 100%;
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-  font-family: ${props => getFontFamily(props.$language, 'body')};
-`;
-
-const HeroSection = styled.section`
-  width: 100%;
-  height: 400px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  position: relative;
-  overflow: hidden;
-  background: #0F0026;
-  
-  @media (max-width: 960px) {
-    height: auto;
-    min-height: 350px;
-    padding: 2rem 0;
-  }
-  
-  @media (max-width: 768px) {
-    height: auto;
-    min-height: 320px;
-    padding: 1.5rem 0;
-  }
-`;
-
-const HeroBgImage = styled.div`
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  width: 100%;
-  max-width: 960px;
-  height: 400px;
-  background-image: url(${heroBg});
-  background-size: contain;
-  background-position: center;
-  background-repeat: no-repeat;
-  z-index: 0;
-  
-  @media (max-width: 960px) {
-    width: 100%;
-    max-width: none;
-    height: auto;
-    min-height: 250px;
-    background-size: cover;
-  }
-  
-  @media (max-width: 768px) {
-    width: 100%;
-    height: 100%;
-    min-height: 100%;
-    background-size: auto 100%;
-    background-position: center center;
-    background-repeat: no-repeat;
-  }
-`;
-
-const HeroContent = styled.div`
-  text-align: left;
-  color: white;
-  z-index: 1;
-  width: 100%;
-  max-width: 960px;
-  padding: 0 1.5rem;
-  position: relative;
-  
-  @media (max-width: 768px) {
-    text-align: center;
-    padding: 0 1.5rem;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-  }
-`;
-
-const HeroTitle = styled.h1<{ $language: string }>`
-  font-family: ${props => getFontFamily(props.$language, 'heading')};
-  font-size: 3.5rem;
-  font-weight: 700;
-  margin-bottom: 1rem;
-  line-height: 1.2;
-  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
-  max-width: 450px;
-  white-space: nowrap;
-  
-  @media (max-width: 768px) {
-    font-size: 2.2rem;
-    max-width: 100%;
-    margin-bottom: 1.2rem;
-    line-height: 1.3;
-    white-space: normal;
-  }
-  
-  @media (max-width: 480px) {
-    font-size: 1.8rem;
-  }
-`;
-
-const HeroSubtitle = styled.p`
-  font-family: inherit;
-  font-size: 1.1rem;
-  font-weight: 400;
-  margin-bottom: 1.5rem;
-  opacity: 0.9;
-  line-height: 1.5;
-  max-width: 400px;
-  word-wrap: break-word;
-  
-  @media (max-width: 768px) {
-    font-size: 1rem;
-    max-width: 100%;
-    margin-bottom: 2rem;
-    line-height: 1.6;
-  }
-  
-  @media (max-width: 480px) {
-    font-size: 0.95rem;
-  }
-`;
-
-const CTAButton = styled.button`
-  background: #6210CC;
-  border: 2px solid rgba(139, 92, 246, 0.4);
-  color: white;
-  padding: 0.75rem 1.5rem;
-  font-family: inherit;
-  font-size: 0.9rem;
-  font-weight: 600;
-  line-height: 1.2;
-  border-radius: 50px;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  position: relative;
-  overflow: hidden;
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
-  
-  &::before {
-    content: '';
-    position: absolute;
-    top: -50%;
-    left: -150%;
-    width: 200%;
-    height: 200%;
-    background: linear-gradient(
-      45deg,
-      transparent 20%,
-      rgba(255, 255, 255, 0.6) 50%,
-      transparent 80%
-    );
-    transform: rotate(45deg);
-    animation: continuousShine 2.5s ease-in-out infinite;
-  }
-  
-  @keyframes continuousShine {
-    0% {
-      left: -150%;
-      opacity: 0;
-    }
-    30% {
-      opacity: 1;
-    }
-    70% {
-      opacity: 1;
-    }
-    100% {
-      left: 150%;
-      opacity: 0;
-    }
-  }
-  
-  &::after {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: linear-gradient(
-      135deg,
-      rgba(255, 255, 255, 0.1) 0%,
-      transparent 50%,
-      rgba(255, 255, 255, 0.05) 100%
-    );
-    border-radius: 50px;
-    pointer-events: none;
-  }
-  
-  &:hover {
-    background: #4c1d95;
-    border-color: rgba(139, 92, 246, 0.7);
-    transform: translateY(-2px);
-    box-shadow: 0 8px 25px rgba(139, 92, 246, 0.4);
-    
-    &::before {
-      animation-duration: 1.5s;
-    }
-  }
-  
-  &:active {
-    transform: translateY(-1px);
-  }
-  
-  @media (max-width: 768px) {
-    padding: 0.875rem 2rem;
-    font-size: 0.95rem;
-    
-    &:hover {
-      transform: translateY(-1px);
-    }
-  }
-  
-  @media (max-width: 480px) {
-    padding: 0.75rem 1.75rem;
-    font-size: 0.9rem;
-  }
-`;
-
-const PopularSection = styled.section`
-  min-height: 50vh;
-  padding: 2.5rem 1.5rem;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: flex-start;
-  position: relative;
-  z-index: 2;
-  
-  @media (max-width: 768px) {
-    padding: 2rem 1rem;
-    min-height: 40vh;
-  }
-`;
-
-const RecommendedSection = styled.section`
-  min-height: 50vh;
-  padding: 2.5rem 1.5rem;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: flex-start;
-  position: relative;
-  z-index: 2;
-  
-  @media (max-width: 768px) {
-    padding: 2rem 1rem;
-    min-height: 40vh;
-  }
-`;
-
-const HotDealsSection = styled.section`
-  min-height: 50vh;
-  padding: 2.5rem 1.5rem;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: flex-start;
-  position: relative;
-  z-index: 2;
-  
-  @media (max-width: 768px) {
-    padding: 2rem 1rem;
-    min-height: 40vh;
-  }
-`;
-
-const ClosingSection = styled.section`
-  min-height: 40vh;
-  padding: 3rem 1.5rem;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  position: relative;
-  z-index: 2;
-  overflow: hidden;
-  
-  &::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: linear-gradient(
-      to bottom,
-      rgba(66, 66, 66, 0.7) 0%,
-      rgba(33, 33, 33, 0.8) 100%
-    );
-    z-index: 2;
-    pointer-events: none;
-  }
-  
-  @media (max-width: 768px) {
-    padding: 2.5rem 1rem;
-    min-height: 35vh;
-  }
-`;
-
-const ClosingVideoBackground = styled.video`
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  width: 100vh;
-  height: 100vw;
-  object-fit: cover;
-  transform: translate(-50%, -50%) rotate(90deg);
-  z-index: 1;
-  
-  @media (max-width: 768px) {
-    width: 100vh;
-    height: 100vw;
-    transform: translate(-50%, -50%) rotate(90deg) scale(1.2);
-  }
-  
-  @media (max-width: 480px) {
-    transform: translate(-50%, -50%) rotate(90deg) scale(1.5);
-  }
-`;
-
-const ClosingContainer = styled.div`
-  background: linear-gradient(145deg, rgba(255, 255, 255, 0.95) 0%, rgba(248, 250, 252, 0.9) 100%);
-  backdrop-filter: blur(20px);
-  border: 2px solid rgba(139, 92, 246, 0.2);
-  border-radius: 32px;
-  padding: 3rem;
-  max-width: 600px;
-  width: 100%;
-  text-align: center;
-  box-shadow: 
-    0 20px 60px rgba(139, 92, 246, 0.15),
-    inset 0 1px 0 rgba(255, 255, 255, 0.8);
-  position: relative;
-  z-index: 3;
-  overflow: hidden;
-  
-  &::before {
-    content: '';
-    position: absolute;
-    top: -2px;
-    left: -2px;
-    right: -2px;
-    bottom: -2px;
-    background: linear-gradient(
-      45deg,
-      rgba(139, 92, 246, 0.3) 0%,
-      rgba(212, 175, 55, 0.3) 25%,
-      rgba(139, 92, 246, 0.3) 50%,
-      rgba(212, 175, 55, 0.3) 75%,
-      rgba(139, 92, 246, 0.3) 100%
-    );
-    border-radius: 32px;
-    z-index: -1;
-    animation: borderGlow 3s ease-in-out infinite;
-  }
-  
-  @keyframes borderGlow {
-    0%, 100% { opacity: 0.6; }
-    50% { opacity: 1; }
-  }
-  
-  @media (max-width: 768px) {
-    padding: 2rem;
-    border-radius: 24px;
-    
-    &::before {
-      border-radius: 24px;
-    }
-  }
-`;
-
-const ClosingTitle = styled.h2<{ $language: string }>`
-  font-family: ${props => getFontFamily(props.$language, 'heading')};
-  font-size: 1.8rem;
-  font-weight: 700;
-  color: #2c1810;
-  margin-bottom: 1.5rem;
-  line-height: 1.3;
-  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  
-  @media (max-width: 768px) {
-    font-size: 1.5rem;
-    margin-bottom: 1rem;
-  }
-`;
-
-const ClosingSubtitle = styled.p`
-  font-size: 1rem;
-  color: #6b7280;
-  margin-bottom: 2rem;
-  line-height: 1.6;
-  
-  @media (max-width: 768px) {
-    font-size: 0.9rem;
-    margin-bottom: 1.5rem;
-  }
-`;
-
-// Unified sections container with gradient background
-const UnifiedSectionsContainer = styled.div`
-  position: relative;
-  background-image: url(${homeBg});
-  background-size: cover;
-  background-position: center top;
-  background-repeat: no-repeat;
-  background-attachment: local;
-  
-  &::before {
-    content: "";
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: linear-gradient(
-      to bottom,
-      rgba(30, 9, 50, 0.6) 0%,
-      rgba(0, 0, 0, 0.7) 100%
-    );
-    z-index: 1;
-    pointer-events: none;
-  }
-`;
-
-const AIServicesSection = styled.section`
-  min-height: 50vh;
-  padding: 2.5rem 1.5rem;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  position: relative;
-  z-index: 2;
-  
-  @media (max-width: 768px) {
-    padding: 2rem 1rem;
-    min-height: 40vh;
-  }
-`;
-
-const AIServicesContainer = styled.div`
-  display: flex;
-  align-items: stretch;
-  gap: 2rem;
-  max-width: 960px;
-  width: 100%;
-  margin: 0 auto;
-  position: relative;
-  z-index: 2;
-  
-  @media (max-width: 768px) {
-    flex-direction: column;
-    gap: 2rem;
-    align-items: center;
-    padding: 0 1rem;
-  }
-`;
-
-const AIServicesHeader = styled.div`
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  margin-bottom: 2rem;
-  margin-top: 0;
-  
-  @media (max-width: 768px) {
-    text-align: center;
-    align-items: center;
-    margin-bottom: 1.5rem;
-  }
-`;
-
-const MagicTitle = styled.h2<{ $language: string }>`
-  font-family: ${props => getFontFamily(props.$language, 'heading')};
-  font-size: 2.2rem;
-  font-weight: 700;
-  color: #ffffff;
-  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
-  margin: 0;
-  padding-top: 0;
-  line-height: 1.3;
-  background: linear-gradient(135deg, #8b5cf6 0%, #c084fc 50%, #a855f7 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-  max-width: 320px;
-  
-  @media (max-width: 768px) {
-    font-size: 1.8rem;
-    max-width: 100%;
-    text-align: center;
-  }
-`;
-
-const AIServicesGrid = styled.div`
-  display: flex;
-  gap: 1.5rem;
-  align-items: flex-start;
-  justify-content: flex-start;
-  
-  @media (max-width: 768px) {
-    flex-direction: row;
-    gap: 1.5rem;
-    justify-content: center; /* center items across the row */
-    align-items: center;     /* center items vertically in row */
-    flex-wrap: wrap;
-    width: 100%;             /* take full width to allow centering */
-    align-self: center;      /* override parent's align-items: flex-start */
-    margin: 0 auto;          /* ensure centering in parent flex column */
-  }
-  
-  @media (max-width: 480px) {
-    flex-direction: column;  /* stack on very small screens */
-    gap: 1.5rem;
-    align-items: center;     /* center stacked items */
-  }
-`;
-
-const AIServicesContent = styled.div`
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  justify-content: flex-start;
-  align-items: flex-end;
-  max-width: 480px;
-  
-  @media (max-width: 768px) {
-    align-items: center;
-    max-width: 100%;
-  }
-`;
-
-const NameInputSection = styled.div`
-  background: linear-gradient(135deg, #4A0E4E 0%, #2D1B69 100%);
-  border-radius: 24px;
-  padding: 2rem;
-  margin-top: 0;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  box-shadow: 0 8px 25px rgba(74, 14, 78, 0.4);
-  width: 100%;
-  min-width: 400px;
-  
-  @media (max-width: 768px) {
-    min-width: auto;
-    padding: 1.5rem;
-    margin: 0 1rem;
-    width: calc(100% - 2rem);
-  }
-  
-  @media (max-width: 480px) {
-    padding: 1.25rem;
-    border-radius: 20px;
-  }
-`;
-
-const NameInputTitle = styled.h3<{ $language: string }>`
-  font-family: ${props => getFontFamily(props.$language, 'heading')};
-  font-size: 1.35rem;
-  font-weight: 700;
-  color: #ffffff;
-  margin: 0 0 1rem 0;
-  padding-top: 0;
-  line-height: 1.3;
-  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
-`;
-
-const NameInputSubtitle = styled.p`
-  font-family: inherit;
-  font-size: 0.95rem;
-  font-weight: 400;
-  color: rgba(255, 255, 255, 0.85);
-  margin-bottom: 1.25rem;
-  line-height: 1.5;
-`;
-
-const NameInputForm = styled.div`
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
-`;
-
-const NameInput = styled.input`
-  background: rgba(255, 255, 255, 0.95);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  border-radius: 20px;
-  padding: 1rem;
-  font-size: 0.95rem;
-  color: #1f2937;
-  transition: all 0.3s ease;
-  width: 100%;
-
-  &::placeholder {
-    color: #6b7280;
-  }
-  
-  &:focus {
-    outline: none;
-    border-color: #8B5CF6;
-    box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.2);
-    background: #ffffff;
-  }
-`;
-
-const NameSubmitButton = styled.button`
-  background: #000000;
-  border: 2px solid #1a1a1a;
-  color: white;
-  padding: 1rem 1.25rem;
-  font-family: inherit;
-  font-size: 0.95rem;
-  font-weight: 600;
-  line-height: 1.2;
-  border-radius: 20px;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  width: 100%;
-  
-  &:hover {
-    background: #2a2a2a;
-    border-color: #3a3a3a;
-    transform: translateY(-1px);
-    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
-  }
-  
-  &:active {
-    transform: translateY(0);
-  }
-`;
-
-// FAQ Section Styles
-const FAQSection = styled.section`
-  padding: 3rem 2rem;
-  position: relative;
-  overflow: hidden;
-  background-image: url(${starBg});
-  background-size: cover;
-  background-position: center;
-  background-repeat: repeat;
-  
-  &::before {
-    content: "";
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: linear-gradient(
-      135deg,
-      rgba(76, 29, 149, 0.80) 0%,
-      rgba(0, 0, 0, 0.80) 100%
-    );
-    z-index: 1;
-    pointer-events: none;
-  }
-  
-  @media (max-width: 768px) {
-    padding: 2.5rem 1rem;
-  }
-`;
-
-const FAQContainer = styled.div`
-  max-width: 960px;
-  margin: 0 auto;
-  position: relative;
-  z-index: 2;
-`;
-
-const FAQHeader = styled.div`
-  text-align: center;
-  margin-bottom: 2.5rem;
-  position: relative;
-  z-index: 2;
-`;
-
-const FAQTitle = styled.h2<{ $language: string }>`
-  font-family: ${props => getFontFamily(props.$language, 'heading')};
-  font-size: 2.2rem;
-  font-weight: 700;
-  color: #ffffff;
-  margin-bottom: 0.75rem;
-  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
-  
-  @media (max-width: 768px) {
-    font-size: 1.8rem;
-  }
-`;
-
-const FAQSubtitle = styled.p`
-  font-size: 1.1rem;
-  color: rgba(255, 255, 255, 0.9);
-  line-height: 1.5;
-  max-width: 600px;
-  margin: 0 auto;
-  
-  @media (max-width: 768px) {
-    font-size: 1rem;
-  }
-`;
-
-const FAQList = styled.div`
-  display: flex;
-  flex-direction: column;
-  gap: 0.75rem;
-  position: relative;
-  z-index: 2;
-`;
-
-const FAQItem = styled.div`
-  background: rgba(255, 255, 255, 0.95);
-  border-radius: 12px;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  overflow: hidden;
-  transition: all 0.3s ease;
-  backdrop-filter: blur(10px);
-  
-  &:hover {
-    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
-    border-color: rgba(255, 255, 255, 0.3);
-    background: rgba(255, 255, 255, 0.98);
-  }
-`;
-
-const FAQQuestion = styled.button`
-  width: 100%;
-  padding: 1.25rem 1.5rem;
-  text-align: left;
-  background: none;
-  border: none;
-  cursor: pointer;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 1rem;
-  transition: all 0.3s ease;
-  
-  &:hover {
-    background: rgba(248, 250, 252, 0.8);
-  }
-  
-  @media (max-width: 768px) {
-    padding: 1rem 1.25rem;
-  }
-`;
-
-const FAQQuestionText = styled.h3`
-  font-size: 1.1rem;
-  font-weight: 600;
-  color: #1f2937;
-  margin: 0;
-  line-height: 1.4;
-  
-  @media (max-width: 768px) {
-    font-size: 1rem;
-  }
-`;
-
-const FAQChevron = styled.div<{ $isOpen: boolean }>`
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: transform 0.3s ease;
-  transform: ${props => props.$isOpen ? 'rotate(180deg)' : 'rotate(0deg)'};
-  
-  svg {
-    width: 20px;
-    height: 20px;
-    color: #6b7280;
-  }
-`;
-
-const FAQAnswer = styled.div<{ $isOpen: boolean }>`
-  overflow: hidden;
-  transition: all 0.3s ease;
-  max-height: ${props => props.$isOpen ? '400px' : '0'};
-  opacity: ${props => props.$isOpen ? '1' : '0'};
-`;
-
-const FAQAnswerContent = styled.div`
-  padding: 0 1.5rem 1.25rem 1.5rem;
-  color: #6b7280;
-  line-height: 1.5;
-  font-size: 0.95rem;
-  
-  @media (max-width: 768px) {
-    padding: 0 1.25rem 1rem 1.25rem;
-    font-size: 0.9rem;
-  }
-`;
-
-// Final CTA Section Styles
-const FinalCTASection = styled.section`
-  padding: 5rem 2rem;
-  background: linear-gradient(
-    135deg,
-    #f8fafc 0%,
-    #f1f5f9 50%,
-    #e2e8f0 100%
-  );
-  
-  @media (max-width: 768px) {
-    padding: 4rem 1rem;
-  }
-`;
-
-const FinalCTAContainer = styled.div`
-  max-width: 960px;
-  margin: 0 auto;
-  text-align: center;
-`;
-
-const FinalCTATitle = styled.h2<{ $language: string }>`
-  font-family: ${props => getFontFamily(props.$language, 'heading')};
-  font-size: 2.5rem;
-  font-weight: 700;
-  color: #1f2937;
-  margin-bottom: 1.5rem;
-  line-height: 1.3;
-  
-  @media (max-width: 768px) {
-    font-size: 2rem;
-  }
-`;
-
-const FinalCTASubtitle = styled.p`
-  font-size: 1.2rem;
-  color: #6b7280;
-  margin-bottom: 3rem;
-  line-height: 1.6;
-  max-width: 600px;
-  margin-left: auto;
-  margin-right: auto;
-  
-  @media (max-width: 768px) {
-    font-size: 1.1rem;
-    margin-bottom: 2.5rem;
-  }
-`;
-
-// Types for Supabase data
 interface LocationService {
-  id: string; // UUID string, not number
+  id: string;
   title: string;
   title_ko?: string;
   title_en?: string;
@@ -941,385 +24,228 @@ interface LocationService {
   tagline_es?: string;
   image_url?: string;
   price_krw: number;
-  activity_level?: string;
-  skill_level?: string;
-  max_guests_total?: number;
-  min_age?: number;
-  place_id: string; // UUID string, not number
+}
+
+const Page = styled.div`width:100%;background:#fffdf8;color:#1f2937;`;
+const Container = styled.div`width:min(1296px,calc(100% - 48px));margin:0 auto;@media(max-width:700px){width:min(100% - 32px,1296px);}`;
+
+const Hero = styled.section`
+  min-height: 470px;
+  background: #0f0026 url(${starBg}) center/cover;
+  position: relative;
+  overflow: hidden;
+  color: white;
+  &::after{content:'';position:absolute;inset:0;background:linear-gradient(90deg,rgba(15,0,38,.12),rgba(15,0,38,.45));pointer-events:none;}
+`;
+const HeroInner = styled(Container)`
+  position:relative;z-index:2;min-height:470px;padding:58px 6px 48px;display:grid;grid-template-columns:minmax(0,760px) 1fr;gap:48px;align-items:center;
+  @media(max-width:980px){grid-template-columns:1fr;padding-top:48px;}
+`;
+const HeroCopy = styled.div`max-width:760px;`;
+const HeroTitle = styled.h1`
+  margin:0 0 6px;font-family:'Cinzel',serif;font-size:clamp(38px,4vw,52px);line-height:1.12;letter-spacing:1.1px;font-weight:700;
+`;
+const HeroSub = styled.h2`
+  margin:0 0 14px;font-family:'Cormorant Garamond','Noto Serif KR',serif;font-size:clamp(26px,2.7vw,34px);line-height:1.2;color:#e8ddf4;font-weight:600;
+`;
+const HeroDesc = styled.p`margin:0 0 30px;max-width:650px;color:#d8cde7;font-size:17px;line-height:1.65;`;
+
+const SearchBox = styled.div`
+  width:min(790px,100%);min-height:106px;padding:14px 14px 14px 22px;border-radius:18px;background:#fffdf8;border:1px solid #e8e0d5;display:grid;grid-template-columns:1fr 1.15fr 1fr 112px;align-items:stretch;box-shadow:0 18px 48px rgba(0,0,0,.15);
+  @media(max-width:760px){grid-template-columns:1fr 1fr;padding:12px;gap:8px;}
+`;
+const SearchCell = styled.button`
+  border:0;background:transparent;padding:12px 18px;text-align:left;color:#1f2937;cursor:pointer;position:relative;
+  &:not(:first-child)::before{content:'';position:absolute;left:0;top:12px;bottom:12px;width:1px;background:#e8e0d5;}
+  @media(max-width:760px){border:1px solid #eee6dc;border-radius:12px;&::before{display:none!important;}}
+`;
+const SearchLabel = styled.span`display:block;color:#6b7280;font-size:11px;font-weight:700;margin-bottom:7px;`;
+const SearchValue = styled.span`display:flex;align-items:center;gap:6px;font-size:15px;font-weight:700;`;
+const FindButton = styled.button`
+  border:0;border-radius:14px;background:#6210cc;color:white;font-size:14px;font-weight:750;cursor:pointer;padding:0 12px;box-shadow:0 8px 22px rgba(98,16,204,.25);transition:.18s ease;
+  &:hover{background:#5410ad;transform:translateY(-1px);}
+  @media(max-width:760px){min-height:52px;grid-column:1/-1;}
+`;
+const Trust = styled.div`margin-top:20px;color:#d9cbe9;font-size:13px;font-weight:550;letter-spacing:.1px;`;
+
+const Orbit = styled.div`
+  width:390px;height:390px;border-radius:50%;background:#2a0f52;justify-self:end;position:relative;box-shadow:inset 0 0 0 1px rgba(255,255,255,.05);
+  &::before{content:'';position:absolute;inset:65px;border-radius:50%;background:#3a1275;}
+  &::after{content:'';position:absolute;inset:140px;border-radius:50%;background:#14021f;box-shadow:0 0 0 26px #5b2a85;}
+  @media(max-width:980px){display:none;}
+`;
+
+const Section = styled.section`padding:84px 0;`;
+const Eyebrow = styled.div`font-size:12px;font-weight:800;letter-spacing:1.6px;color:#6210cc;margin-bottom:12px;text-transform:uppercase;`;
+const SectionTitle = styled.h2`margin:0;font-family:'Cormorant Garamond','Noto Serif KR',serif;font-size:36px;line-height:1.18;font-weight:700;color:#1f2937;`;
+const SectionLead = styled.p`margin:10px 0 0;color:#6b7280;font-size:15px;line-height:1.6;max-width:820px;`;
+const HeadingRow = styled.div`margin-bottom:36px;`;
+
+const ServicesGrid = styled.div`display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:22px;align-items:stretch;@media(max-width:1050px){grid-template-columns:repeat(2,minmax(0,1fr));}@media(max-width:560px){grid-template-columns:1fr;}`;
+const ServiceSlot = styled.div`display:flex;justify-content:center;`;
+const EmptyCard = styled.button`
+  min-height:360px;border-radius:16px;border:2px solid #8b7355;background:#f8f6f0;position:relative;cursor:pointer;padding:24px;color:#2c1810;text-align:center;
+  &::after{content:'';position:absolute;inset:8px;border:1px solid #d4af37;border-radius:12px;}
+  strong{display:block;font-family:'Cormorant Garamond',serif;font-size:24px;margin:190px 0 8px;position:relative;z-index:2;}
+  span{position:relative;z-index:2;color:#8b7355;font-size:13px;}
+`;
+
+const Culture = styled.section`padding:72px 0;background:#180a2e url(${starBg}) center/cover;color:white;`;
+const CultureGrid = styled.div`display:grid;grid-template-columns:380px 1fr;gap:64px;align-items:center;@media(max-width:900px){grid-template-columns:1fr;}`;
+const CultureTitle = styled.h2`font-family:'Cormorant Garamond',serif;font-size:36px;margin:0 0 12px;`;
+const CultureText = styled.p`color:#d8cde7;line-height:1.6;font-size:15px;margin:0 0 24px;`;
+const ShieldRow = styled.div`display:flex;gap:12px;`;
+const NamePanel = styled.div`background:#26103f;border:1px solid #6d4a93;border-radius:22px;padding:32px 36px;`;
+const NameTitle = styled.h3`font-family:'Cinzel',serif;font-size:26px;letter-spacing:.3px;margin:0 0 10px;`;
+const NameText = styled.p`color:#d7c8e9;font-size:14px;line-height:1.5;margin:0 0 24px;`;
+const NameForm = styled.form`display:grid;grid-template-columns:1fr 210px;gap:14px;@media(max-width:650px){grid-template-columns:1fr;}`;
+const NameInput = styled.input`height:54px;border:0;border-radius:18px;background:#fffdf8;color:#1f2937;padding:0 20px;outline:none;&:focus{box-shadow:0 0 0 3px rgba(139,92,246,.35);}`;
+const NameButton = styled.button`height:54px;border:0;border-radius:18px;background:#050505;color:white;font-weight:700;cursor:pointer;`;
+
+const Neighborhoods = styled.div`display:grid;grid-template-columns:repeat(4,1fr);gap:22px;@media(max-width:850px){grid-template-columns:repeat(2,1fr);}@media(max-width:500px){grid-template-columns:1fr;}`;
+const Neighborhood = styled.button<{ $tone: number }>`
+  min-height:146px;border:0;border-radius:18px;background:${p => ['#f6e7e5','#e7f0ea','#efe7da','#eee9f7'][p.$tone]};padding:82px 18px 18px;text-align:left;cursor:pointer;transition:.18s ease;
+  &:hover{transform:translateY(-3px);box-shadow:0 10px 30px rgba(15,0,38,.08);}
+  strong{display:block;font-family:'Cormorant Garamond',serif;font-size:22px;margin-bottom:4px;color:#1f2937;}span{font-size:12px;color:#6b7280;}
+`;
+
+const Steps = styled.div`display:grid;grid-template-columns:repeat(3,1fr);gap:24px;@media(max-width:800px){grid-template-columns:1fr;}`;
+const Step = styled.div`min-height:220px;border:1px solid #e8e0d5;border-radius:18px;padding:28px 24px;background:#fffdf8;`;
+const StepNo = styled.div`font-size:12px;font-weight:800;color:#6210cc;margin-bottom:28px;`;
+const StepTitle = styled.h3`font-family:'Cormorant Garamond',serif;font-size:25px;margin:0 0 10px;`;
+const StepText = styled.p`margin:0;color:#6b7280;font-size:14px;line-height:1.6;`;
+
+const FAQ = styled.section`padding:78px 0;background:#0f0026 url(${starBg}) center/cover;color:white;`;
+const FAQTitle = styled.h2`font-family:'Cinzel',serif;font-size:34px;margin:0 0 10px;`;
+const FAQLead = styled.p`margin:0 0 30px;color:#d8cde7;font-size:15px;`;
+const FAQList = styled.div`display:grid;gap:12px;`;
+const FAQItem = styled.div`background:#fffdf8;border-radius:12px;color:#1f2937;overflow:hidden;`;
+const FAQButton = styled.button`width:100%;min-height:58px;border:0;background:transparent;padding:0 24px;display:flex;align-items:center;justify-content:space-between;text-align:left;font-weight:700;cursor:pointer;`;
+const FAQAnswer = styled.div`padding:0 24px 22px;color:#6b7280;font-size:14px;line-height:1.65;`;
+
+const BottomCTA = styled.section`padding:48px 0 72px;`;
+const CTABox = styled.div`min-height:170px;border:1px solid #e8e0d5;border-radius:24px;background:#f8f6f0;padding:34px 36px;display:flex;align-items:center;justify-content:space-between;gap:24px;@media(max-width:700px){align-items:flex-start;flex-direction:column;}`;
+const CTATitle = styled.h3`font-family:'Cormorant Garamond',serif;font-size:30px;margin:0 0 8px;`;
+const CTAText = styled.p`margin:0;color:#6b7280;font-size:14px;`;
+const CTAButton = styled.button`min-width:250px;height:50px;border:0;border-radius:16px;background:#6210cc;color:white;font-weight:750;cursor:pointer;`;
+
+function localize(service: LocationService, language: string, field: 'title' | 'tagline') {
+  const map: Record<string, string | undefined> = field === 'title'
+    ? { ko: service.title_ko, en: service.title_en, zh: service.title_zh, ja: service.title_ja, es: service.title_es }
+    : { ko: service.tagline_ko, en: service.tagline_en, zh: service.tagline_zh, ja: service.tagline_ja, es: service.tagline_es };
+  return map[language] || map.en || map.ko || service[field] || '';
+}
+
+function krw(value: number) {
+  return new Intl.NumberFormat('ko-KR', { style: 'currency', currency: 'KRW', maximumFractionDigits: 0 }).format(value);
 }
 
 export function Home() {
-  const { t, language } = useI18n();
   const navigate = useNavigate();
-
-  // State for Supabase data
+  const { language } = useI18n();
   const [services, setServices] = useState<LocationService[]>([]);
-  const [loading, setLoading] = useState(true);
-  
-  // State for name input
-  const [userName, setUserName] = useState('');
-  
-  // State for FAQ accordions
-  const [openFAQ, setOpenFAQ] = useState<number | null>(null);
+  const [name, setName] = useState('');
+  const [openFaq, setOpenFaq] = useState<number | null>(null);
 
-  // FAQ data with proper localization
-  const faqData = [
-    {
-      id: 1,
-      question: t("faqWhatIsSaju"),
-      answer: t("faqWhatIsSajuAnswer")
-    },
-    {
-      id: 2,
-      question: t("faqHowKSajuDifferent"),
-      answer: t("faqHowKSajuDifferentAnswer")
-    },
-    {
-      id: 3,
-      question: t("faqHowConsultationWorks"),
-      answer: t("faqHowConsultationWorksAnswer")
-    },
-    {
-      id: 4,
-      question: t("faqHowAccurate"),
-      answer: t("faqHowAccurateAnswer")
-    },
-    {
-      id: 5,
-      question: t("faqWhatLanguages"),
-      answer: t("faqWhatLanguagesAnswer")
-    },
-    {
-      id: 6,
-      question: t("faqPricingOptions"),
-      answer: t("faqPricingOptionsAnswer")
-    }
-  ];
-
-  // Fetch services from Supabase
   useEffect(() => {
-    const fetchServices = async () => {
-      try {
-        const { data, error } = await supabase
-          .from('locations')
-          .select(`
-            id, title, image_url, price_krw, activity_level, skill_level, max_guests_total, min_age, place_id,
-            title_ko, title_en, title_zh, title_ja, title_es,
-            tagline, tagline_ko, tagline_en, tagline_zh, tagline_ja, tagline_es
-          `);
-        
-        if (error) {
-          console.error('Error fetching services:', error);
-        } else if (data) {
-          setServices(data);
-        }
-      } catch (error) {
-        console.error('Error fetching services:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchServices();
+    let cancelled = false;
+    supabase.from('locations').select('id,title,title_ko,title_en,title_zh,title_ja,title_es,tagline,tagline_ko,tagline_en,tagline_zh,tagline_ja,tagline_es,image_url,price_krw').limit(8)
+      .then(({ data, error }) => {
+        if (error) console.error('Unable to load featured locations', error);
+        if (!cancelled) setServices((data ?? []) as LocationService[]);
+      });
+    return () => { cancelled = true; };
   }, []);
 
-  const aiServices = [
-    {
-      id: 1,
-      title: t("todayFortune"),
-      icon: SparklesIcon,
-      color: "linear-gradient(135deg, #4c1d95 0%, #3730a3 100%)" // Dark purple
-    },
-    {
-      id: 3,
-      title: t("liveTranslation"),
-      icon: MicrophoneIcon,
-      color: "linear-gradient(135deg, #4c1d95 0%, #3730a3 100%)" // Dark purple
-    }
+  const featured = useMemo(() => services.slice(0, 4), [services]);
+  const faq = [
+    ['What is Saju?', 'Saju is a Korean four-pillars tradition that uses your birth year, month, day and hour as a starting point for discussing personality, relationships, career and timing.'],
+    ['How does a consultation work?', 'Choose a reader, reserve a time, share your birth details and meet the practitioner. Listings show when live AI interpretation is available.'],
+    ['What languages do you support?', 'The product currently supports Korean, English, Chinese, Japanese and Spanish across key flows.'],
+    ['How accurate are the readings?', 'Saju is a traditional cultural practice rather than a scientific prediction method. Treat the reading as interpretation and conversation, not certainty.'],
   ];
-  
-  const getPrice = (basePrice: number) => {
-    const exchangeRates = {
-      ko: 1, // 원화 기준
-      en: 0.00075, // USD (1원 = 0.00075달러)
-      zh: 0.0054, // CNY (1원 = 0.0054위안)
-      ja: 0.11, // JPY (1원 = 0.11엔)
-      es: 0.00069 // EUR (1원 = 0.00069유로)
-    };
-    
-    const rate = exchangeRates[language] || 1;
-    const convertedPrice = Math.round(basePrice * rate);
-    
-    switch (language) {
-      case 'ko': return `₩${convertedPrice.toLocaleString()}`;
-      case 'en': return `$${convertedPrice}`;
-      case 'zh': return `¥${convertedPrice}`;
-      case 'ja': return `¥${convertedPrice}`;
-      case 'es': return `€${convertedPrice}`;
-      default: return `₩${convertedPrice.toLocaleString()}`;
-    }
-  };
-
-  // Generate random rating for demo purposes
-  const getRandomRating = () => {
-    return Math.round((Math.random() * 1.5 + 3.5) * 10) / 10; // Between 3.5 and 5.0
-  };
-
-  // Transform Supabase data for display with localization
-  const transformServiceData = (service: LocationService, index: number) => {
-    // Get localized title based on current language
-    const getLocalizedTitle = () => {
-      switch (language) {
-        case 'ko':
-          return service.title_ko || service.title || `사주 서비스 ${index + 1}`;
-        case 'en':
-          return service.title_en || service.title_ko || service.title || `Fortune Service ${index + 1}`;
-        case 'zh':
-          return service.title_zh || service.title_ko || service.title || `四柱服务 ${index + 1}`;
-        case 'ja':
-          return service.title_ja || service.title_ko || service.title || `四柱サービス ${index + 1}`;
-        case 'es':
-          return service.title_es || service.title_en || service.title_ko || service.title || `Servicio Saju ${index + 1}`;
-        default:
-          return service.title_en || service.title_ko || service.title || `Fortune Service ${index + 1}`;
-      }
-    };
-
-    // Get localized tagline based on current language
-    const getLocalizedTagline = () => {
-      switch (language) {
-        case 'ko':
-          return service.tagline_ko || service.tagline;
-        case 'en':
-          return service.tagline_en || service.tagline_ko || service.tagline;
-        case 'zh':
-          return service.tagline_zh || service.tagline_ko || service.tagline;
-        case 'ja':
-          return service.tagline_ja || service.tagline_ko || service.tagline;
-        case 'es':
-          return service.tagline_es || service.tagline_en || service.tagline_ko || service.tagline;
-        default:
-          return service.tagline_en || service.tagline_ko || service.tagline;
-      }
-    };
-
-    const localizedTitle = getLocalizedTitle();
-    const localizedTagline = getLocalizedTagline();
-
-    return {
-      id: service.id, // UUID string
-      title: localizedTitle,
-      price: getPrice(service.price_krw),
-      rating: getRandomRating(),
-      image: service.image_url || `사주 서비스 ${index + 1}`,
-      tagline: localizedTagline
-    };
-  };
-
-  // Split services into categories
-  const popularServices = services.slice(0, 7).map(transformServiceData);
-  const recommendedServices = services.slice(7, 14).map(transformServiceData);
-  const hotDealsServices = services.slice(14, 21).map((service, index) => ({
-    ...transformServiceData(service, index),
-    originalPrice: getPrice(service.price_krw * 1.5), // Simulate original price
-    discount: "33%"
-  }));
-
-
-  const handleMoreClick = () => {
-    // More button links to our original business page
-    const originalBusinessId = '550e8400-e29b-41d4-a716-446655440002';
-    navigate(`/business/${originalBusinessId}`);
-  };
-
-  const handleBusinessClick = (businessId: number | string) => {
-    // Navigate to the specific business detail page using the actual service ID
-    navigate(`/business/${businessId}`);
-  };
-
-  const handleSearchLocations = () => {
-    navigate('/locations');
-  };
-
-  const handleAIServiceClick = (serviceId: number) => {
-    if (serviceId === 1) { // Today's Fortune (id: 1)
-      navigate('/today-fortune');
-    } else if (serviceId === 3) { // Live Translation (id: 3)
-      navigate('/live-translation');
-    }
-  };
-
-  const handleNameCreation = () => {
-    if (userName.trim()) {
-      // Navigate to name-creation page with the entered name as a query parameter
-      navigate(`/name-creation?name=${encodeURIComponent(userName.trim())}`);
-    } else {
-      // If no name entered, just navigate to the page
-      navigate('/name-creation');
-    }
-  };
-
-  const handleNameInputKeyPress = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter') {
-      handleNameCreation();
-    }
-  };
-
-  const toggleFAQ = (id: number) => {
-    setOpenFAQ(openFAQ === id ? null : id);
-  };
 
   return (
-    <Wrapper $language={language}>
-      <HeroSection>
-        <HeroBgImage />
-        <HeroContent>
-          <HeroTitle $language={language}>
-            {t("heroTitle")}
-          </HeroTitle>
-          <HeroSubtitle>
-            {t("heroSubtitle")}
-          </HeroSubtitle>
-          <CTAButton onClick={handleSearchLocations}>
-            {"✨ "}{t("searchLocations")}
-          </CTAButton>
-        </HeroContent>
-      </HeroSection>
-      
-      <UnifiedSectionsContainer>
-        <AIServicesSection id="ai-services-section">
-          <AIServicesContainer>
-            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'flex-start', justifyContent: 'flex-start', paddingTop: 0 }}>
-              <AIServicesHeader>
-                <MagicTitle $language={language}>{t("aiServicesTitle")}</MagicTitle>
-              </AIServicesHeader>
-              <AIServicesGrid>
-                {aiServices.map((service) => (
-                  <AIServiceCard 
-                    key={service.id}
-                    service={service}
-                    onClick={handleAIServiceClick}
-                  />
-                ))}
-              </AIServicesGrid>
-            </div>
-            
-            <AIServicesContent>
-              <NameInputSection>
-                <NameInputTitle $language={language}>{t("getKoreanName")}</NameInputTitle>
-                <NameInputSubtitle>
-                  {t("nameInputDescription")}
-                </NameInputSubtitle>
-                <NameInputForm>
-                  <NameInput
-                    type="text"
-                    placeholder={t("enterFullName")}
-                    value={userName}
-                    onChange={(e) => setUserName(e.target.value)}
-                    onKeyPress={handleNameInputKeyPress}
-                  />
-                  <NameSubmitButton onClick={handleNameCreation}>
-                    {t("createKoreanName")}
-                  </NameSubmitButton>
-                </NameInputForm>
-              </NameInputSection>
-            </AIServicesContent>
-          </AIServicesContainer>
-        </AIServicesSection>
-        
-        <PopularSection>
-          <SectionTitle>{t("popularServices")}</SectionTitle>
-          <CardsCarousel totalItems={popularServices.length + 1}>
-            {popularServices.map((service) => (
-              <ServiceCard 
-                key={service.id}
-                service={service}
-                variant="popular"
-                onClick={handleBusinessClick}
-              />
-            ))}
-            <MoreCard onClick={handleMoreClick} />
-          </CardsCarousel>
-        </PopularSection>
+    <Page>
+      <Hero>
+        <HeroInner>
+          <HeroCopy>
+            <HeroTitle>WRITTEN IN THE STARS?</HeroTitle>
+            <HeroSub>Meet Korea’s traditional way of reading your path.</HeroSub>
+            <HeroDesc>Book a real Saju reading in Seoul, choose your language, and use live AI interpretation during the session.</HeroDesc>
+            <SearchBox>
+              <SearchCell onClick={() => navigate('/locations')}><SearchLabel>Where</SearchLabel><SearchValue>Seoul <ChevronDownIcon width={14}/></SearchValue></SearchCell>
+              <SearchCell onClick={() => navigate('/locations')}><SearchLabel>When</SearchLabel><SearchValue>Today or tomorrow <ChevronDownIcon width={14}/></SearchValue></SearchCell>
+              <SearchCell onClick={() => navigate('/locations')}><SearchLabel>Language</SearchLabel><SearchValue>English <ChevronDownIcon width={14}/></SearchValue></SearchCell>
+              <FindButton onClick={() => navigate('/locations')}>Find a reading</FindButton>
+            </SearchBox>
+            <Trust>Verified readers&nbsp;&nbsp; ✦ &nbsp;&nbsp;Translation included&nbsp;&nbsp; ✦ &nbsp;&nbsp;Multilingual support</Trust>
+          </HeroCopy>
+          <Orbit aria-hidden="true"/>
+        </HeroInner>
+      </Hero>
 
-        <RecommendedSection>
-          <SectionTitle>{t("recommendedBy")}</SectionTitle>
-          <CardsCarousel totalItems={recommendedServices.length + 1}>
-            {recommendedServices.map((service) => (
-              <ServiceCard 
-                key={service.id}
-                service={service}
-                variant="popular"
-                onClick={handleBusinessClick}
-              />
-            ))}
-            <MoreCard onClick={handleMoreClick} />
-          </CardsCarousel>
-        </RecommendedSection>
+      <Section>
+        <Container>
+          <HeadingRow><Eyebrow>Popular Saju services</Eyebrow><SectionTitle>Choose a reading that feels right</SectionTitle><SectionLead>Traditional card details from K-Saju, cleaned up for faster scanning and clearer pricing.</SectionLead></HeadingRow>
+          <ServicesGrid>
+            {featured.length ? featured.map(s => (
+              <ServiceSlot key={s.id}><ServiceCard service={{ id:s.id, title:localize(s, language, 'title'), tagline:localize(s, language, 'tagline'), price:krw(s.price_krw), image:s.image_url }} onClick={(id) => navigate(`/business/${id}`)} /></ServiceSlot>
+            )) : ['Traditional Four Pillars','Love & Compatibility','Career & Direction','Tarot + Saju'].map((label, i) => <EmptyCard key={label} onClick={() => navigate('/locations')}><strong>{label}</strong><span>{['Classic Saju reading','Relationships and timing','Work and direction','A lighter mixed reading'][i]}</span></EmptyCard>)}
+          </ServicesGrid>
+        </Container>
+      </Section>
 
-        <HotDealsSection>
-          <SectionTitle>{t("hotDeals")}</SectionTitle>
-          <CardsCarousel totalItems={hotDealsServices.length}>
-            {hotDealsServices.map((service) => (
-              <ServiceCard 
-                key={service.id}
-                service={service}
-                variant="hotdeals"
-                onClick={handleBusinessClick}
-              />
-            ))}
-          </CardsCarousel>
-        </HotDealsSection>
-      </UnifiedSectionsContainer>
-      
-      {/* FAQ Section */}
-      <FAQSection>
-        <FAQContainer>
-          <FAQHeader>
-            <FAQTitle $language={language}>
-              {t("faqTitle")}
-            </FAQTitle>
-            <FAQSubtitle>
-              {t("faqSubtitle")}
-            </FAQSubtitle>
-          </FAQHeader>
-          
-          <FAQList>
-            {faqData.map((faq) => (
-              <FAQItem key={faq.id}>
-                <FAQQuestion onClick={() => toggleFAQ(faq.id)}>
-                  <FAQQuestionText>{faq.question}</FAQQuestionText>
-                  <FAQChevron $isOpen={openFAQ === faq.id}>
-                    <ChevronDownIcon />
-                  </FAQChevron>
-                </FAQQuestion>
-                <FAQAnswer $isOpen={openFAQ === faq.id}>
-                  <FAQAnswerContent>
-                    {faq.answer}
-                  </FAQAnswerContent>
-                </FAQAnswer>
-              </FAQItem>
-            ))}
-          </FAQList>
-        </FAQContainer>
-      </FAQSection>
-      
-      {/* Final CTA Section */}
-      <FinalCTASection>
-        <FinalCTAContainer>
-          <FinalCTATitle $language={language}>
-            {t("finalCtaTitle")}
-          </FinalCTATitle>
-          <FinalCTASubtitle>
-            {t("finalCtaSubtitle")}
-          </FinalCTASubtitle>
-          <CTAButton onClick={handleSearchLocations}>
-            {"✨ "}{t("searchLocations")}
-          </CTAButton>
-        </FinalCTAContainer>
-      </FinalCTASection>
-      
-      {loading && <LoadingScreen />}
-    </Wrapper>
+      <Culture>
+        <Container><CultureGrid>
+          <div>
+            <Eyebrow style={{color:'#cbb8e8'}}>Culture Lab</Eyebrow>
+            <CultureTitle>Our AI services work like magic</CultureTitle>
+            <CultureText>Quick cultural tools keep the original K-Saju personality without competing with the core booking journey.</CultureText>
+            <ShieldRow>
+              <AIServiceCard service={{id:1,title:"Today's Fortune",icon:SparklesIcon,color:'linear-gradient(135deg,#8b5cf6,#6210cc)'}} onClick={() => navigate('/today-fortune')}/>
+              <AIServiceCard service={{id:2,title:'Live Translation',icon:MicrophoneIcon,color:'linear-gradient(135deg,#8b5cf6,#6210cc)'}} onClick={() => navigate('/live-translation')}/>
+            </ShieldRow>
+          </div>
+          <NamePanel>
+            <NameTitle>✨ GET YOUR KOREAN NAME</NameTitle>
+            <NameText>Enter your full name and discover a Korean name through AI-powered analysis.</NameText>
+            <NameForm onSubmit={e => {e.preventDefault(); navigate(`/name-creation${name ? `?name=${encodeURIComponent(name)}` : ''}`);}}>
+              <NameInput value={name} onChange={e => setName(e.target.value)} placeholder="Enter your full name…"/>
+              <NameButton type="submit">Create my Korean name</NameButton>
+            </NameForm>
+          </NamePanel>
+        </CultureGrid></Container>
+      </Culture>
+
+      <Section>
+        <Container>
+          <HeadingRow><Eyebrow>Explore Seoul</Eyebrow><SectionTitle>Find a Saju studio near your plans</SectionTitle><SectionLead>Pick a neighborhood already on your itinerary, then compare real readers nearby.</SectionLead></HeadingRow>
+          <Neighborhoods>
+            {[['Hongdae','Young · casual · creative'],['Insadong','Traditional atmosphere'],['Gangnam','Polished · modern'],['Myeongdong','Central · convenient']].map(([title,sub],i) => <Neighborhood key={title} $tone={i} onClick={() => navigate('/locations')}><strong>{title}</strong><span>{sub}</span></Neighborhood>)}
+          </Neighborhoods>
+        </Container>
+      </Section>
+
+      <Section style={{paddingTop:0}}>
+        <Container>
+          <HeadingRow><Eyebrow>Simple & translated</Eyebrow><SectionTitle>How K-Saju works</SectionTitle></HeadingRow>
+          <Steps>
+            <Step><StepNo>01</StepNo><StepTitle>Find your reader</StepTitle><StepText>Browse by neighborhood, topic, price and language support.</StepText></Step>
+            <Step><StepNo>02</StepNo><StepTitle>Book a time</StepTitle><StepText>See exact duration, real availability and cancellation rules before you commit.</StepText></Step>
+            <Step><StepNo>03</StepNo><StepTitle>Read in your language</StepTitle><StepText>Use the live interpreter during the session and save a translated recap.</StepText></Step>
+          </Steps>
+        </Container>
+      </Section>
+
+      <FAQ>
+        <Container>
+          <FAQTitle>FREQUENTLY ASKED QUESTIONS</FAQTitle><FAQLead>A calmer version of the original star-background FAQ.</FAQLead>
+          <FAQList>{faq.map(([q,a],i) => <FAQItem key={q}><FAQButton onClick={() => setOpenFaq(openFaq === i ? null : i)}><span>{q}</span><span>{openFaq === i ? '⌃' : '⌄'}</span></FAQButton>{openFaq === i ? <FAQAnswer>{a}</FAQAnswer> : null}</FAQItem>)}</FAQList>
+        </Container>
+      </FAQ>
+
+      <BottomCTA><Container><CTABox><div><CTATitle>New to Korean fortune-telling?</CTATitle><CTAText>Learn the four pillars before you book — then meet a reader in person.</CTAText></div><CTAButton onClick={() => navigate('/intro')}>Learn what Saju is</CTAButton></CTABox></Container></BottomCTA>
+    </Page>
   );
 }

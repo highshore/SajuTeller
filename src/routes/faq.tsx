@@ -1,190 +1,36 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { styled } from "styled-components";
-import { useI18n } from "../i18n/i18n";
+import starBg from "../assets/star_bg.png";
 
-const Wrapper = styled.div`
-  max-width: 800px;
-  margin: 0 auto;
-  padding: 40px 20px;
-`;
+const Page=styled.div`background:#fffdf8;color:#1f2937;min-height:860px;`;
+const Hero=styled.section`background:#0f0026 url(${starBg}) center/cover;color:white;padding:46px 0 34px;`;
+const Container=styled.div`width:min(1296px,calc(100% - 48px));margin:0 auto;`;
+const Title=styled.h1`font-family:'Cinzel',serif;font-size:50px;margin:0 0 10px;`;
+const Lead=styled.p`margin:0;color:#d8cde7;font-size:16px;`;
+const Search=styled.input`margin-top:28px;width:min(650px,100%);height:50px;border:1px solid rgba(255,255,255,.28);border-radius:14px;background:#fffdf8;color:#1f2937;padding:0 18px;outline:none;&:focus{box-shadow:0 0 0 3px rgba(139,92,246,.35);}`;
+const Content=styled.section`padding:56px 0 88px;`;
+const Grid=styled.div`display:grid;grid-template-columns:minmax(0,866px) 374px;gap:56px;align-items:start;@media(max-width:900px){grid-template-columns:1fr;}`;
+const Heading=styled.h2`font-family:'Cormorant Garamond',serif;font-size:38px;margin:0 0 22px;`;
+const List=styled.div`display:grid;gap:14px;`;
+const Item=styled.div`border:1px solid #e8e0d5;border-radius:15px;background:white;overflow:hidden;`;
+const Q=styled.button`width:100%;min-height:64px;border:0;background:transparent;padding:0 22px;display:flex;align-items:center;justify-content:space-between;gap:18px;text-align:left;font-size:15px;font-weight:750;cursor:pointer;`;
+const A=styled.div`padding:0 22px 20px;color:#6b7280;font-size:14px;line-height:1.65;`;
+const Side=styled.aside`border:1px solid #e8e0d5;border-radius:22px;background:#f8f6f0;padding:30px;`;
+const SideTitle=styled.h3`font-family:'Cormorant Garamond',serif;font-size:28px;margin:0 0 10px;`;
+const SideText=styled.p`margin:0;color:#6b7280;font-size:14px;line-height:1.65;`;
 
-const Header = styled.div`
-  text-align: center;
-  margin-bottom: 48px;
-`;
-
-const Title = styled.h1`
-  font-size: 32px;
-  font-weight: 700;
-  color: #111827;
-  margin: 0 0 16px 0;
-`;
-
-const Subtitle = styled.p`
-  font-size: 18px;
-  color: #6b7280;
-  margin: 0;
-  line-height: 1.5;
-`;
-
-const FAQList = styled.div`
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-`;
-
-const FAQItem = styled.div`
-  background: #ffffff;
-  border: 1px solid #e5e7eb;
-  border-radius: 12px;
-  overflow: hidden;
-`;
-
-const FAQQuestion = styled.button<{ $isOpen: boolean }>`
-  width: 100%;
-  padding: 20px 24px;
-  background: none;
-  border: none;
-  text-align: left;
-  font-size: 16px;
-  font-weight: 600;
-  color: #111827;
-  cursor: pointer;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  transition: background 0.15s ease;
-  
-  &:hover {
-    background: #f9fafb;
-  }
-  
-  svg {
-    width: 20px;
-    height: 20px;
-    color: #6b7280;
-    transition: transform 0.15s ease;
-    transform: ${props => props.$isOpen ? 'rotate(180deg)' : 'rotate(0deg)'};
-  }
-`;
-
-const FAQAnswer = styled.div<{ $isOpen: boolean }>`
-  max-height: ${props => props.$isOpen ? '200px' : '0'};
-  overflow: hidden;
-  transition: max-height 0.3s ease;
-  
-  div {
-    padding: 0 24px 20px 24px;
-    color: #6b7280;
-    line-height: 1.6;
-    font-size: 14px;
-  }
-`;
-
-const SearchBox = styled.input`
-  width: 100%;
-  padding: 16px 20px;
-  border: 1px solid #e5e7eb;
-  border-radius: 12px;
-  font-size: 16px;
-  margin-bottom: 32px;
-  
-  &:focus {
-    outline: none;
-    border-color: #3b82f6;
-    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
-  }
-`;
-
-export default function FAQ() {
-  const { t } = useI18n();
-  const [openItems, setOpenItems] = useState<Set<number>>(new Set());
-  const [searchTerm, setSearchTerm] = useState("");
-  
-  const faqData = [
-    {
-      question: "How do I create an account?",
-      answer: "You can create an account by clicking the 'Sign up' button and following the registration process. You can also sign up using Google, Apple, or Kakao."
-    },
-    {
-      question: "Is my personal information secure?",
-      answer: "Yes, we take your privacy seriously. All personal information is encrypted and stored securely. We never share your data with third parties without your consent."
-    },
-    {
-      question: "How do I reset my password?",
-      answer: "If you've forgotten your password, click 'Forgot Password' on the login page and follow the instructions sent to your email."
-    },
-    {
-      question: "Can I change my language preference?",
-      answer: "Yes! You can change your language preference using the language selector in the top navigation bar. We support English, Korean, Chinese, Japanese, and Spanish."
-    },
-    {
-      question: "How do I contact customer support?",
-      answer: "You can contact our customer support team through live chat, email, or phone. Visit our Customer Support page for more details."
-    },
-    {
-      question: "What browsers are supported?",
-      answer: "Our platform works best on modern browsers including Chrome, Firefox, Safari, and Edge. Make sure your browser is up to date for the best experience."
-    },
-    {
-      question: "How do I delete my account?",
-      answer: "To delete your account, go to your Profile settings and click 'Delete Account'. Please note that this action is irreversible."
-    },
-    {
-      question: "Are there any usage fees?",
-      answer: "Our basic services are free to use. Premium features may require a subscription. Check our pricing page for detailed information."
-    }
-  ];
-  
-  const toggleItem = (index: number) => {
-    const newOpenItems = new Set(openItems);
-    if (newOpenItems.has(index)) {
-      newOpenItems.delete(index);
-    } else {
-      newOpenItems.add(index);
-    }
-    setOpenItems(newOpenItems);
-  };
-  
-  const filteredFAQ = faqData.filter(item =>
-    item.question.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    item.answer.toLowerCase().includes(searchTerm.toLowerCase())
-  );
-  
-  return (
-    <Wrapper>
-      <Header>
-        <Title>{t("faq")}</Title>
-        <Subtitle>
-          Find answers to commonly asked questions about our platform.
-        </Subtitle>
-      </Header>
-      
-      <SearchBox
-        type="text"
-        placeholder="Search frequently asked questions..."
-        value={searchTerm}
-        onChange={(e) => setSearchTerm(e.target.value)}
-      />
-      
-      <FAQList>
-        {filteredFAQ.map((item, index) => (
-          <FAQItem key={index}>
-            <FAQQuestion
-              onClick={() => toggleItem(index)}
-              $isOpen={openItems.has(index)}
-            >
-              {item.question}
-              <svg viewBox="0 0 20 20" fill="currentColor">
-                <path fillRule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 10.94l3.71-3.71a.75.75 0 111.06 1.06l-4.24 4.25a.75.75 0 01-1.06 0L5.23 8.29a.75.75 0 01.02-1.06z" clipRule="evenodd"/>
-              </svg>
-            </FAQQuestion>
-            <FAQAnswer $isOpen={openItems.has(index)}>
-              <div>{item.answer}</div>
-            </FAQAnswer>
-          </FAQItem>
-        ))}
-      </FAQList>
-    </Wrapper>
-  );
+export default function FAQ(){
+ const [open,setOpen]=useState<number|null>(0);
+ const [term,setTerm]=useState('');
+ const items=[
+ ['What is Saju?','Saju uses the four pillars of your birth information as the basis for a traditional Korean reading about personality, relationships, career and timing.'],
+ ['How does a consultation work?','Choose a reader, reserve a time, share your birth details, then meet the practitioner. Listings show whether live AI interpretation is included.'],
+ ['What languages do you support?','Korean, English, Chinese, Japanese and Spanish are supported across the current product direction.'],
+ ['How do cancellations work?','Each listing shows its cancellation window before payment. Always check the exact terms on the booking screen.'],
+ ['Is live translation included?','Listings clearly indicate whether AI interpretation is included with the session.'],
+ ['What if I do not know my birth time?','You can still book. An exact birth time is recommended for a traditional four-pillars calculation, but the product allows you to mark it as unknown.'],
+ ['Is Saju scientifically accurate?','Saju is a traditional cultural practice, not a scientific prediction method. Treat the reading as interpretation and conversation rather than certainty.'],
+ ];
+ const filtered=useMemo(()=>items.filter(([q,a])=>(q+' '+a).toLowerCase().includes(term.toLowerCase())),[term]);
+ return <Page><Hero><Container><Title>HELP & FAQ</Title><Lead>Answers for first-time Saju visitors, bookings and translation.</Lead><Search value={term} onChange={e=>setTerm(e.target.value)} placeholder="Search help articles…"/></Container></Hero><Content><Container><Grid><div><Heading>Frequently asked questions</Heading><List>{filtered.map(([q,a],i)=><Item key={q}><Q onClick={()=>setOpen(open===i?null:i)}><span>{q}</span><span>{open===i?'⌃':'⌄'}</span></Q>{open===i?<A>{a}</A>:null}</Item>)}</List></div><Side><SideTitle>Before your first reading</SideTitle><SideText>Bring your birth date and, if you know it, your exact birth time. Use the listing’s language badge to check whether the reader speaks your language or includes AI interpretation.</SideText></Side></Grid></Container></Content></Page>;
 }

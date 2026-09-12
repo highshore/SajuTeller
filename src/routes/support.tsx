@@ -1,146 +1,25 @@
+import { useNavigate } from "react-router-dom";
 import { styled } from "styled-components";
-import { useI18n } from "../i18n/i18n";
+import starBg from "../assets/star_bg.png";
 
-const Wrapper = styled.div`
-  max-width: 800px;
-  margin: 0 auto;
-  padding: 40px 20px;
-`;
+const Page=styled.div`background:#fffdf8;color:#1f2937;min-height:760px;`;
+const Hero=styled.section`background:#0f0026 url(${starBg}) center/cover;color:white;padding:48px 0;`;
+const Container=styled.div`width:min(1296px,calc(100% - 48px));margin:0 auto;`;
+const Title=styled.h1`font-family:'Cinzel',serif;font-size:50px;margin:0 0 10px;letter-spacing:.7px;`;
+const Lead=styled.p`margin:0;color:#d8cde7;font-size:16px;line-height:1.6;max-width:760px;`;
+const Content=styled.section`padding:64px 0 90px;`;
+const Grid=styled.div`display:grid;grid-template-columns:1fr 374px;gap:56px;align-items:start;@media(max-width:900px){grid-template-columns:1fr;}`;
+const Heading=styled.h2`font-family:'Cormorant Garamond',serif;font-size:36px;margin:0 0 24px;`;
+const Cards=styled.div`display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px;@media(max-width:620px){grid-template-columns:1fr;}`;
+const Card=styled.div`border:1px solid #e8e0d5;border-radius:18px;background:#fff;padding:24px;min-height:190px;`;
+const Icon=styled.div`width:46px;height:46px;border-radius:14px;background:#f1e8fb;color:#6210cc;display:flex;align-items:center;justify-content:center;font-size:22px;margin-bottom:18px;`;
+const CardTitle=styled.h3`font-family:'Cormorant Garamond',serif;font-size:25px;margin:0 0 8px;`;
+const Text=styled.p`margin:0 0 18px;color:#6b7280;font-size:14px;line-height:1.6;`;
+const Button=styled.button`height:44px;padding:0 18px;border:0;border-radius:14px;background:#6210cc;color:white;font-weight:700;cursor:pointer;`;
+const Side=styled.div`border:1px solid #e8e0d5;border-radius:22px;background:#f8f6f0;padding:30px;`;
+const Lang=styled.div`margin-top:30px;padding-top:22px;border-top:1px solid #e0d7cb;color:#6b7280;font-size:13px;line-height:1.7;`;
 
-const Header = styled.div`
-  text-align: center;
-  margin-bottom: 48px;
-`;
-
-const Title = styled.h1`
-  font-size: 32px;
-  font-weight: 700;
-  color: #111827;
-  margin: 0 0 16px 0;
-`;
-
-const Subtitle = styled.p`
-  font-size: 18px;
-  color: #6b7280;
-  margin: 0;
-  line-height: 1.5;
-`;
-
-const ContactGrid = styled.div`
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-  gap: 24px;
-  margin-bottom: 48px;
-`;
-
-const ContactCard = styled.div`
-  background: #ffffff;
-  border: 1px solid #e5e7eb;
-  border-radius: 12px;
-  padding: 24px;
-  text-align: center;
-`;
-
-const ContactIcon = styled.div`
-  width: 48px;
-  height: 48px;
-  background: #f3f4f6;
-  border-radius: 12px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin: 0 auto 16px auto;
-  
-  svg {
-    width: 24px;
-    height: 24px;
-    color: #6b7280;
-  }
-`;
-
-const ContactTitle = styled.h3`
-  font-size: 18px;
-  font-weight: 600;
-  color: #111827;
-  margin: 0 0 8px 0;
-`;
-
-const ContactText = styled.p`
-  font-size: 14px;
-  color: #6b7280;
-  margin: 0 0 16px 0;
-  line-height: 1.5;
-`;
-
-const ContactButton = styled.button`
-  background: #111827;
-  color: #ffffff;
-  border: none;
-  border-radius: 8px;
-  padding: 12px 24px;
-  font-size: 14px;
-  font-weight: 500;
-  cursor: pointer;
-  transition: background 0.15s ease;
-  
-  &:hover {
-    background: #374151;
-  }
-`;
-
-export default function Support() {
-  const { t } = useI18n();
-  
-  return (
-    <Wrapper>
-      <Header>
-        <Title>{t("customerSupport")}</Title>
-        <Subtitle>
-          We're here to help you with any questions or issues you might have.
-        </Subtitle>
-      </Header>
-      
-      <ContactGrid>
-        <ContactCard>
-          <ContactIcon>
-            <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-            </svg>
-          </ContactIcon>
-          <ContactTitle>Live Chat</ContactTitle>
-          <ContactText>
-            Get instant help from our support team. Available 24/7.
-          </ContactText>
-          <ContactButton>Start Chat</ContactButton>
-        </ContactCard>
-        
-        <ContactCard>
-          <ContactIcon>
-            <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" stroke="currentColor" strokeWidth="2"/>
-              <path d="m22 6-10 7L2 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-            </svg>
-          </ContactIcon>
-          <ContactTitle>Email Support</ContactTitle>
-          <ContactText>
-            Send us an email and we'll get back to you within 24 hours.
-          </ContactText>
-          <ContactButton>Send Email</ContactButton>
-        </ContactCard>
-        
-        <ContactCard>
-          <ContactIcon>
-            <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-            </svg>
-          </ContactIcon>
-          <ContactTitle>Phone Support</ContactTitle>
-          <ContactText>
-            Call us directly for urgent matters. Available during business hours.
-          </ContactText>
-          <ContactButton>Call Now</ContactButton>
-        </ContactCard>
-      </ContactGrid>
-    </Wrapper>
-  );
+export default function Support(){
+ const navigate=useNavigate();
+ return <Page><Hero><Container><Title>HELP & SUPPORT</Title><Lead>Answers for first-time Saju visitors, bookings, payments and translation.</Lead></Container></Hero><Content><Container><Grid><div><Heading>How can we help?</Heading><Cards><Card><Icon>?</Icon><CardTitle>Frequently asked questions</CardTitle><Text>Start with practical answers about Saju, bookings, cancellations and supported languages.</Text><Button onClick={()=>navigate('/faq')}>Browse FAQ</Button></Card><Card><Icon>✉</Icon><CardTitle>Message support</CardTitle><Text>Contact K-Saju when you need help with a booking, payment or translation issue.</Text><Button onClick={()=>navigate('/messages')}>Open messages</Button></Card></Cards></div><Side><CardTitle>Need more help?</CardTitle><Text>We’ll help you sort out booking, payment or interpreter issues before your session.</Text><Button onClick={()=>navigate('/messages')}>Contact support</Button><Lang><strong style={{color:'#1f2937'}}>Response languages</strong><br/>English · 한국어 · 中文 · 日本語 · Español</Lang></Side></Grid></Container></Content></Page>;
 }

@@ -6,9 +6,6 @@ import { Login } from "./routes/sign_in";
 import { CreateAccount } from "./routes/sign_up";
 import { createGlobalStyle, styled } from "styled-components";
 import reset from "styled-reset";
-import { useEffect, useState } from "react";
-import LoadingScreen from "./components/loading_screen";
-import { supabase } from "./supabase";
 import ProtectedRoute from "./components/protected_route";
 import NotFound from "./components/not_found";
 import AuthCallback from "./routes/auth_callback";
@@ -33,18 +30,9 @@ const router = createBrowserRouter([
     children: [
       { path: "", element: <Home /> },
       { path: "intro", element: <Intro /> },
-      {
-        path: "profile",
-        element: <ProtectedRoute><Profile /></ProtectedRoute>,
-      },
-      {
-        path: "messages",
-        element: <ProtectedRoute><Messages /></ProtectedRoute>,
-      },
-      {
-        path: "d",
-        element: <AdminRoute><AdminBroadcast /></AdminRoute>,
-      },
+      { path: "profile", element: <ProtectedRoute><Profile /></ProtectedRoute> },
+      { path: "messages", element: <ProtectedRoute><Messages /></ProtectedRoute> },
+      { path: "d", element: <AdminRoute><AdminBroadcast /></AdminRoute> },
       { path: "support", element: <Support /> },
       { path: "faq", element: <FAQ /> },
       { path: "live-translation", element: <LiveTranslation /> },
@@ -67,7 +55,6 @@ const router = createBrowserRouter([
 
 const GlobalStyles = createGlobalStyle`
   ${reset};
-  @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Cormorant+Garamond:wght@500;600;700&family=Crimson+Text:wght@400;600&family=Noto+Sans+KR:wght@400;500;600;700&family=Noto+Serif+KR:wght@500;600;700&family=Song+Myung&display=swap');
 
   :root {
     --ks-midnight: #0F0026;
@@ -103,7 +90,6 @@ const GlobalStyles = createGlobalStyle`
   button, input, textarea, select { font: inherit; }
   button { -webkit-tap-highlight-color: transparent; }
   ::selection { background: rgba(98, 16, 204, 0.18); }
-
   h1, h2, h3, h4 { text-wrap: balance; }
   p { text-wrap: pretty; }
 
@@ -119,22 +105,10 @@ const Wrapper = styled.div`
 `;
 
 function App() {
-  const [isLoading, setLoading] = useState(true);
-
-  useEffect(() => {
-    let isMounted = true;
-    (async () => {
-      await supabase.auth.getSession();
-      if (isMounted) setLoading(false);
-    })();
-    return () => { isMounted = false; };
-  }, []);
-
   return (
     <Wrapper>
       <GlobalStyles />
       <RouterProvider router={router} />
-      {isLoading && <LoadingScreen />}
     </Wrapper>
   );
 }

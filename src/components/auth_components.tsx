@@ -17,7 +17,7 @@ export const Page = styled.div`
   position:relative;
   overflow:hidden;
   &::before{content:'';position:absolute;inset:0;background:radial-gradient(circle at 20% 20%,rgba(139,92,246,.20),transparent 30%),radial-gradient(circle at 85% 80%,rgba(98,16,204,.18),transparent 34%);pointer-events:none;}
-  @media(max-width:${MOBILE_BP}){padding:28px 12px;}
+  @media(max-width:${MOBILE_BP}){padding:28px 12px 84px;min-height:100dvh;}
 `;
 
 export const Card = styled.div`

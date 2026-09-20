@@ -76,8 +76,8 @@ interface ChatMessage {
 
 const Page = styled.div`
   min-height: 100vh;
-  width: 100vw;
-  margin-left: calc(-50vw + 50%);
+  width: 100%;
+
   background: linear-gradient(135deg, #1a1a2e 0%, #16213e 25%, #0f3460 50%, #533483 75%, #7209b7 100%);
   position: relative;
   padding: 2rem 0;
@@ -111,7 +111,9 @@ const Button = styled.button<{ $primary?: boolean; $danger?: boolean; $customer?
   font-weight: 600;
   cursor: pointer;
   transition: all 0.3s ease;
-  min-width: 180px;
+  min-width: min(180px,100%);
+  max-width:100%;
+  @media(max-width:600px){padding:14px 18px;font-size:15px;}
   position: relative;
   overflow: hidden;
   

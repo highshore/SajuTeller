@@ -9,7 +9,7 @@ const Header = styled.header`
   position: sticky;
   top: 0;
   z-index: 100;
-  height: 76px;
+  height: var(--ks-header-height);
   width: 100%;
   background: rgba(15, 0, 38, 0.97);
   border-bottom: 1px solid rgba(255,255,255,.12);
@@ -30,9 +30,11 @@ const Inner = styled.div`
     padding: 0 20px;
     grid-template-columns: 1fr auto;
   }
+  @media(max-width:400px){padding:0 12px;gap:10px;}
 `;
 
 const Brand = styled(Link)`
+  @media(max-width:400px){gap:6px;}
   display: inline-flex;
   align-items: baseline;
   gap: 13px;
@@ -41,6 +43,7 @@ const Brand = styled(Link)`
 `;
 
 const BrandLatin = styled.span`
+  @media(max-width:400px){font-size:19px;}
   font-family: 'Cinzel', serif;
   font-size: 22px;
   font-weight: 700;
@@ -48,6 +51,7 @@ const BrandLatin = styled.span`
 `;
 
 const BrandKo = styled.span`
+  @media(max-width:400px){font-size:16px;}
   font-family: 'Song Myung', serif;
   font-size: 20px;
   color: #eadcfb;
@@ -89,6 +93,7 @@ const NavItem = styled.button<{ $active?: boolean }>`
 `;
 
 const Actions = styled.div`
+  @media(max-width:400px){gap:6px;}
   justify-self: end;
   display: flex;
   align-items: center;
@@ -96,6 +101,7 @@ const Actions = styled.div`
 `;
 
 const Pill = styled.button<{ $light?: boolean }>`
+  @media(max-width:400px){padding:0 10px;gap:4px;}
   appearance: none;
   height: 40px;
   padding: 0 16px;
@@ -147,8 +153,8 @@ const DropButton = styled.button<{ $active?: boolean }>`
 
 const MobileButton = styled.button`
   display: none;
-  width: 40px;
-  height: 40px;
+  width: 44px;
+  height: 44px;
   border-radius: 999px;
   border: 1px solid rgba(255,255,255,.35);
   background: rgba(255,255,255,.08);
@@ -162,7 +168,8 @@ const MobileButton = styled.button`
 
 const MobileMenu = styled.div`
   position: fixed;
-  inset: 76px 0 auto 0;
+  inset: var(--ks-header-height) 0 auto 0;
+  max-height:calc(100dvh - var(--ks-header-height));overflow-y:auto;
   z-index: 99;
   background: #0f0026;
   border-top: 1px solid rgba(255,255,255,.08);
@@ -201,6 +208,12 @@ export default function GNB() {
     if (pref && ['en','ko','zh','ja','es'].includes(pref)) setLanguage(pref);
   }, [user, setLanguage]);
 
+  useEffect(() => {
+    const close = (event: KeyboardEvent) => { if(event.key === 'Escape'){setMobileOpen(false);setLangOpen(false);setProfileOpen(false);} };
+    window.addEventListener('keydown', close);
+    return () => window.removeEventListener('keydown', close);
+  }, []);
+
   const languages = useMemo(() => [
     { code: 'en', label: 'English', flag: '🇺🇸' },
     { code: 'ko', label: '한국어', flag: '🇰🇷' },
@@ -238,7 +251,7 @@ export default function GNB() {
 
           <Actions>
             <DropdownWrap>
-              <Pill onClick={() => { setLangOpen(v => !v); setProfileOpen(false); }}>
+              <Pill aria-label="Choose language" aria-expanded={langOpen} onClick={() => { setLangOpen(v => !v); setProfileOpen(false); }}>
                 <span>{current.flag}</span><span>{current.code.toUpperCase()}</span><ChevronDownIcon width={14}/>
               </Pill>
               {langOpen && (
@@ -266,7 +279,7 @@ export default function GNB() {
               </DropdownWrap>
             ) : <Pill $light onClick={() => go('/sign-in')}>Sign in</Pill>}
 
-            <MobileButton onClick={() => setMobileOpen(v => !v)} aria-label="Open menu">
+            <MobileButton onClick={() => setMobileOpen(v => !v)} aria-label={mobileOpen ? "Close menu" : "Open menu"} aria-expanded={mobileOpen} aria-controls="mobile-menu">
               {mobileOpen ? <XMarkIcon/> : <Bars3Icon/>}
             </MobileButton>
           </Actions>
@@ -274,7 +287,7 @@ export default function GNB() {
       </Header>
 
       {mobileOpen && (
-        <MobileMenu>
+        <MobileMenu id="mobile-menu">
           <MobileLink onClick={() => go('/locations')}>Explore</MobileLink>
           <MobileLink onClick={() => go('/intro')}>What is Saju?</MobileLink>
           <MobileLink onClick={() => go('/today-fortune')}>Culture Lab</MobileLink>

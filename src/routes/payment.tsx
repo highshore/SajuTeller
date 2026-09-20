@@ -17,7 +17,7 @@ const Container = styled.div`
     top: 0;
     left: 50%;
     transform: translateX(-50%);
-    width: 100vw;
+    width: 100%;
     height: 100%;
     background: #f8fafc;
     z-index: -1;
@@ -233,12 +233,14 @@ const Input = styled.input`
 `;
 
 const CardRow = styled.div`
+  @media(max-width:420px){grid-template-columns:1fr;}
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 1rem;
 `;
 
 const ButtonGroup = styled.div`
+  @media(max-width:600px){flex-direction:column;}
   display: flex;
   gap: 1rem;
   margin-top: 3rem;

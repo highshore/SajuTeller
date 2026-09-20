@@ -27,7 +27,7 @@ const Brand = styled.div`
 `;
 const Copy = styled.p`margin:0;max-width:560px;font-size:13px;line-height:1.65;color:#bca9d3;`;
 const Links = styled.div`display:flex;justify-content:flex-end;gap:20px;flex-wrap:wrap;font-size:13px;@media(max-width:720px){justify-content:flex-start;}`;
-const FootLink = styled(Link)`color:#eadcfb;&:hover{color:white;}`;
+const FootLink = styled(Link)`display:inline-flex;align-items:center;min-height:44px;color:#eadcfb;&:hover{color:white;}`;
 
 export default function Footer(){
   return <FooterWrap><Inner><div><Brand>K-SAJU · 사주</Brand><Copy>Discover Korean fortune-telling experiences, book with local readers and use multilingual interpretation when you need it.</Copy></div><Links><FootLink to="/intro">What is Saju?</FootLink><FootLink to="/support">Support</FootLink><FootLink to="/faq">FAQ</FootLink><FootLink to="/locations">Explore</FootLink></Links></Inner></FooterWrap>;

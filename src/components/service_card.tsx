@@ -3,8 +3,9 @@ import { useI18n } from "../i18n/i18n";
 
 const Card = styled.article<{ $variant?: 'popular' | 'hotdeals' | 'ai' }>`
   width: 100%;
-  min-width: 230px;
+  min-width: 0;
   max-width: 330px;
+  @media(max-width:700px){min-height:290px;max-width:none;}
   min-height: 360px;
   display: flex;
   flex-direction: column;
@@ -44,6 +45,7 @@ const Image = styled.div<{ $image?: string; $variant?: 'popular' | 'hotdeals' | 
 `;
 
 const Body = styled.div`
+  @media(max-width:700px){padding:16px 14px;}
   padding: 18px 24px 22px;
   display: flex;
   flex-direction: column;
@@ -109,7 +111,7 @@ export function ServiceCard({ service, variant = 'popular', onClick }: ServiceCa
   const roundedRating = Math.max(0, Math.min(5, Math.round(service.rating ?? 0)));
 
   return (
-    <Card $variant={variant} onClick={() => onClick?.(service.id)} role="button" tabIndex={0} onKeyDown={e => { if (e.key === 'Enter') onClick?.(service.id); }}>
+    <Card $variant={variant} onClick={() => onClick?.(service.id)} role="button" tabIndex={0} onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onClick?.(service.id); } }}>
       <Image $image={validImage} $variant={variant} aria-label={service.title} />
       <Body>
         <Spark>✦</Spark>

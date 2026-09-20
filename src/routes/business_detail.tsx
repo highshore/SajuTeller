@@ -448,7 +448,7 @@ const MobileBottomBar = styled.div`
   right: 0;
   background: #ffffff;
   border-top: 1px solid #ebebeb;
-  padding: 16px 24px;
+  padding: 16px 24px calc(16px + env(safe-area-inset-bottom));
   display: none;
   align-items: center;
   justify-content: space-between;

@@ -5,7 +5,7 @@ import { useI18n } from "../i18n/i18n";
 
 const Shell = styled.div`
   min-height: calc(100vh - 64px);
-  width: 100vw;
+  width: 100%;
   margin: 0;
   padding: 0;
   background: #f7f7f7;

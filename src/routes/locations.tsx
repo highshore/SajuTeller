@@ -104,7 +104,8 @@ const ListPane = styled.div<{ $expanded?: boolean; $mapRatio?: number; $sheetExp
     border-top-left-radius: 16px;
     border-top-right-radius: 16px;
     box-shadow: 0 -8px 24px rgba(0,0,0,0.15);
-    height: ${p => (p.$sheetExpanded ? '85vh' : '40vh')};
+    height: ${p => (p.$sheetExpanded ? 'calc(100dvh - var(--ks-header-height) - 24px)' : '42dvh')};
+    padding-bottom:env(safe-area-inset-bottom);
     z-index: 6; /* above map mobile */
     overflow: hidden;
     flex-direction: column;
@@ -114,7 +115,7 @@ const ListPane = styled.div<{ $expanded?: boolean; $mapRatio?: number; $sheetExp
 
 const MapPane = styled.div<{ $expanded?: boolean; $mapRatio?: number }>`
   position: ${p => (p.$expanded ? "fixed" : "sticky")};
-  top: ${p => (p.$expanded ? 0 : "86px")};
+  top: ${p => (p.$expanded ? 0 : "var(--ks-header-height)")};
   right: ${p => (p.$expanded ? 0 : "auto")};
   left: ${p => (p.$expanded ? 0 : "auto")};
   bottom: ${p => (p.$expanded ? 0 : "auto")};
@@ -130,14 +131,14 @@ const MapPane = styled.div<{ $expanded?: boolean; $mapRatio?: number }>`
   z-index: ${p => (p.$expanded ? 50 : 1)};
   @media (max-width: 768px) {
     position: ${p => (p.$expanded ? "fixed" : "sticky")};
-    top: ${p => (p.$expanded ? 0 : "86px")};
+    top: ${p => (p.$expanded ? 0 : "var(--ks-header-height)")};
     right: 0;
     left: 0;
     bottom: auto;
     float: none;
     margin-left: 0;
     width: 100%;
-    height: ${p => (p.$expanded ? "100vh" : "60vh")};
+    height: ${p => (p.$expanded ? "100dvh" : "55dvh")};
     border-radius: 0px;
     box-shadow: none;
     z-index: ${p => (p.$expanded ? 50 : 2)};
@@ -194,7 +195,7 @@ const Cards = styled.div<{ $mode: "list" | "grid" }>`
   gap: 12px;
   padding: 12px;
   @media (max-width: 768px) {
-    grid-template-columns: repeat(2, 1fr);
+    grid-template-columns: minmax(0,1fr);
     gap: 8px;
     padding: 8px 12px;
     justify-items: center; /* center items within each grid cell */

@@ -2,7 +2,8 @@ import { styled } from "styled-components";
 import { type ComponentType } from "react";
 
 const Card = styled.button`
-  width: 156px;
+  min-width:0;flex:0 1 156px;
+  width: min(156px, 100%);
   min-height: 176px;
   padding: 0;
   border: 0;
@@ -18,7 +19,7 @@ const Card = styled.button`
 `;
 
 const Shield = styled.div<{ $color: string }>`
-  width: 156px;
+  width: min(156px, 100%);
   height: 140px;
   clip-path: polygon(25% 6%,75% 6%,100% 50%,75% 94%,25% 94%,0 50%);
   background: ${p => p.$color || 'linear-gradient(135deg,#8b5cf6,#6210cc)'};

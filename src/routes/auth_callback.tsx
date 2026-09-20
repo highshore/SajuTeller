@@ -1,5 +1,6 @@
 import { useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
+import { safeReturn } from "../product/plans";
 import { supabase } from "../supabase";
 
 function GlobalLoading() {
@@ -18,7 +19,9 @@ export default function AuthCallback() {
         // If a session already exists, skip handling
         const existing = await supabase.auth.getSession();
         if (existing.data.session) {
-          navigate("/profile");
+          const destination = safeReturn(localStorage.getItem("returnUrl"));
+          localStorage.removeItem("returnUrl");
+          navigate(destination, { replace: true });
           return;
         }
 
@@ -47,12 +50,12 @@ export default function AuthCallback() {
         const returnUrl = localStorage.getItem("returnUrl");
         if (returnUrl) {
           localStorage.removeItem("returnUrl");
-          navigate(returnUrl);
+          navigate(safeReturn(returnUrl));
         } else {
-          navigate("/profile");
+          navigate(safeReturn(localStorage.getItem("returnUrl")));
         }
       } catch (e) {
-        console.error("Auth callback handling error:", e, "href:", window.location.href);
+        console.error("Sign-in could not be completed", e instanceof Error ? e.message : "Unknown error");
         await supabase.auth.signOut().catch(() => {});
         navigate("/sign_in");
       }

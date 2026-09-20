@@ -7,7 +7,7 @@ export const isSupabaseConfigured = Boolean(configuredUrl && configuredAnonKey);
 
 if (!isSupabaseConfigured) {
   console.error(
-    "K-Saju: missing VITE_SUPABASE_URL or VITE_SUPABASE_ANON_KEY. The public UI will still render, but data/auth features will be unavailable until the deployment environment is configured."
+    "SajuTeller: missing VITE_SUPABASE_URL or VITE_SUPABASE_ANON_KEY. The public UI will still render, but data/auth features will be unavailable until the deployment environment is configured."
   );
 }
 

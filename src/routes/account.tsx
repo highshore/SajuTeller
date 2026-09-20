@@ -1,0 +1,6 @@
+import {useState} from 'react';
+import {useNavigate} from 'react-router-dom';
+import {useAccount} from '../product/data';
+import {supabase} from '../supabase';
+import {Page,Wrap,Eyebrow,Lead,Box,Stack,Button,InlineLink,Notice} from '../product/ui';
+export default function Account(){const{account}=useAccount();const navigate=useNavigate();const[error,setError]=useState('');const[busy,setBusy]=useState(false);return <Page><Wrap style={{maxWidth:680}}><Eyebrow>Your SajuTeller</Eyebrow><h1>A place for your plans.</h1><Lead>Manage your visit requests and keep exploring.</Lead><Stack><Box><h2>Your account</h2><p style={{overflowWrap:'anywhere'}}>{account?.email||'Signed in'}</p></Box><Box><h2>Your travel space</h2><Stack><InlineLink to="/trips">Visit requests & preview plans →</InlineLink><InlineLink to="/saved">Saved experiences on this device →</InlineLink><InlineLink to="/messages">Messages →</InlineLink><InlineLink to="/host">Apply to become a host →</InlineLink></Stack></Box>{error&&<Notice role="alert">{error}</Notice>}<Button $secondary disabled={busy} onClick={async()=>{setBusy(true);const{error}=await supabase.auth.signOut();if(error){setError('Could not sign out. Please try again.');setBusy(false);}else navigate('/');}}>{busy?'Signing out…':'Sign out'}</Button></Stack></Wrap></Page>}

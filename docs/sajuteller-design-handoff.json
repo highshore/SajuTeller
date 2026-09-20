@@ -1,0 +1,234 @@
+{
+  "fileKey": "ueJ1FlZRj7yJifKruOQWxM",
+  "pageId": "73:11283",
+  "pageName": "SajuTeller · Mobile product v2",
+  "updated": "2026-09-20",
+  "screens": [
+    {
+      "id": "79:11283",
+      "name": "01 Discover",
+      "width": 390,
+      "height": 2555,
+      "instances": 20,
+      "textCount": 41,
+      "fontMismatches": []
+    },
+    {
+      "id": "79:11284",
+      "name": "02 Experiences",
+      "width": 390,
+      "height": 1310,
+      "instances": 8,
+      "textCount": 22,
+      "fontMismatches": []
+    },
+    {
+      "id": "79:11285",
+      "name": "03 For You",
+      "width": 390,
+      "height": 808,
+      "instances": 8,
+      "textCount": 15,
+      "fontMismatches": []
+    },
+    {
+      "id": "79:11286",
+      "name": "04 Studio detail",
+      "width": 390,
+      "height": 1385,
+      "instances": 7,
+      "textCount": 14,
+      "fontMismatches": []
+    },
+    {
+      "id": "79:11287",
+      "name": "05 Plan a visit",
+      "width": 390,
+      "height": 1037,
+      "instances": 8,
+      "textCount": 17,
+      "fontMismatches": []
+    },
+    {
+      "id": "79:11288",
+      "name": "06 Field guide",
+      "width": 390,
+      "height": 2010,
+      "instances": 8,
+      "textCount": 29,
+      "fontMismatches": []
+    },
+    {
+      "id": "79:11289",
+      "name": "07 Saved",
+      "width": 390,
+      "height": 900,
+      "instances": 4,
+      "textCount": 16,
+      "fontMismatches": []
+    },
+    {
+      "id": "79:11290",
+      "name": "08 Trips",
+      "width": 390,
+      "height": 1159,
+      "instances": 8,
+      "textCount": 17,
+      "fontMismatches": []
+    },
+    {
+      "id": "79:11291",
+      "name": "09 Become a host",
+      "width": 390,
+      "height": 1130,
+      "instances": 7,
+      "textCount": 17,
+      "fontMismatches": []
+    }
+  ],
+  "components": [
+    {
+      "id": "74:11283",
+      "name": "SajuTeller / Button / primary",
+      "key": "8b6c1e8602dd42998a92b9336e419f89203a8942"
+    },
+    {
+      "id": "74:11285",
+      "name": "SajuTeller / Button / secondary",
+      "key": "cf363b00846c2e2a0dfb37cf6b63a9c497709731"
+    },
+    {
+      "id": "74:11287",
+      "name": "SajuTeller / Page intro",
+      "key": "85faf051610c6acdae95325dc9a89f0fc19122b5"
+    },
+    {
+      "id": "74:11291",
+      "name": "SajuTeller / Editorial panel",
+      "key": "bcd56a9f03cdc199c95db0797cfb9d963183478d"
+    },
+    {
+      "id": "74:11294",
+      "name": "SajuTeller / Header / mobile",
+      "key": "fdd9bccaff2d4f3cb1e28eda399bfbc5b41af222"
+    },
+    {
+      "id": "74:11302",
+      "name": "SajuTeller / Navigation / mobile",
+      "key": "d3d5f008ebf9cda54d18000e9bd350735cbec6a3"
+    },
+    {
+      "id": "75:11283",
+      "name": "SajuTeller / ExperienceCard",
+      "key": "f076070d1034987c6f271306d2947016807b2d79"
+    },
+    {
+      "id": "80:11283",
+      "name": "SajuTeller / Discovery hero",
+      "key": "20cbae783412609552590d171d2f44e5d6092240"
+    },
+    {
+      "id": "80:16997",
+      "name": "SajuTeller / Interest card",
+      "key": "b339167c0cf09a56c3b567fa9f1fd7f637aa190a"
+    },
+    {
+      "id": "80:17002",
+      "name": "SajuTeller / Form field",
+      "key": "c389752ac3c0b27db926fb72e2123e6e33504fe0"
+    },
+    {
+      "id": "84:17247",
+      "name": "SajuTeller / Icon / HeartIcon",
+      "key": "444b5fdd7c9db0eaa893334f4f28217e3b7dca7c"
+    },
+    {
+      "id": "84:17250",
+      "name": "SajuTeller / Icon / BriefcaseIcon",
+      "key": "258c55b9c0be80a02b5967d6d5d1e60b4093696f"
+    },
+    {
+      "id": "84:17253",
+      "name": "SajuTeller / Icon / SparklesIcon",
+      "key": "1c9932e902292b582ff3640d2a27fa043412604a"
+    },
+    {
+      "id": "84:17256",
+      "name": "SajuTeller / Icon / ChatBubbleLeftRightIcon",
+      "key": "70b8b1a8b582df0a73c54f9de7a52d0d022201e9"
+    },
+    {
+      "id": "85:17246",
+      "name": "SajuTeller / GuideCard",
+      "key": "c339debdcfe28a22ee9915e86f3ecd21030253c1"
+    }
+  ],
+  "styles": [
+    {
+      "id": "S:bb53b6149e6b62564fa99f398572514d7922c794,",
+      "name": "SajuTeller / display",
+      "font": {
+        "family": "Cormorant Garamond",
+        "style": "Medium",
+        "variationSettings": {
+          "wght": 500
+        }
+      }
+    },
+    {
+      "id": "S:b98458577f58c49f2b60c5c9a12c4b5ba848bd95,",
+      "name": "SajuTeller / heading",
+      "font": {
+        "family": "Inter",
+        "style": "Semi Bold",
+        "variationSettings": {
+          "wght": 600,
+          "slnt": 0
+        }
+      }
+    },
+    {
+      "id": "S:e3007813a45296673f1b7a7c9926ba2fa37cb480,",
+      "name": "SajuTeller / body",
+      "font": {
+        "family": "Inter",
+        "style": "Regular",
+        "variationSettings": {
+          "wght": 400,
+          "slnt": 0
+        }
+      }
+    },
+    {
+      "id": "S:eb68299efe5fb3a14b7c9c100f54b10eeaeb2aae,",
+      "name": "SajuTeller / label",
+      "font": {
+        "family": "Inter",
+        "style": "Semi Bold",
+        "variationSettings": {
+          "wght": 600,
+          "slnt": 0
+        }
+      }
+    },
+    {
+      "id": "S:385e63795ddd0d2e85bd5d80b126bf1f550d960a,",
+      "name": "SajuTeller / eyebrow",
+      "font": {
+        "family": "Inter",
+        "style": "Semi Bold",
+        "variationSettings": {
+          "wght": 600,
+          "slnt": 0
+        }
+      }
+    }
+  ],
+  "collections": [
+    {
+      "id": "VariableCollectionId:73:11284",
+      "name": "SajuTeller / Product",
+      "count": 13
+    }
+  ]
+}

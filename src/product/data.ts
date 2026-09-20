@@ -1,14 +1,14 @@
 import { useCallback, useEffect, useState } from 'react';
 import { supabase } from '../supabase';
 export type LanguageSupport = { language_code:string; support_type:string };
-export type Studio = { id:string; slug:string; name:string; name_ko:string; tagline:string; description:string; neighborhood:string; city:string; address_line1:string; nearest_station:string; station_walk_minutes:number; base_price:number; min_duration_minutes:number; max_guests:number; min_age:number; specialties:string[]; modalities:string[]; ai_interpretation_available:boolean; wheelchair_accessible:boolean; average_rating:number; review_count:number; is_mock:boolean; verified:boolean; is_featured:boolean; studio_images:{image_url:string;alt_text:string;sort_order:number}[]; studio_languages:LanguageSupport[] };
+export type Studio = { id:string; slug:string; name:string; name_ko:string; tagline:string; description:string; neighborhood:string; city:string; address_line1:string; phone:string|null; email:string|null; website:string|null; nearest_station:string; station_walk_minutes:number; base_price:number; min_duration_minutes:number; max_guests:number; min_age:number; specialties:string[]; modalities:string[]; ai_interpretation_available:boolean; wheelchair_accessible:boolean; average_rating:number; review_count:number; is_mock:boolean; verified:boolean; is_featured:boolean; studio_images:{image_url:string;alt_text:string;sort_order:number}[]; studio_languages:LanguageSupport[] };
 export type Service = {id:string;studio_id:string;name:string;description:string;duration_minutes:number;price:number;max_guests:number;requires_birth_date:boolean;birth_time_recommended:boolean};
 export type Review = {id:string;reviewer_display_name:string;rating:number;body:string;title:string;is_mock:boolean;verified_booking:boolean};
 export const money=(n:number)=>new Intl.NumberFormat('en-US',{style:'currency',currency:'KRW',maximumFractionDigits:0}).format(n);
 export const languageNames:Record<string,string>={en:'English',ko:'Korean',zh:'Chinese',ja:'Japanese',es:'Spanish',fr:'French'};
 export const supportLabel=(s:string)=>s==='ai_interpreter'?'AI interpretation':s==='native'?'Reader speaks':'Conversational';
 export function cover(s:Studio){return [...(s.studio_images||[])].sort((a,b)=>a.sort_order-b.sort_order)[0];}
-export const studioSelect='id,slug,name,name_ko,tagline,description,neighborhood,city,address_line1,nearest_station,station_walk_minutes,base_price,min_duration_minutes,max_guests,min_age,specialties,modalities,ai_interpretation_available,wheelchair_accessible,average_rating,review_count,is_mock,verified,is_featured,studio_images(image_url,alt_text,sort_order),studio_languages(language_code,support_type)';
+export const studioSelect='id,slug,name,name_ko,tagline,description,neighborhood,city,address_line1,phone,email,website,nearest_station,station_walk_minutes,base_price,min_duration_minutes,max_guests,min_age,specialties,modalities,ai_interpretation_available,wheelchair_accessible,average_rating,review_count,is_mock,verified,is_featured,studio_images(image_url,alt_text,sort_order),studio_languages(language_code,support_type)';
 let cached:Studio[]|null=null;
 let pending:Promise<Studio[]>|null=null;
 async function getStudios(){

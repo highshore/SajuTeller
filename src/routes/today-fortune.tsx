@@ -65,8 +65,8 @@ const getFontFamily = (language: string, type: 'heading' | 'body' | 'accent' | '
 
 const Container = styled.div<{ $language: string }>`
   min-height: 100vh;
-  width: 100vw;
-  margin-left: calc(-50vw + 50%);
+  width: 100%;
+
   background: linear-gradient(135deg, #1a1a2e 0%, #16213e 25%, #0f3460 50%, #533483 75%, #7209b7 100%);
   position: relative;
   padding: 2rem 0;

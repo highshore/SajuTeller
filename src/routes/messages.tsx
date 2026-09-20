@@ -26,9 +26,9 @@ const Wrapper = styled.div`
   .str-chat__message-input{border-top:1px solid #e8e0d5;background:#fffdf8;}
   .str-chat__message-text-inner{border-radius:16px!important;}
   @media(max-width:850px){grid-template-columns:300px 1fr;}
-  @media(max-width:680px){grid-template-columns:1fr;height:720px;}
+  @media(max-width:680px){grid-template-columns:1fr;grid-template-rows:220px minmax(420px,1fr);height:800px;}
 `;
-const Sidebar=styled.aside`border-right:1px solid #e8e0d5;min-width:0;overflow:hidden;background:#fffdf8;@media(max-width:680px){display:none;}`;
+const Sidebar=styled.aside`border-right:1px solid #e8e0d5;min-width:0;overflow:hidden;background:#fffdf8;@media(max-width:680px){border-right:0;border-bottom:1px solid #e8e0d5;}`;
 const Panel=styled.section`min-width:0;overflow:hidden;background:white;`;
 const SidebarInner=styled.div`display:flex;flex-direction:column;height:100%;`;
 const SidebarHeader=styled.div`height:72px;padding:0 22px;display:flex;align-items:center;border-bottom:1px solid #e8e0d5;`;

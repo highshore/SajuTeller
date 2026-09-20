@@ -73,7 +73,7 @@ const GlobalStyles = createGlobalStyle`
   :root {
     --st-paper:#faf9f6;
     --st-ink:#252131;
-    --st-muted:#7c7584;
+    --st-muted:#686071;
     --st-line:#e4dfe7;
     --st-lilac:#e9e2f4;
     --ks-header-height: 72px;

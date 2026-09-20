@@ -59,3 +59,13 @@ North-star measure: attended experiences with international travelers. Track lea
 - Airbnb Experiences: https://www.airbnb.com/experiences — traveler intent, experience discovery, host participation.
 - Visit Korea: https://english.visitkorea.or.kr/svc/sp/HallyuNew/contentsView.do?dataSetId=76&vcontsId=216894 — Saju as a cultural visitor experience and multilingual services.
 - Visit Seoul: https://english.visitseoul.net/tours/unique-activities-for-a-memorable-seoul-trip_/23395 — local fortune-telling experiences for tourists.
+
+## Release verification, 20 September 2026
+
+The main redesign is deployed through PR #4. Public-browser checks passed for the rebranded home, loaded catalog, star pause/play, all three matcher steps, matched results (love + English + up to ₩80,000), saved studios, detail/service data, preview form submission, Trips, and removing the temporary test plan and favorite. No real booking, payment, application, or message was sent during testing.
+
+Review corrections add a graceful card-photo fallback, clearly illustrative sample location text, contact links for real studios, sign-up return-path preservation and email-confirmation messaging, and remove the unconfigured Apple sign-in action.
+
+Editable Figma handoff: https://www.figma.com/design/ueJ1FlZRj7yJifKruOQWxM/K-Saju-Desktop-UX-Redesign?node-id=79-11283
+
+The new “SajuTeller · Mobile product v2” page includes nine 390px key-state compositions, fifteen local reusable components (including imported source icons), thirteen color/layout variables, and five text styles. Text remains editable; Inter and Cormorant Garamond were explicitly verified on every screen. The starfield uses an instance of the existing editable vector component. Full live animation remains in code. Legacy pages are preserved for history. The handoff is a product-state design reference, not an automatic DOM capture or an exhaustive record of every responsive state. Node IDs and component keys are recorded in sajuteller-design-handoff.json.

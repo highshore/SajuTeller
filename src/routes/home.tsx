@@ -6,7 +6,7 @@ import { supabase } from "../supabase";
 import { useI18n } from "../i18n/i18n";
 import { ServiceCard } from "../components/service_card";
 import { AIServiceCard } from "../components/ai_service_card";
-import starBg from "../assets/star_bg.png";
+import StarfieldSection from "../components/starfield_section";
 
 interface LocationService {
   id: string;
@@ -29,9 +29,8 @@ interface LocationService {
 const Page = styled.div`width:100%;background:#fffdf8;color:#1f2937;`;
 const Container = styled.div`width:min(1296px,calc(100% - 48px));margin:0 auto;@media(max-width:700px){width:min(100% - 32px,1296px);}`;
 
-const Hero = styled.section`
+const Hero = styled(StarfieldSection)`
   min-height: 470px;
-  background: #0f0026 url(${starBg}) center/cover;
   position: relative;
   overflow: hidden;
   color: white;
@@ -90,7 +89,7 @@ const EmptyCard = styled.button`
   span{position:relative;z-index:2;color:#8b7355;font-size:13px;}
 `;
 
-const Culture = styled.section`padding:72px 0;background:#180a2e url(${starBg}) center/cover;color:white;`;
+const Culture = styled(StarfieldSection)`padding:72px 0;color:white;`;
 const CultureGrid = styled.div`display:grid;grid-template-columns:380px 1fr;gap:64px;align-items:center;@media(max-width:900px){grid-template-columns:1fr;}`;
 const CultureTitle = styled.h2`font-family:'Cormorant Garamond',serif;font-size:36px;margin:0 0 12px;`;
 const CultureText = styled.p`color:#d8cde7;line-height:1.6;font-size:15px;margin:0 0 24px;`;
@@ -115,7 +114,7 @@ const StepNo = styled.div`font-size:12px;font-weight:800;color:#6210cc;margin-bo
 const StepTitle = styled.h3`font-family:'Cormorant Garamond',serif;font-size:25px;margin:0 0 10px;`;
 const StepText = styled.p`margin:0;color:#6b7280;font-size:14px;line-height:1.6;`;
 
-const FAQ = styled.section`padding:78px 0;background:#0f0026 url(${starBg}) center/cover;color:white;`;
+const FAQ = styled(StarfieldSection)`padding:78px 0;color:white;`;
 const FAQTitle = styled.h2`font-family:'Cinzel',serif;font-size:34px;margin:0 0 10px;`;
 const FAQLead = styled.p`margin:0 0 30px;color:#d8cde7;font-size:15px;`;
 const FAQList = styled.div`display:grid;gap:12px;`;

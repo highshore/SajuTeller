@@ -1,10 +1,10 @@
 import { useNavigate } from "react-router-dom";
 import { styled } from "styled-components";
-import starBg from "../assets/star_bg.png";
+import StarfieldSection from "../components/starfield_section";
 
 const Page=styled.div`background:#fffdf8;color:#1f2937;`;
 const Container=styled.div`width:min(1296px,calc(100% - 48px));margin:0 auto;`;
-const Hero=styled.section`min-height:400px;background:#0f0026 url(${starBg}) center/cover;color:white;position:relative;overflow:hidden;`;
+const Hero=styled(StarfieldSection)`min-height:400px;color:white;position:relative;overflow:hidden;`;
 const HeroInner=styled(Container)`min-height:400px;display:grid;grid-template-columns:1fr 360px;align-items:center;gap:64px;@media(max-width:850px){grid-template-columns:1fr;}`;
 const Title=styled.h1`font-family:'Cinzel',serif;font-size:clamp(42px,5vw,62px);margin:0 0 16px;letter-spacing:1px;`;
 const Lead=styled.p`font-size:18px;line-height:1.65;color:#e2d8ef;max-width:720px;margin:0 0 28px;`;

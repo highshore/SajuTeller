@@ -7,7 +7,7 @@ import MobileNavigation from "./mobile_navigation";
 import { hasMobileNavigation } from "./mobile_navigation_routes";
 
 const Shell = styled.div<{ $mobileDock: boolean }>`
-  @media(max-width:768px){padding-bottom:${p => p.$mobileDock ? "calc(88px + env(safe-area-inset-bottom))" : "0"};}
+  @media(max-width:850px){padding-bottom:${p => p.$mobileDock ? "calc(88px + env(safe-area-inset-bottom))" : "0"};}
   width: 100%;
   min-height: 100vh;
   display: flex;
@@ -26,5 +26,5 @@ const Main = styled.main`
 export default function Layout() {
   const { pathname } = useLocation();
   useEffect(() => { window.scrollTo({ top:0, left:0, behavior:"instant" }); }, [pathname]);
-  return <Shell $mobileDock={hasMobileNavigation(pathname)}><GNB/><Main><Outlet/></Main><Footer/><MobileNavigation/></Shell>;
+  return <Shell $mobileDock={hasMobileNavigation(pathname)}><a href="#main-content" className="skip-link">Skip to content</a><GNB/><Main id="main-content"><Outlet/></Main><Footer/><MobileNavigation/></Shell>;
 }

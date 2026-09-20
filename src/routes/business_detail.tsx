@@ -2040,7 +2040,7 @@ export default function BusinessDetail() {
       setShowScrollToTop(scrollTop > 300); // 300px 이상 스크롤하면 버튼 표시
       
       // nav bar가 화면에서 사라질 정도로 스크롤했을 때 고정
-      // K-SAJU main nav bar 높이 + nav bar 자체 높이를 고려하여 200px로 설정
+      // SajuTeller main nav bar 높이 + nav bar 자체 높이를 고려하여 200px로 설정
       setIsNavFixed(scrollTop > 200);
       
       // 가격과 예약 버튼을 하단에 고정 (nav bar가 사라질 정도로 스크롤했을 때)

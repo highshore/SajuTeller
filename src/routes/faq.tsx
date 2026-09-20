@@ -1,36 +1,16 @@
-import { useMemo, useState } from "react";
-import { styled } from "styled-components";
-import starBg from "../assets/star_bg.png";
-
-const Page=styled.div`background:#fffdf8;color:#1f2937;min-height:860px;`;
-const Hero=styled.section`background:#0f0026 url(${starBg}) center/cover;color:white;padding:46px 0 34px;`;
-const Container=styled.div`width:min(1296px,calc(100% - 48px));margin:0 auto;`;
-const Title=styled.h1`font-family:'Cinzel',serif;font-size:clamp(30px,5vw,50px);margin:0 0 10px;`;
-const Lead=styled.p`margin:0;color:#d8cde7;font-size:16px;`;
-const Search=styled.input`margin-top:28px;width:min(650px,100%);height:50px;border:1px solid rgba(255,255,255,.28);border-radius:14px;background:#fffdf8;color:#1f2937;padding:0 18px;outline:none;&:focus{box-shadow:0 0 0 3px rgba(139,92,246,.35);}`;
-const Content=styled.section`@media(max-width:700px){padding:36px 0 48px;}padding:56px 0 88px;`;
-const Grid=styled.div`display:grid;grid-template-columns:minmax(0,866px) 374px;gap:56px;align-items:start;@media(max-width:900px){grid-template-columns:1fr;}`;
-const Heading=styled.h2`font-family:'Cormorant Garamond',serif;font-size:38px;margin:0 0 22px;`;
-const List=styled.div`display:grid;gap:14px;`;
-const Item=styled.div`border:1px solid #e8e0d5;border-radius:15px;background:white;overflow:hidden;`;
-const Q=styled.button`width:100%;min-height:64px;border:0;background:transparent;padding:0 22px;display:flex;align-items:center;justify-content:space-between;gap:18px;text-align:left;font-size:15px;font-weight:750;cursor:pointer;`;
-const A=styled.div`padding:0 22px 20px;color:#6b7280;font-size:14px;line-height:1.65;`;
-const Side=styled.aside`border:1px solid #e8e0d5;border-radius:22px;background:#f8f6f0;padding:30px;`;
-const SideTitle=styled.h3`font-family:'Cormorant Garamond',serif;font-size:28px;margin:0 0 10px;`;
-const SideText=styled.p`margin:0;color:#6b7280;font-size:14px;line-height:1.65;`;
-
-export default function FAQ(){
- const [open,setOpen]=useState<number|null>(0);
- const [term,setTerm]=useState('');
- const items=[
- ['What is Saju?','Saju uses the four pillars of your birth information as the basis for a traditional Korean reading about personality, relationships, career and timing.'],
- ['How does a consultation work?','Choose a reader, reserve a time, share your birth details, then meet the practitioner. Listings show whether live AI interpretation is included.'],
- ['What languages do you support?','Korean, English, Chinese, Japanese and Spanish are supported across the current product direction.'],
- ['How do cancellations work?','Each listing shows its cancellation window before payment. Always check the exact terms on the booking screen.'],
- ['Is live translation included?','Listings clearly indicate whether AI interpretation is included with the session.'],
- ['What if I do not know my birth time?','You can still book. An exact birth time is recommended for a traditional four-pillars calculation, but the product allows you to mark it as unknown.'],
- ['Is Saju scientifically accurate?','Saju is a traditional cultural practice, not a scientific prediction method. Treat the reading as interpretation and conversation rather than certainty.'],
- ];
- const filtered=useMemo(()=>items.filter(([q,a])=>(q+' '+a).toLowerCase().includes(term.toLowerCase())),[term]);
- return <Page><Hero><Container><Title>HELP & FAQ</Title><Lead>Answers for first-time Saju visitors, bookings and translation.</Lead><Search value={term} onChange={e=>setTerm(e.target.value)} placeholder="Search help articles…"/></Container></Hero><Content><Container><Grid><div><Heading>Frequently asked questions</Heading><List>{filtered.map(([q,a],i)=><Item key={q}><Q onClick={()=>setOpen(open===i?null:i)}><span>{q}</span><span>{open===i?'⌃':'⌄'}</span></Q>{open===i?<A>{a}</A>:null}</Item>)}</List></div><Side><SideTitle>Before your first reading</SideTitle><SideText>Bring your birth date and, if you know it, your exact birth time. Use the listing’s language badge to check whether the reader speaks your language or includes AI interpretation.</SideText></Side></Grid></Container></Content></Page>;
-}
+import {useState} from 'react';
+import {styled} from 'styled-components';
+import {Page,Wrap,Eyebrow,Lead,Field,Stack,InlineLink} from '../product/ui';
+const questions=[
+['What is Saju?','Saju is a Korean tradition that interprets the year, month, day, and hour of your birth. A reader uses these four pillars to start a conversation about personality, relationships, work, and timing. It is a cultural practice, not a scientifically proven prediction.'],
+['Is this suitable for a first-time visitor?','Yes. Start with the beginner’s guide or take the three-question experience finder. You do not need to know Korean or share birth information to browse.'],
+['What does Preview studio mean?','Preview studios are sample listings that show how the marketplace will work. Their photos are illustrative. You can save them or create a preview plan on this device, but it is not a booking and nobody is contacted.'],
+['Does sending a request confirm my visit?','No. For real studios, you can request a preferred date and time. The status stays Requested until the host confirms it. There is no payment or immediate reservation in this flow.'],
+['How do I cancel?','Open Trips to cancel a request while it is still Requested. For a confirmed visit, contact the studio using its listing details to discuss changes and its terms. Preview plans can simply be removed from this device.'],
+['Will the reader speak my language?','Check the language format on each listing. Native or conversational support means the reader speaks that language. AI interpreter support is different and may make mistakes. Confirm the exact format with a real host before your visit.'],
+['Do I need my exact birth time?','An exact birth time helps a traditional four-pillars reading. If you do not know it, tell the reader rather than guessing. You do not need to enter birth details to use our experience finder or request a visit.'],
+['Where are my saved places and preview plans stored?','They are saved in this browser on this device. Clearing browser data removes them. Real booking requests are linked to your signed-in account.'],
+['How can my business join?','Open Become a host, sign in, and submit your studio and language details. The application is saved for review; submitting it does not automatically publish a listing.']
+];
+const Item=styled.details`background:white;border:1px solid var(--st-line);border-radius:16px;padding:0 20px;summary{cursor:pointer;min-height:64px;padding:22px 0;font-size:14px;font-weight:650;line-height:1.5;}p{padding:0 0 22px;color:var(--st-muted);font-size:14px;line-height:1.7;}`;
+export default function FAQ(){const[term,setTerm]=useState('');const filtered=questions.filter(q=>q.join(' ').toLowerCase().includes(term.toLowerCase()));return <Page><Wrap style={{maxWidth:760}}><Eyebrow>Good questions</Eyebrow><h1>Before you go.</h1><Lead>Practical answers for curious travelers.</Lead><Field style={{marginBottom:24}}>Search questions<input value={term} onChange={e=>setTerm(e.target.value)} placeholder="Try languages, birth time, or booking" type="search"/></Field><Stack>{filtered.map(([q,a])=><Item key={q}><summary>{q}</summary><p>{a}</p></Item>)}{!filtered.length&&<Lead>No matching questions. Try a different word.</Lead>}</Stack><InlineLink to="/support" style={{marginTop:24}}>More help →</InlineLink></Wrap></Page>}

@@ -784,7 +784,7 @@ export default function TodayFortune() {
   const handleShareFortune = () => {
     if (!fortune) return;
     
-    const shareText = `🍀 ${t('todayFortune')}\n\n${fortune.overall}\n\n💕 ${t('loveFortune')}: ${fortune.love}\n💼 ${t('businessFortune')}: ${fortune.business}\n🏥 ${t('healthFortune')}: ${fortune.health}\n💰 ${t('wealthFortune')}: ${fortune.wealth}\n\n🍀 ${t('luckyColor')}: ${fortune.luckyColor}\n🔢 ${t('luckyNumber')}: ${fortune.luckyNumber}\n🧭 ${t('luckyDirection')}: ${fortune.luckyDirection}\n🎯 ${t('todayAction')}: ${fortune.luckyAction}\n🍽️ ${t('todayFood')}: ${fortune.food}\n🔑 ${t('todayKeyword')}: ${fortune.keyword}\n💡 ${t('todayAdvice')}: ${fortune.advice}\n\n#${t('todayFortune')} #K-Saju #${t('fortune')}`;
+    const shareText = `🍀 ${t('todayFortune')}\n\n${fortune.overall}\n\n💕 ${t('loveFortune')}: ${fortune.love}\n💼 ${t('businessFortune')}: ${fortune.business}\n🏥 ${t('healthFortune')}: ${fortune.health}\n💰 ${t('wealthFortune')}: ${fortune.wealth}\n\n🍀 ${t('luckyColor')}: ${fortune.luckyColor}\n🔢 ${t('luckyNumber')}: ${fortune.luckyNumber}\n🧭 ${t('luckyDirection')}: ${fortune.luckyDirection}\n🎯 ${t('todayAction')}: ${fortune.luckyAction}\n🍽️ ${t('todayFood')}: ${fortune.food}\n🔑 ${t('todayKeyword')}: ${fortune.keyword}\n💡 ${t('todayAdvice')}: ${fortune.advice}\n\n#${t('todayFortune')} #SajuTeller #${t('fortune')}`;
     
     if (navigator.share) {
       // 네이티브 공유 기능 사용 (모바일)

@@ -1,9 +1,10 @@
-import { Navigate } from "react-router-dom";
+import { Navigate, useLocation } from "react-router-dom";
 import type { ReactElement } from "react";
 import { useEffect, useState } from "react";
 import { supabase } from "../supabase";
 
 export default function ProtectedRoute({ children }: { children: ReactElement }) {
+  const location=useLocation();
   const [loading, setLoading] = useState(true);
   const [isAuthed, setAuthed] = useState(false);
   useEffect(() => {
@@ -22,6 +23,6 @@ export default function ProtectedRoute({ children }: { children: ReactElement })
     };
   }, []);
   if (loading) return null;
-  if (!isAuthed) return <Navigate to="/sign-in" />;
+  if (!isAuthed) return <Navigate to={"/sign-in?next="+encodeURIComponent(location.pathname+location.search)} replace />;
   return children;
 }

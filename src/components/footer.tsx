@@ -1,34 +1,5 @@
-import { Link } from "react-router-dom";
-import { styled } from "styled-components";
-
-const FooterWrap = styled.footer`
-  margin-top: auto;
-  background: #0f0026;
-  color: #d8cde7;
-  border-top: 1px solid rgba(255,255,255,.08);
-`;
-const Inner = styled.div`
-  width: min(1296px, calc(100% - 48px));
-  margin: 0 auto;
-  padding: 40px 0;
-  display: grid;
-  grid-template-columns: 1.4fr 1fr;
-  gap: 32px;
-  align-items: end;
-  @media(max-width:720px){grid-template-columns:1fr;align-items:start;}
-`;
-const Brand = styled.div`
-  font-family:'Cinzel',serif;
-  font-weight:700;
-  letter-spacing:1px;
-  color:white;
-  font-size:18px;
-  margin-bottom:10px;
-`;
-const Copy = styled.p`margin:0;max-width:560px;font-size:13px;line-height:1.65;color:#bca9d3;`;
-const Links = styled.div`display:flex;justify-content:flex-end;gap:20px;flex-wrap:wrap;font-size:13px;@media(max-width:720px){justify-content:flex-start;}`;
-const FootLink = styled(Link)`display:inline-flex;align-items:center;min-height:44px;color:#eadcfb;&:hover{color:white;}`;
-
-export default function Footer(){
-  return <FooterWrap><Inner><div><Brand>K-SAJU · 사주</Brand><Copy>Discover Korean fortune-telling experiences, book with local readers and use multilingual interpretation when you need it.</Copy></div><Links><FootLink to="/intro">What is Saju?</FootLink><FootLink to="/support">Support</FootLink><FootLink to="/faq">FAQ</FootLink><FootLink to="/locations">Explore</FootLink></Links></Inner></FooterWrap>;
-}
+import { Link } from 'react-router-dom';
+import { styled } from 'styled-components';
+import { SparklesIcon } from '@heroicons/react/24/outline';
+const FooterShell=styled.footer`background:#efede8;border-top:1px solid var(--st-line);padding:38px 0 28px;color:var(--st-ink);.inner{width:min(1160px,calc(100% - 32px));margin:auto;} .top{display:flex;justify-content:space-between;gap:32px;}strong{font-size:24px;letter-spacing:-1px;font-weight:650;display:flex;align-items:center;gap:7px;svg{width:22px;}}p{font-size:12px;line-height:1.8;color:var(--st-muted);max-width:310px;margin:10px 0 0;}nav{display:grid;grid-template-columns:repeat(2,1fr);gap:0 28px;}a{font-size:12px;min-height:44px;display:flex;align-items:center;}small{display:block;font-size:10px;color:#8c8590;padding-top:22px;margin-top:25px;border-top:1px solid #dcd7df;line-height:1.7;}@media(max-width:650px){.top{flex-direction:column;gap:20px;}}`;
+export default function Footer(){return <FooterShell><div className="inner"><div className="top"><div><strong><SparklesIcon/>SajuTeller</strong><p>A little Seoul. A little soul.<br/>Korean Saju experiences for curious travelers.</p></div><nav aria-label="Footer navigation"><Link to="/experiences">Find an experience</Link><Link to="/learn">What is Saju?</Link><Link to="/host">Become a host</Link><Link to="/support">Help & support</Link><Link to="/saved">Saved experiences</Link><Link to="/trips">Your trips</Link></nav></div><small>© {new Date().getFullYear()} SajuTeller. Saju is a cultural and reflective experience, not a scientific prediction.</small></div></FooterShell>;}

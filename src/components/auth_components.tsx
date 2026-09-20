@@ -27,7 +27,7 @@ export const Card = styled.div`
 
 export const Logo = styled.div`display:flex;align-items:center;justify-content:center;margin-bottom:20px;`;
 const LogoLink = styled(Link)`display:flex;justify-content:center;align-items:baseline;gap:10px;margin:0 auto 26px;color:#0f0026;`;
-export function LogoImage(){return <LogoLink to="/"><span style={{fontFamily:'Cinzel,serif',fontSize:24,fontWeight:700,letterSpacing:'1px'}}>K-SAJU</span><span style={{fontFamily:'Song Myung,serif',fontSize:20,color:'#6210cc'}}>사주</span></LogoLink>;}
+export function LogoImage(){return <LogoLink to="/"><span style={{fontFamily:'Inter,sans-serif',fontSize:24,fontWeight:700,letterSpacing:'1px'}}>SajuTeller</span></LogoLink>;}
 
 export const Wrapper = styled.div`display:flex;flex-direction:column;gap:20px;width:100%;`;
 export const Title = styled.h1`font-family:'Cormorant Garamond','Noto Serif KR',serif;font-size:34px;font-weight:700;text-align:center;margin:0;color:#1f2937;`;

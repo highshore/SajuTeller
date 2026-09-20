@@ -12,3 +12,6 @@ dist
 .env.local
 .env.*
 .env
+
+# Supabase CLI cache
+supabase/.temp/

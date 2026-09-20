@@ -888,7 +888,7 @@ const NameCreation: React.FC = () => {
   };
 
   const handleShare = () => {
-    const shareText = `🎭 ${t('koreanNameCreation')} ${t('result')}\n\n📝 ${t('generatedName')}: ${result?.name_hangul} (${result?.romanization})\n${t('hanja')}: ${result?.name_hanja}\n${result?.meaning}\n\n#한국이름 #이름작명 #K-Saju`;
+    const shareText = `🎭 ${t('koreanNameCreation')} ${t('result')}\n\n📝 ${t('generatedName')}: ${result?.name_hangul} (${result?.romanization})\n${t('hanja')}: ${result?.name_hanja}\n${result?.meaning}\n\n#한국이름 #이름작명 #SajuTeller`;
     
     if (navigator.share) {
       navigator.share({
@@ -968,7 +968,7 @@ const NameCreation: React.FC = () => {
               <IDCardFooter>
                 <IDCardIssueDate $language={language}>{new Date().toLocaleDateString('ko-KR')}</IDCardIssueDate>
                 <IDCardAuthority>
-                  <IDCardAuthorityText $language={language}>K-Saju 작명센터</IDCardAuthorityText>
+                  <IDCardAuthorityText $language={language}>SajuTeller 작명센터</IDCardAuthorityText>
                 </IDCardAuthority>
               </IDCardFooter>
             </IDCard>

@@ -12,9 +12,11 @@
     "deploy": "vercel --prod --yes"
   },
   "dependencies": {
+    "@fontsource/cormorant-garamond": "5.3.0",
+    "@fontsource/inter": "5.3.0",
     "@heroicons/react": "^2.2.0",
     "@openai/agents": "^0.1.5",
-    "@supabase/supabase-js": "^2.47.10",
+    "@supabase/supabase-js": "2.57.4",
     "lottie-react": "^2.4.1",
     "openai": "^5.23.1",
     "react": "^19.1.1",

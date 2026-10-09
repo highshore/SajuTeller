@@ -16,7 +16,7 @@ const AdminBroadcast = lazy(() => import("./routes/admin-broadcast"));
 import Support from "./routes/support";
 import FAQ from "./routes/faq";
 const LiveTranslation = lazy(() => import("./routes/live_translation.tsx"));
-const Locations = lazy(() => import("./routes/locations"));
+const Locations = lazy(() => import("./routes/reading-map"));
 import BusinessDetail from "./routes/experience";
 import Booking from "./routes/request-visit";
 
@@ -28,6 +28,11 @@ import Match from "./routes/match";
 import Saved from "./routes/saved";
 import Trips from "./routes/trips";
 import Host from "./routes/host";
+import Search from "./routes/search";
+import Studio from "./routes/studio";
+import Onboarding from "./routes/onboarding";
+import Legal from "./routes/legal";
+import AuthFlow from "./components/auth-flow";
 
 const router = createBrowserRouter([
   {
@@ -35,10 +40,22 @@ const router = createBrowserRouter([
     element: <Layout />,
     children: [
       { path: "", element: <Home /> },
+      { path: "/sign-in", element: <Login /> },
+      { path: "/sign-up", element: <CreateAccount /> },
+      { path: "/sign_in", element: <Login /> },
+      { path: "/sign_up", element: <CreateAccount /> },
+      { path: "/auth-callback", element: <AuthCallback /> },
+      { path: "/kakao-callback", element: <AuthCallback /> },
+
       { path: "intro", element: <Navigate to="/learn" replace /> },
       { path: "learn", element: <Learn /> },
       { path: "learn/:slug", element: <Learn /> },
       { path: "experiences", element: <Experiences /> },
+      { path: "search", element: <Search /> },
+      { path: "studio", element: <Studio /> },
+      { path: "onboarding", element: <ProtectedRoute><Onboarding /></ProtectedRoute> },
+      { path: "reset-password", element: <ProtectedRoute><AuthFlow initialMode="reset"/></ProtectedRoute> },
+      ...["privacy","terms","refund-policy"].map(path=>({path,element:<Legal/>})),
       { path: "find-my-reading", element: <Match /> },
       { path: "saved", element: <Saved /> },
       { path: "trips", element: <Trips /> },
@@ -58,12 +75,6 @@ const router = createBrowserRouter([
       { path: "business/:id/payment", element: <Booking /> },
     ],
   },
-  { path: "/sign-in", element: <Login /> },
-  { path: "/sign-up", element: <CreateAccount /> },
-  { path: "/sign_in", element: <Login /> },
-  { path: "/sign_up", element: <CreateAccount /> },
-  { path: "/auth-callback", element: <AuthCallback /> },
-  { path: "/kakao-callback", element: <AuthCallback /> },
   { path: "*", element: <NotFound /> },
 ]);
 
@@ -71,11 +82,16 @@ const GlobalStyles = createGlobalStyle`
   ${reset};
 
   :root {
-    --st-paper:#faf9f6;
-    --st-ink:#252131;
-    --st-muted:#686071;
-    --st-line:#e4dfe7;
-    --st-lilac:#e9e2f4;
+    --st-paper:#0b0610;
+    --st-surface:#130a1b;
+    --st-elevated:#1c1027;
+    --st-accent:#4b2d5a;
+    --st-accent-line:#6c447c;
+    --st-gold:#c9a76a;
+    --st-ink:#f4eee7;
+    --st-muted:#b8acbf;
+    --st-line:#2b1a33;
+    --st-lilac:#4b2d5a;
     --ks-header-height: 72px;
     --ks-midnight: #0F0026;
     --ks-night: #180A2E;
@@ -84,9 +100,9 @@ const GlobalStyles = createGlobalStyle`
     --ks-gold: #D4AF37;
     --ks-bronze: #8B7355;
     --ks-parchment: #F8F6F0;
-    --ks-paper: #faf9f6;
+    --ks-paper: var(--st-paper);
     --ks-cocoa: #2C1810;
-    --ks-ink: #1F2937;
+    --ks-ink: var(--st-ink);
     --ks-muted: #6B7280;
     --ks-line: #E8E0D5;
     --ks-radius-sm: 12px;
@@ -114,6 +130,7 @@ const GlobalStyles = createGlobalStyle`
   a { color: inherit; text-decoration: none; }
   button, input, textarea, select { font: inherit; }
   button { -webkit-tap-highlight-color: transparent; }
+  input,select,textarea { color-scheme:dark; }
   ::selection { background: rgba(98, 16, 204, 0.18); }
   h1, h2, h3, h4 { text-wrap: balance; }
   p { text-wrap: pretty; }

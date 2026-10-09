@@ -1,3 +1,5 @@
+import LocaleSelector from './locale-selector';
+import { useI18n } from '../i18n/i18n';
 import { Link, useLocation } from 'react-router-dom';
 import { styled } from 'styled-components';
 import { UserCircleIcon } from '@heroicons/react/24/outline';
@@ -14,7 +16,8 @@ const Header = styled.header`
   @container saju (max-width:850px){nav{display:none;}.inner{gap:12px;}.actions{gap:12px;}.signin{padding:8px 12px;}.brand{font-size:24px;}}
 `;
 export default function GNB() {
+  const { t } = useI18n();
   const { pathname } = useLocation();
   const { account } = useAccount();
-  return <Header data-global-header><div className="inner"><Link className="brand" to="/" aria-label="SajuTeller home">SAJUTELLER</Link><nav aria-label="Desktop navigation">{navigation.map(item => <Link to={item.to} key={item.to} aria-current={item.matches(pathname) ? 'page' : undefined}>{item.label}</Link>)}</nav><div className="actions"><span className="locale" aria-label="Site language: English">EN</span><Link className="signin" to={account ? '/profile' : '/sign-in'}>{account ? <><UserCircleIcon/><span>My profile</span></> : 'Sign in'}</Link></div></div></Header>;
+  return <Header data-global-header><div className="inner"><Link className="brand" to="/" aria-label="SajuTeller home">SAJUTELLER</Link><nav aria-label="Desktop navigation">{navigation.map(item => <Link to={item.to} key={item.to} aria-current={item.matches(pathname) ? 'page' : undefined}>{t(item.label)}</Link>)}</nav><div className="actions"><LocaleSelector/><Link className="signin" to={account ? '/profile' : '/sign-in'}>{account ? <><UserCircleIcon/><span>{t("My profile")}</span></> : t('Sign in')}</Link></div></div></Header>;
 }

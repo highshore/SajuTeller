@@ -1,3 +1,4 @@
+import { useI18n } from '../i18n/i18n';
 import { Suspense, useEffect } from "react";
 import { Outlet, useLocation } from "react-router-dom";
 import { styled } from "styled-components";
@@ -28,9 +29,11 @@ const Main = styled.main`
   background: var(--ks-paper);
 `;
 
-export default function Layout() {
-  const { pathname } = useLocation();
+export default function Layout() {const { t } = useI18n();
+  const { pathname, search } = useLocation();
   const policy = siteLayout(pathname);
+  const chatRoom = pathname === "/messages" && new URLSearchParams(search).has("channel");
+  if (chatRoom) { policy.header = false; policy.footer = false; policy.bottomNav = false; }
   useEffect(() => { window.scrollTo({ top:0, left:0, behavior:"instant" }); }, [pathname]);
-  return <Shell data-app-shell $mobileDock={policy.bottomNav} $wide={policy.wide}><a href="#main-content" className="skip-link">Skip to content</a>{policy.header && <GNB/>}<Main id="main-content"><Suspense fallback={<p role="status" style={{padding:32}}>Loading your reading…</p>}><Outlet/></Suspense></Main>{policy.footer && <Footer compact={policy.compactFooter}/>}<MobileNavigation/></Shell>;
+  return <Shell data-app-shell $mobileDock={policy.bottomNav} $wide={policy.wide}><a href="#main-content" className="skip-link">{t("Skip to content")}</a>{policy.header && <GNB/>}<Main id="main-content"><Suspense fallback={<p role="status" style={{padding:32}}>{t("Loading your reading…")}</p>}><Outlet/></Suspense></Main>{policy.footer && <Footer compact={policy.compactFooter}/>}{policy.bottomNav&&<MobileNavigation/>}</Shell>;
 }

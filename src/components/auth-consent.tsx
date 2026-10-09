@@ -1,3 +1,4 @@
+import { useI18n } from '../i18n/i18n';
 import { useEffect, useRef, useState } from 'react';
 import { ArrowLeftIcon, ShieldCheckIcon } from '@heroicons/react/24/outline';
 import { styled } from 'styled-components';
@@ -23,7 +24,7 @@ const agreements = [
 ] as const;
 type DocumentPath = typeof agreements[number]['path'];
 
-export default function AuthConsent({ busy, onAccept, onCancel }: { busy: boolean; onAccept: () => void; onCancel: () => void }) {
+export default function AuthConsent({ busy, onAccept, onCancel }: { busy: boolean; onAccept: () => void; onCancel: () => void }) {const { t } = useI18n();
   const dialog = useRef<HTMLDialogElement>(null);
   const [view, setView] = useState<DocumentPath | null>(null);
   const [checked, setChecked] = useState<string[]>([]);
@@ -37,22 +38,22 @@ export default function AuthConsent({ busy, onAccept, onCancel }: { busy: boolea
   return <Dialog ref={dialog} aria-labelledby="consent-title" aria-busy={busy}
     onCancel={event => { event.preventDefault(); if (!busy) { if (view) setView(null); else onCancel(); } }}>
     {view ? <>
-      <button className="document-back" type="button" onClick={() => setView(null)}><ArrowLeftIcon/>Back to agreements</button>
-      <h2 id="consent-title">{policies[view].title}</h2>
-      <div className="document" tabIndex={0} aria-label={`Scrollable ${policies[view].title}`}>
-        {policies[view].sections.map(([title, body]) => <section key={title}><h3>{title}</h3><p>{body}</p></section>)}
+      <button className="document-back" type="button" onClick={() => setView(null)}><ArrowLeftIcon/>{t("Back to agreements")}</button>
+      <h2 id="consent-title">{t(policies[view].title)}</h2>
+      <div className="document" tabIndex={0} aria-label={t(policies[view].title)}>
+        {policies[view].sections.map(([title, body]) => <section key={title}><h3>{t(title)}</h3><p>{t(body)}</p></section>)}
       </div>
-      <button className="primary" type="button" onClick={() => setView(null)}>Done reviewing</button>
+      <button className="primary" type="button" onClick={() => setView(null)}>{t("Done reviewing")}</button>
     </> : <>
       <ShieldCheckIcon className="icon"/>
-      <h2 id="consent-title">Before we get started</h2>
-      <p>Please review the policies before creating your SajuTeller account.</p>
+      <h2 id="consent-title">{t("Before we get started")}</h2>
+      <p>{t("Please review the policies before creating your SajuTeller account.")}</p>
       <div className="agreements">{agreements.map(({ path, label }) => <div className="row" key={path}>
-        <label><input type="checkbox" disabled={busy} checked={checked.includes(path)} onChange={e => setChecked(values => e.target.checked ? [...values, path] : values.filter(value => value !== path))}/><span>{label}<br/><small>{path === '/refund-policy' ? 'I have read this policy' : 'Required agreement'}</small></span></label>
-        <button type="button" className="read" disabled={busy} aria-label={`Read ${label}`} onClick={() => setView(path)}>Read</button>
+        <label><input type="checkbox" disabled={busy} checked={checked.includes(path)} onChange={e => setChecked(values => e.target.checked ? [...values, path] : values.filter(value => value !== path))}/><span>{t(label)}<br/><small>{path === '/refund-policy' ? t("I have read this policy") : t("Required agreement")}</small></span></label>
+        <button type="button" className="read" disabled={busy} aria-label={`${t('Read')} ${t(label)}`} onClick={() => setView(path)}>{t("Read")}</button>
       </div>)}</div>
-      <button className="primary" type="button" disabled={busy || checked.length !== agreements.length} onClick={onAccept}>{busy ? 'Creating your account…' : 'Agree and continue'}</button>
-      <button className="cancel" type="button" disabled={busy} onClick={onCancel}>Not now</button>
+      <button className="primary" type="button" disabled={busy || checked.length !== agreements.length} onClick={onAccept}>{busy ? t("Creating your account…") : t("Agree and continue")}</button>
+      <button className="cancel" type="button" disabled={busy} onClick={onCancel}>{t("Not now")}</button>
     </>}
   </Dialog>;
 }

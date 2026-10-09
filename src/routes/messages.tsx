@@ -1,78 +1,38 @@
-import { styled } from "styled-components";
-import { useEffect, useMemo, useState } from "react";
-import { StreamChat } from "stream-chat";
-import { Chat, Channel, MessageList, MessageInput, Window, Thread, ChannelList, LoadingIndicator, useChannelStateContext } from "stream-chat-react";
-import "stream-chat-react/dist/css/v2/index.css";
-import { supabase } from "../supabase";
-import { MagnifyingGlassIcon, PhoneIcon, EllipsisHorizontalIcon } from "@heroicons/react/24/outline";
-
-const Page = styled.div`
-  width:min(1296px,calc(100% - 48px));
-  margin:40px auto 72px;
-`;
-const PageTitle=styled.h1`font-family:'Cormorant Garamond',serif;font-size:42px;margin:0 0 22px;color:#1f2937;`;
-const Wrapper = styled.div`
-  height:650px;
-  display:grid;
-  grid-template-columns:390px 1fr;
-  background:#fff;
-  border:1px solid #e8e0d5;
-  border-radius:22px;
-  overflow:hidden;
-  box-shadow:0 16px 44px rgba(15,0,38,.08);
-  .str-chat{height:100%;font-family:Inter,'Noto Sans KR',sans-serif;}
-  .str-chat__channel-list{background:#fffdf8;}
-  .str-chat__channel-preview-messenger--active{background:#f1e8fb!important;border-radius:12px;}
-  .str-chat__message-input{border-top:1px solid #e8e0d5;background:#fffdf8;}
-  .str-chat__message-text-inner{border-radius:16px!important;}
-  @container saju (max-width:850px){grid-template-columns:300px 1fr;}
-  @container saju (max-width:680px){grid-template-columns:1fr;grid-template-rows:220px minmax(420px,1fr);height:800px;}
-`;
-const Sidebar=styled.aside`border-right:1px solid #e8e0d5;min-width:0;overflow:hidden;background:#fffdf8;@container saju (max-width:680px){border-right:0;border-bottom:1px solid #e8e0d5;}`;
-const Panel=styled.section`min-width:0;overflow:hidden;background:white;`;
-const SidebarInner=styled.div`display:flex;flex-direction:column;height:100%;`;
-const SidebarHeader=styled.div`height:72px;padding:0 22px;display:flex;align-items:center;border-bottom:1px solid #e8e0d5;`;
-const SidebarTitle=styled.h2`font-family:'Cormorant Garamond',serif;font-size:25px;margin:0;`;
-const SidebarScroll=styled.div`flex:1;overflow:auto;padding:8px;`;
-const PanelHeader=styled.div`height:72px;border-bottom:1px solid #e8e0d5;display:flex;align-items:center;justify-content:space-between;padding:0 22px;background:#fffdf8;`;
-const PanelTitle=styled.div`font-family:'Cormorant Garamond',serif;font-size:21px;font-weight:700;`;
-const IconBtn=styled.button`width:38px;height:38px;border-radius:12px;border:1px solid #e8e0d5;background:#fff;color:#1f2937;display:inline-flex;align-items:center;justify-content:center;cursor:pointer;&:hover{background:#f8f6f0;}`;
-
-function CustomChannelHeader(){
- const {channel}=useChannelStateContext();
- const channelData=channel?.data as Record<string,unknown>|undefined;
- const title=(channelData?.name as string|undefined)||channel?.id||'Direct Message';
- const membersCount=channel?Object.keys(channel.state.members).length:0;
- return <PanelHeader><div><PanelTitle>{title}</PanelTitle>{membersCount>0&&<span style={{color:'#8b7355',fontSize:12}}>· {membersCount} members</span>}</div><div style={{display:'flex',gap:8}}><IconBtn aria-label="Search"><MagnifyingGlassIcon width={18}/></IconBtn><IconBtn aria-label="Call"><PhoneIcon width={18}/></IconBtn><IconBtn aria-label="More"><EllipsisHorizontalIcon width={18}/></IconBtn></div></PanelHeader>;
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { Link, useSearchParams } from 'react-router-dom';
+import { StreamChat, type Channel as StreamChannel } from 'stream-chat';
+import { Chat, Channel, MessageList, MessageInput, Window, Streami18n } from 'stream-chat-react';
+import 'stream-chat-react/dist/css/v2/index.css';
+import { ArrowLeftIcon, ChatBubbleLeftRightIcon, ChevronRightIcon } from '@heroicons/react/24/outline';
+import { styled } from 'styled-components';
+import { supabase } from '../supabase';
+import { useI18n } from '../i18n/i18n';
+import { Button, ButtonLink, Notice, Page, Wrap } from '../product/ui';
+type ChatSession={apiKey:string;token:string;user:{id:string;name:string};channelType:string;channelId?:string};
+class ChatError extends Error { code:string;constructor(code:string){super(code);this.code=code;} }
+async function session(studioId?:string):Promise<ChatSession>{
+ const{data,error}=await supabase.functions.invoke('business-chat',{body:studioId?{studioId}:{}});
+ if(error){let code='chat_unavailable';try{const payload=await error.context?.json();code=payload?.code||code;}catch{/* Transport errors use the generic state. */}throw new ChatError(code);}
+ return data as ChatSession;
 }
-
+const Inbox=styled.div`display:grid;gap:12px;.conversation{width:100%;display:flex;align-items:center;gap:14px;background:var(--st-surface);border:1px solid var(--st-line);border-radius:18px;padding:16px;text-align:left;color:var(--st-ink);cursor:pointer;}.avatar{width:48px;height:48px;display:grid;place-items:center;background:var(--st-accent);border-radius:50%;color:var(--st-gold);flex:none;font-size:21px;}.copy{flex:1;min-width:0;}.copy strong{font-size:14px;display:block;margin-bottom:6px;}.copy p{font-size:12px;color:var(--st-muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}.conversation svg{width:18px;flex:none;}.unread{width:8px;height:8px;background:var(--st-gold);border-radius:50%;}.empty{padding:40px 0;display:grid;gap:20px;text-align:center;justify-items:center;}.empty>svg{width:52px;height:52px;color:var(--st-gold);}.empty h2{font-size:24px;}.empty p{font-size:14px;color:var(--st-muted);}`;
+const Room=styled.div`height:100dvh;display:flex;flex-direction:column;min-width:0;overflow:hidden;background:var(--st-paper);.room-header{height:68px;flex:none;display:flex;align-items:center;gap:14px;padding:12px 16px;border-bottom:1px solid var(--st-line);}.room-header a{width:44px;height:44px;border-radius:50%;background:var(--st-elevated);display:grid;place-items:center;}.room-header svg{width:21px;}.room-header h1{font-size:16px;font-weight:600;}.room-header p{font-size:11px;color:var(--st-muted);margin-top:5px;}.chat-container{flex:1;min-height:0;overflow:hidden;}.str-chat{height:100%;font-family:Inter,system-ui,sans-serif;--str-chat__primary-color:var(--st-gold);--str-chat__active-primary-color:var(--st-gold);--str-chat__background-color:var(--st-paper);--str-chat__secondary-background-color:var(--st-surface);--str-chat__primary-surface-color:var(--st-accent);--str-chat__text-color:var(--st-ink);--str-chat__secondary-text-color:var(--st-muted);--str-chat__message-bubble-background-color:var(--st-elevated);--str-chat__own-message-bubble-background-color:var(--st-accent);}.str-chat__channel,.str-chat__container{height:100%;min-width:0;}.str-chat__message-input{padding-bottom:max(12px,env(safe-area-inset-bottom));}.str-chat__message-list{padding-inline:12px;}`;
 export default function Messages(){
- const [client,setClient]=useState<StreamChat|null>(null);
- const [loading,setLoading]=useState(true);
- const filters=useMemo(()=>({type:{$in:['messaging']}}),[]);
- const sort=useMemo(()=>({last_message_at:-1} as const),[]);
- const options=useMemo(()=>({limit:30,state:true,watch:true}),[]);
- useEffect(()=>{
-  let mounted=true;
-  let connected:StreamChat|null=null;
-  (async()=>{
-   try{
-    const {data}=await supabase.auth.getSession();
-    const accessToken=data.session?.access_token;
-    if(!accessToken) throw new Error('Not authenticated');
-    const apiKey=import.meta.env.VITE_STREAM_API_KEY as string;
-    if(!apiKey) throw new Error('Missing VITE_STREAM_API_KEY');
-    const {data:fnRes,error:fnErr}=await supabase.functions.invoke('stream-token',{method:'GET',headers:{Authorization:`Bearer ${accessToken}`}});
-    if(fnErr) throw fnErr;
-    const {token,user}=fnRes as any;
-    const c=StreamChat.getInstance(apiKey);connected=c;
-    await c.connectUser({id:user.id,name:user.name,image:user.image},token);
-    if(mounted)setClient(c);
-   }catch(e){console.error('Failed to init Stream chat:',e);}finally{if(mounted)setLoading(false);}
-  })();
-  return()=>{mounted=false;connected?.disconnectUser();};
- },[]);
- if(loading)return <div style={{minHeight:500,display:'flex',alignItems:'center',justifyContent:'center'}}><LoadingIndicator size={28}/></div>;
- if(!client)return <div style={{minHeight:500,display:'flex',alignItems:'center',justifyContent:'center',color:'#6b7280'}}>Unable to initialize chat.</div>;
- return <Page><PageTitle>Messages</PageTitle><Wrapper><Chat client={client} theme="str-chat__theme-light"><Sidebar><SidebarInner><SidebarHeader><SidebarTitle>Conversations</SidebarTitle></SidebarHeader><SidebarScroll><ChannelList filters={filters} sort={sort} options={options}/></SidebarScroll></SidebarInner></Sidebar><Panel><Channel><Window><CustomChannelHeader/><MessageList/><MessageInput focus/></Window><Thread/></Channel></Panel></Chat></Wrapper></Page>;
+ const{t,language}=useI18n();const[params,setParams]=useSearchParams();const studioId=params.get('studio')||undefined;const channelId=params.get('channel');const[client,setClient]=useState<StreamChat|null>(null);const[channels,setChannels]=useState<StreamChannel[]>([]);const[loading,setLoading]=useState(true);const[error,setError]=useState('');const[retry,setRetry]=useState(0);
+ const updateParams=useRef(setParams);updateParams.current=setParams;
+ const i18n=useMemo(()=>new Streami18n({language:language==='zh'?'zh':language}),[language]);
+ useEffect(()=>{let active=true;let connection:StreamChat|undefined;let unsubscribe:(()=>void)|undefined;
+ setLoading(true);setError('');setClient(null);
+ void(async()=>{try{const result=await session(studioId);const c=new StreamChat(result.apiKey);connection=c;await c.connectUser(result.user,async()=>{const refreshed=await session();if(refreshed.user.id!==result.user.id)throw new Error('Session changed');return refreshed.token;});if(!active){await c.disconnectUser();return;}
+ const load=async()=>{const list=await c.queryChannels({type:result.channelType,members:{$in:[result.user.id]}},[{last_message_at:-1}],{limit:30,state:true,watch:true});if(active)setChannels(list);};await load();if(!active)return;setClient(c);
+ if(result.channelId)updateParams.current({channel:result.channelId,...(studioId?{studio:studioId}:{})},{replace:true});
+ const sub=c.on(e=>{if(['message.new','notification.message_new','notification.added_to_channel','notification.removed_from_channel'].includes(e.type))void load().catch(()=>{if(active)setError('chat_unavailable');});});unsubscribe=()=>sub.unsubscribe();
+ }catch(e){if(active)setError(e instanceof ChatError?e.code:'chat_unavailable');}finally{if(active)setLoading(false);}})();
+ return()=>{active=false;unsubscribe?.();void connection?.disconnectUser();};
+ // Reconnect when the business changes; room selection alone reuses the connection.
+ },[retry,studioId]);
+ const current=channels.find(c=>c.id===channelId);
+ if(current&&client){const name=String((current.data as Record<string,unknown>)?.name||t('Business conversation'));return <Room><header className="room-header"><Link to="/messages" aria-label={t('Back to messages')}><ArrowLeftIcon/></Link><div><h1>{name}</h1><p>{t('Business conversation')}</p></div></header><div className="chat-container"><Chat client={client} i18nInstance={i18n} theme="str-chat__theme-dark"><Channel channel={current}><Window><MessageList messageActions={['react','flag','quote']}/><MessageInput focus/></Window></Channel></Chat></div></Room>;}
+ const detail=error==='chat_not_configured'?'Business chat is being prepared. Please try again later.':error==='business_unavailable'?'This business is not receiving messages yet.':error==='preview_studio'?'Preview studios cannot receive messages. Choose a live studio when available.':'We couldn’t load your messages. Please try again.';
+ return <Page><Wrap><h1>{t('Messages')}</h1>{loading?<p role="status">{t('Loading…')}</p>:error?<><Notice role="alert">{t(detail)}</Notice><Button onClick={()=>setRetry(v=>v+1)}>{t('Try again')}</Button><ButtonLink to="/experiences" $secondary style={{marginTop:12}}>{t('Explore experiences')}</ButtonLink></>:<Inbox>{channels.length?channels.map(c=><button className="conversation" key={c.cid} onClick={()=>setParams({channel:c.id!})}><span className="avatar">{String((c.data as Record<string,unknown>)?.name||'S')[0]}</span><div className="copy"><strong>{String((c.data as Record<string,unknown>)?.name||t('Business conversation'))}</strong><p>{c.state.messages.at(-1)?.text||t('Chat with the business')}</p></div>{c.countUnread()>0&&<span className="unread" aria-label={t('Unread messages')}/>}<ChevronRightIcon/></button>):<div className="empty"><ChatBubbleLeftRightIcon/><h2>{t('No conversations yet')}</h2><p>{t('Open an experience and choose “Chat with the business” to ask a question.')}</p><ButtonLink to="/experiences">{t('Explore experiences')}</ButtonLink></div>}</Inbox>}</Wrap></Page>;
 }

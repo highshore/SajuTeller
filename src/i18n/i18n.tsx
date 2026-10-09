@@ -1,3 +1,4 @@
+import { productTranslations } from './product-translations';
 import {
   createContext,
   useCallback,
@@ -7,7 +8,7 @@ import {
   useState,
 } from "react";
 
-type Language = "en" | "ko" | "zh" | "ja" | "es";
+export type Language = "en" | "ko" | "zh" | "ja" | "es";
 
 type Translations = Record<string, string>;
 
@@ -1570,11 +1571,14 @@ type I18nContextValue = {
   availableLanguages: Language[];
 };
 
+const sourceKeys = Object.fromEntries(Object.entries(TRANSLATIONS.en).map(([key,value])=>[value,key]));
+
 const I18nContext = createContext<I18nContextValue | null>(null);
 
 export function I18nProvider({ children }: { children: React.ReactNode }) {
   const [language, setLanguageState] = useState<Language>(() => {
-    const stored = localStorage.getItem("app.lang") as Language | null;
+    let stored: Language | null = null;
+    try { stored = localStorage.getItem("app.lang") as Language | null; } catch { /* Private browsing may disable storage. */ }
     if (stored && ["en", "ko", "zh", "ja", "es"].includes(stored))
       return stored as Language;
     const nav = navigator.language?.toLowerCase() ?? "en";
@@ -1586,7 +1590,8 @@ export function I18nProvider({ children }: { children: React.ReactNode }) {
   });
 
   useEffect(() => {
-    localStorage.setItem("app.lang", language);
+    try { localStorage.setItem("app.lang", language); } catch { /* Keep the in-memory preference. */ }
+    document.documentElement.lang = language === "zh" ? "zh-Hans" : language;
   }, [language]);
 
   const setLanguage = useCallback((lang: Language) => {
@@ -1596,7 +1601,7 @@ export function I18nProvider({ children }: { children: React.ReactNode }) {
   const t = useCallback(
     (key: string) => {
       const table = TRANSLATIONS[language] ?? TRANSLATIONS.en;
-      return table[key] ?? key;
+      return productTranslations[language]?.[key] ?? table[key] ?? table[sourceKeys[key]] ?? TRANSLATIONS.en[key] ?? key;
     },
     [language]
   );

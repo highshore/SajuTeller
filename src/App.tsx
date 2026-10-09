@@ -70,6 +70,7 @@ const router = createBrowserRouter([
       { path: "map", element: <Locations /> },
       { path: "today-fortune", element: <TodayFortune /> },
       { path: "name-creation", element: <NameCreation /> },
+      { path: "business", element: <Navigate to="/experiences" replace /> },
       { path: "business/:id", element: <BusinessDetail /> },
       { path: "business/:id/booking", element: <Booking /> },
       { path: "business/:id/payment", element: <Booking /> },
@@ -114,8 +115,8 @@ const GlobalStyles = createGlobalStyle`
   }
 
   * { box-sizing: border-box; }
-  .skip-link{position:fixed;top:-60px;left:max(16px,calc((100% - var(--st-app-width))/2 + 16px));z-index:1000;padding:12px 18px;background:var(--st-gold);color:var(--st-paper);border-radius:10px;}
-  .skip-link:focus{top:8px;}
+  .skip-link{clip-path:inset(50%);position:fixed;top:-60px;left:max(16px,calc((100% - var(--st-app-width))/2 + 16px));z-index:1000;padding:12px 18px;background:var(--st-gold);color:var(--st-paper);border-radius:10px;}
+  .skip-link:focus{top:8px;clip-path:none;}
   img, video { max-width:100%; height:auto; }
   input, select, textarea { max-width:100%; min-width:0; }
   :focus-visible { outline:2px solid #a78bfa; outline-offset:3px; }

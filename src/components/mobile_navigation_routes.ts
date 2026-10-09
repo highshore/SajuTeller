@@ -1,1 +1,2 @@
-export function hasMobileNavigation(path:string){return !/^\/(business|map|locations|live-translation|messages)(\/|$)/.test(path);}
+import { siteLayout } from './navigation';
+export function hasMobileNavigation(path: string) { return siteLayout(path).bottomNav; }

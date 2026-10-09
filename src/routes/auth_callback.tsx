@@ -1,71 +1,7 @@
-import { useEffect, useRef } from "react";
-import { useNavigate } from "react-router-dom";
-import { safeReturn } from "../product/plans";
-import { supabase } from "../supabase";
-
-function GlobalLoading() {
-  return <div style={{ display: "flex", minHeight: "100vh", alignItems: "center", justifyContent: "center" }}>Processing sign-in…</div>;
-}
-
-export default function AuthCallback() {
-  const navigate = useNavigate();
-  const hasExchangedRef = useRef(false);
-
-  useEffect(() => {
-    if (hasExchangedRef.current) return;
-    hasExchangedRef.current = true;
-    const run = async () => {
-      try {
-        // If a session already exists, skip handling
-        const existing = await supabase.auth.getSession();
-        if (existing.data.session) {
-          const destination = safeReturn(localStorage.getItem("returnUrl"));
-          localStorage.removeItem("returnUrl");
-          navigate(destination, { replace: true });
-          return;
-        }
-
-        const url = new URL(window.location.href);
-        const hasCode = !!url.searchParams.get("code");
-        const fragment = window.location.hash.startsWith("#") ? window.location.hash.slice(1) : window.location.hash;
-        const hashParams = new URLSearchParams(fragment);
-        const accessToken = hashParams.get("access_token");
-        const refreshToken = hashParams.get("refresh_token");
-
-        if (hasCode) {
-          const { error } = await supabase.auth.exchangeCodeForSession(window.location.href);
-          if (error) throw error;
-        } else if (accessToken && refreshToken) {
-          const { error } = await supabase.auth.setSession({
-            access_token: accessToken,
-            refresh_token: refreshToken,
-          });
-          if (error) throw error;
-          // Clean up URL fragment after storing session
-          window.history.replaceState({}, document.title, url.origin + url.pathname + url.search);
-        } else {
-          throw new Error("No code or tokens present in callback URL");
-        }
-
-        const returnUrl = localStorage.getItem("returnUrl");
-        if (returnUrl) {
-          localStorage.removeItem("returnUrl");
-          navigate(safeReturn(returnUrl));
-        } else {
-          navigate(safeReturn(localStorage.getItem("returnUrl")));
-        }
-      } catch (e) {
-        console.error("Sign-in could not be completed", e instanceof Error ? e.message : "Unknown error");
-        await supabase.auth.signOut().catch(() => {});
-        navigate("/sign_in");
-      }
-    };
-
-    run();
-  }, [navigate]);
-
-  return <GlobalLoading />;
-}
-
-
-
+import { useEffect, useRef, useState } from 'react';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
+import { supabase } from '../supabase';
+import { afterSignIn } from '../product/auth';
+import { safeReturn } from '../product/plans';
+import { Page, Wrap, Notice } from '../product/ui';
+export default function AuthCallback(){const navigate=useNavigate();const[params]=useSearchParams();const started=useRef(false);const[error,setError]=useState('');useEffect(()=>{if(started.current)return;started.current=true;void(async()=>{try{if(params.get('error'))throw new Error(params.get('error_description')||'This sign-in link is no longer valid.');const next=safeReturn(params.get('next')||sessionStorage.getItem('sajuteller-return'));const{data,error}=await supabase.auth.getSession();if(error)throw error;if(!data.session)throw new Error('This link has expired or could not be verified. Request a new link and open it in the same browser.');sessionStorage.removeItem('sajuteller-return');window.history.replaceState({},'',window.location.pathname);navigate(next==='/reset-password'?next:await afterSignIn(next),{replace:true});}catch(e){setError(e instanceof Error?e.message:'Sign-in could not be completed.');}})();},[navigate,params]);return <Page><Wrap style={{maxWidth:440}}>{error?<Notice role="alert">{error}<br/><Link to="/sign-in">Return to sign in</Link></Notice>:<p role="status">Confirming your account…</p>}</Wrap></Page>;}

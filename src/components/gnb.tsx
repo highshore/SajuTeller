@@ -1,13 +1,20 @@
-import { useEffect, useState } from 'react';
-import { Link, NavLink, useLocation } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import { styled } from 'styled-components';
-import { Bars3Icon, XMarkIcon, MagnifyingGlassIcon, SparklesIcon, HeartIcon, UserCircleIcon } from '@heroicons/react/24/outline';
+import { UserCircleIcon } from '@heroicons/react/24/outline';
 import { useAccount } from '../product/data';
-import { useI18n } from '../i18n/i18n';
-const Header=styled.header`position:sticky;top:0;z-index:100;height:var(--ks-header-height);background:#faf9f6f5;backdrop-filter:blur(18px);border-bottom:1px solid var(--st-line);`;
-const Inner=styled.div`width:min(1160px,calc(100% - 40px));margin:auto;height:100%;display:flex;align-items:center;justify-content:space-between;gap:20px;@media(max-width:600px){width:calc(100% - 32px);gap:10px;}`;
-const Brand=styled(Link)`display:inline-flex;align-items:center;gap:7px;font-size:23px;font-weight:750;letter-spacing:-1.3px;color:#252131;svg{width:23px;stroke-width:1.6;color:#79608b;}b{font-weight:450;}@media(max-width:360px){font-size:21px;}`;
-const Nav=styled.nav`display:flex;gap:28px;align-items:center;a{font-size:12px;color:var(--st-muted);padding:10px 0;}a.active{color:var(--st-ink);font-weight:700;}@media(max-width:850px){display:none;}`;
-const Actions=styled.div`display:flex;align-items:center;gap:6px;a,button{display:grid;place-items:center;width:44px;height:44px;border:0;border-radius:50%;background:transparent;color:var(--st-ink);cursor:pointer;}svg{width:21px;}a:hover,button:hover{background:#ece8f0;}.wide{display:none;}@media(min-width:851px){.wide{display:grid;}}`;
-const Menu=styled.nav`position:absolute;left:0;right:0;top:var(--ks-header-height);max-height:calc(100dvh - var(--ks-header-height));overflow:auto;padding:20px max(20px,calc((100vw - 1160px)/2));background:#faf9f6;border-bottom:1px solid var(--st-line);box-shadow:0 15px 30px #00000008;display:grid;gap:4px;a{font-size:15px;padding:16px 4px;border-bottom:1px solid var(--st-line);}label{display:flex;align-items:center;justify-content:space-between;font-size:12px;color:var(--st-muted);padding:18px 0;}select{padding:10px;border:1px solid var(--st-line);background:white;border-radius:10px;}`;
-export default function GNB(){const[open,setOpen]=useState(false);const{account}=useAccount();const{pathname}=useLocation();const{language,setLanguage}=useI18n();useEffect(()=>setOpen(false),[pathname]);useEffect(()=>{const close=(e:KeyboardEvent)=>{if(e.key==='Escape')setOpen(false);};window.addEventListener('keydown',close);return()=>window.removeEventListener('keydown',close);},[]);return <Header><Inner><Brand to="/" aria-label="SajuTeller home"><SparklesIcon/><span>Saju<b>Teller</b></span></Brand><Nav aria-label="Main navigation"><NavLink to="/experiences">Experiences</NavLink><NavLink to="/learn">The field guide</NavLink><NavLink to="/find-my-reading">Find my reading</NavLink></Nav><Actions><Link to="/experiences" aria-label="Search experiences"><MagnifyingGlassIcon/></Link><Link className="wide" to="/saved" aria-label="Saved experiences"><HeartIcon/></Link><Link className="wide" to="/trips" aria-label="Trips and account"><UserCircleIcon/></Link><button type="button" aria-label={open?'Close menu':'Open menu'} aria-expanded={open} aria-controls="site-menu" onClick={()=>setOpen(v=>!v)}>{open?<XMarkIcon/>:<Bars3Icon/>}</button></Actions></Inner>{open&&<Menu id="site-menu" aria-label="Site menu"><Link to="/experiences">Explore experiences</Link><Link to="/find-my-reading">Find my reading</Link><Link to="/learn">The Saju field guide</Link><Link to="/saved">Saved experiences</Link><Link to="/trips">Trips & plans</Link><Link to="/host">For Saju businesses</Link><Link to="/support">Help & support</Link><Link to={account?'/profile':'/sign-in'}>{account?'Your profile':'Sign in'}</Link><label>Language for AI tools<select aria-label="Language for AI tools" value={language} onChange={e=>setLanguage(e.target.value as typeof language)}><option value="en">English</option><option value="ko">한국어</option><option value="ja">日本語</option><option value="zh">中文</option><option value="es">Español</option></select></label></Menu>}</Header>;}
+import { navigation } from './navigation';
+
+const Header = styled.header`
+  position:sticky;top:0;z-index:100;height:var(--ks-header-height);background:rgb(11 6 16 / 94%);backdrop-filter:blur(18px);border-bottom:1px solid var(--st-line);
+  .inner{width:min(1160px,calc(100% - 32px));margin:auto;height:100%;display:flex;align-items:center;justify-content:space-between;gap:24px;}
+  .brand{font:500 26px/30px 'Cormorant Garamond',serif;letter-spacing:.4px;}
+  nav{display:flex;align-items:center;gap:28px;}nav a{font-size:13px;color:var(--st-muted);padding:12px 0;}nav a[aria-current]{color:var(--st-gold);}
+  .actions{display:flex;align-items:center;gap:16px;}.locale{font-size:11px;letter-spacing:1.1px;color:var(--st-gold);}
+  .signin{border:1px solid var(--st-line);border-radius:999px;padding:10px 18px;min-height:44px;display:flex;align-items:center;gap:7px;font-size:12px;}svg{width:20px;height:20px;}
+  @media(max-width:850px){nav{display:none;}.inner{gap:12px;}.actions{gap:12px;}.signin{padding:8px 12px;}.brand{font-size:24px;}}
+`;
+export default function GNB() {
+  const { pathname } = useLocation();
+  const { account } = useAccount();
+  return <Header data-global-header><div className="inner"><Link className="brand" to="/" aria-label="SajuTeller home">SAJUTELLER</Link><nav aria-label="Desktop navigation">{navigation.map(item => <Link to={item.to} key={item.to} aria-current={item.matches(pathname) ? 'page' : undefined}>{item.label}</Link>)}</nav><div className="actions"><span className="locale" aria-label="Site language: English">EN</span><Link className="signin" to={account ? '/profile' : '/sign-in'}>{account ? <><UserCircleIcon/><span>My profile</span></> : 'Sign in'}</Link></div></div></Header>;
+}

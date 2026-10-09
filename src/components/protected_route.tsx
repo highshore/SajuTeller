@@ -1,28 +1,9 @@
-import { Navigate, useLocation } from "react-router-dom";
-import type { ReactElement } from "react";
-import { useEffect, useState } from "react";
-import { supabase } from "../supabase";
-
-export default function ProtectedRoute({ children }: { children: ReactElement }) {
-  const location=useLocation();
-  const [loading, setLoading] = useState(true);
-  const [isAuthed, setAuthed] = useState(false);
-  useEffect(() => {
-    let unsub: (() => void) | undefined;
-    (async () => {
-      const { data } = await supabase.auth.getSession();
-      setAuthed(!!data.session);
-      setLoading(false);
-      const { data: sub } = supabase.auth.onAuthStateChange((_e, session) => {
-        setAuthed(!!session);
-      });
-      unsub = () => sub.subscription.unsubscribe();
-    })();
-    return () => {
-      if (unsub) unsub();
-    };
-  }, []);
-  if (loading) return null;
-  if (!isAuthed) return <Navigate to={"/sign-in?next="+encodeURIComponent(location.pathname+location.search)} replace />;
-  return children;
+import { Navigate, useLocation } from 'react-router-dom';
+import type { ReactElement } from 'react';
+import { useAccount } from '../product/data';
+export default function ProtectedRoute({children}:{children:ReactElement}) {
+ const location=useLocation();const{account,loading}=useAccount();
+ if(loading)return <p role="status" style={{padding:32}}>Checking your session…</p>;
+ if(!account)return <Navigate to={'/sign-in?next='+encodeURIComponent(location.pathname+location.search)} replace/>;
+ return children;
 }

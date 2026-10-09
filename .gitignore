@@ -15,3 +15,5 @@ dist
 
 # Supabase CLI cache
 supabase/.temp/
+
+!.env.example

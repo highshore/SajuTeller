@@ -1,7 +1,7 @@
 import { createClient } from "@supabase/supabase-js";
 
 const configuredUrl = import.meta.env.VITE_SUPABASE_URL as string | undefined;
-const configuredAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY as string | undefined;
+const configuredAnonKey = (import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY || import.meta.env.VITE_SUPABASE_ANON_KEY) as string | undefined;
 
 export const isSupabaseConfigured = Boolean(configuredUrl && configuredAnonKey);
 
@@ -13,8 +13,8 @@ if (!isSupabaseConfigured) {
 
 // Keep the app renderable even when a preview/production deployment is missing env vars.
 // Supabase-backed screens already handle request failures and can show their fallback UI.
-const supabaseUrl = configuredUrl || "https://missing-config.supabase.co";
-const supabaseAnonKey = configuredAnonKey || "missing-config";
+export const supabaseUrl = configuredUrl || "https://missing-config.supabase.co";
+export const supabaseAnonKey = configuredAnonKey || "missing-config";
 
 export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
   auth: {

@@ -1,0 +1,5 @@
+import { Link } from 'react-router-dom';
+import { styled } from 'styled-components';
+import { Eyebrow, Lead, Page, Stack, Wrap } from '../product/ui';
+const Cards=styled(Stack)`margin-top:36px;a{display:block;padding:16px;border-radius:16px;border:1px solid var(--st-accent-line);background:var(--st-accent);min-height:120px;}strong{font-size:11px;letter-spacing:1.1px;color:var(--st-gold);}h2{font:500 26px/30px 'Cormorant Garamond',serif;margin:8px 0 4px;}p{font-size:14px;color:var(--st-muted);}a:nth-child(2){border-color:var(--st-gold);}`;
+export default function Studio(){return <Page><Wrap style={{maxWidth:620}}><Eyebrow>Make it personal</Eyebrow><h1>Your Saju<br/>Studio</h1><Lead>Choose a little insight.</Lead><Cards><Link to="/today-fortune"><strong>TODAY</strong><h2>Daily Flow</h2><p>A gentle reading for the day ahead.</p></Link><Link to="/experiences?topic=compatibility"><strong>CONNECTION</strong><h2>Connection Reading</h2><p>Find a reader to explore a bond that matters.</p></Link><Link to="/name-creation"><strong>IDENTITY</strong><h2>Korean Name Atelier</h2><p>Find a name rooted in meaning.</p></Link></Cards></Wrap></Page>;}

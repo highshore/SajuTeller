@@ -86,7 +86,7 @@ const Container = styled.div<{ $language: string }>`
     z-index: 0;
   }
   
-  @media (max-width: 768px) {
+  @container saju (max-width: 768px) {
     padding: 1rem 0;
   }
 `;
@@ -107,7 +107,7 @@ const ContentWrapper = styled.div`
   z-index: 1;
   border: 1px solid rgba(255, 255, 255, 0.2);
   
-  @media (max-width: 768px) {
+  @container saju (max-width: 768px) {
     padding: 2rem 1.5rem;
     margin: 1rem;
     max-width: calc(100% - 2rem);
@@ -160,11 +160,11 @@ const Title = styled.h1<{ $language: string }>`
   line-height: 1.2;
   text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   
-  @media (max-width: 768px) {
+  @container saju (max-width: 768px) {
     font-size: 2.2rem;
   }
   
-  @media (max-width: 480px) {
+  @container saju (max-width: 480px) {
     font-size: 1.8rem;
   }
 `;
@@ -177,7 +177,7 @@ const Subtitle = styled.p<{ $language: string }>`
   line-height: 1.6;
   font-weight: 400;
   
-  @media (max-width: 768px) {
+  @container saju (max-width: 768px) {
     font-size: 1.1rem;
   }
 `;
@@ -460,7 +460,7 @@ const FormGrid = styled.div`
   gap: 1.5rem;
   margin-bottom: 1.5rem;
   
-  @media (max-width: 768px) {
+  @container saju (max-width: 768px) {
     grid-template-columns: 1fr;
     gap: 1rem;
   }

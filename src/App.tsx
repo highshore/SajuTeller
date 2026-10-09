@@ -82,6 +82,8 @@ const GlobalStyles = createGlobalStyle`
   ${reset};
 
   :root {
+    --st-app-width:430px;
+    --st-backdrop:#17111e;
     --st-paper:#0b0610;
     --st-surface:#130a1b;
     --st-elevated:#1c1027;
@@ -112,16 +114,16 @@ const GlobalStyles = createGlobalStyle`
   }
 
   * { box-sizing: border-box; }
-  .skip-link{position:fixed;top:-60px;left:16px;z-index:1000;padding:12px 18px;background:white;border-radius:10px;}
+  .skip-link{position:fixed;top:-60px;left:max(16px,calc((100% - var(--st-app-width))/2 + 16px));z-index:1000;padding:12px 18px;background:var(--st-gold);color:var(--st-paper);border-radius:10px;}
   .skip-link:focus{top:8px;}
   img, video { max-width:100%; height:auto; }
   input, select, textarea { max-width:100%; min-width:0; }
   :focus-visible { outline:2px solid #a78bfa; outline-offset:3px; }
-  html { scroll-behavior: smooth; }
+  html { scroll-behavior: smooth; scroll-padding-top:76px; }
   html, body, #root { min-height: 100%; }
   body {
     margin: 0;
-    background: var(--ks-paper);
+    background: var(--st-backdrop);
     color: var(--ks-ink);
     font-family: Inter, 'Noto Sans KR', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
     -webkit-font-smoothing: antialiased;
@@ -137,9 +139,7 @@ const GlobalStyles = createGlobalStyle`
 
   @media (prefers-reduced-motion:reduce) { html { scroll-behavior:auto; } }
 
-  @media (max-width: 850px) {
-    :root { --ks-radius-lg: 20px; --ks-header-height:60px; }
-    html { scroll-padding-top:76px; }
+  @container saju (max-width: 850px) {
     input, select, textarea { font-size:16px !important; }
     button { touch-action:manipulation; }
   }
@@ -148,7 +148,7 @@ const GlobalStyles = createGlobalStyle`
 const Wrapper = styled.div`
   min-height: 100vh;
   display: block;
-  background: var(--ks-paper);
+  background: var(--st-backdrop);
 `;
 
 function App() {

@@ -10,6 +10,7 @@ export const navigation = [
 
 export function siteLayout(path: string) {
   const immersive = /^\/live-translation(?:\/|$)/.test(path);
+  const wide = /^\/d(?:\/|$)/.test(path);
   const booking = /^\/business\//.test(path);
-  return { header: !immersive, footer: !immersive, bottomNav: !immersive && !booking, compactFooter: path === '/' || /^\/(sign-|auth-|onboarding)/.test(path) };
+  return { wide, header: !immersive, footer: !immersive, bottomNav: !immersive && !booking && !wide, compactFooter: path === '/' || /^\/(sign-|auth-|onboarding)/.test(path) };
 }

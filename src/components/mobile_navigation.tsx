@@ -3,7 +3,7 @@ import { styled } from 'styled-components';
 import { navigation, siteLayout } from './navigation';
 const Dock = styled.nav`
   display:none;
-  @media(max-width:850px){display:grid;grid-template-columns:repeat(4,minmax(0,1fr));position:fixed;bottom:0;left:0;right:0;z-index:90;background:rgb(28 16 39 / 97%);backdrop-filter:blur(18px);border-top:1px solid var(--st-line);padding:8px 16px calc(8px + env(safe-area-inset-bottom));
+  @container saju (max-width:850px){display:grid;grid-template-columns:repeat(4,minmax(0,1fr));position:fixed;bottom:0;left:50%;right:auto;width:min(100%,var(--st-app-width));transform:translateX(-50%);z-index:90;background:rgb(28 16 39 / 97%);backdrop-filter:blur(18px);border-top:1px solid var(--st-line);padding:8px 16px calc(8px + env(safe-area-inset-bottom));
   a{min-height:56px;display:flex;flex-direction:column;gap:5px;align-items:center;justify-content:center;color:var(--st-muted);font-size:11px;font-weight:600;letter-spacing:.5px;}svg{width:22px;height:22px;stroke-width:1.5;}a[aria-current]{color:var(--st-gold);}a[aria-current] svg{stroke-width:2;}}
 `;
 export default function MobileNavigation() { const { pathname } = useLocation(); if (!siteLayout(pathname).bottomNav) return null; return <Dock data-global-bottom-nav aria-label="Mobile navigation">{navigation.map(item => <Link to={item.to} key={item.to} aria-current={item.matches(pathname) ? 'page' : undefined}><item.icon/><span>{item.label}</span></Link>)}</Dock>; }

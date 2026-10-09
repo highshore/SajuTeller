@@ -50,3 +50,11 @@ Email signup is enabled and email confirmation is required. Google, Kakao, Apple
 - Supabase security advisors: zero findings.
 
 The repository's older migration history does not match the full remote schema; do not reset the database or blindly replay all historical files. These four migrations are already applied to the supplied project.
+
+## Mobile app layout correction — October 10, 2026 (KST)
+
+Roundy's current consumer shell uses a 430px maximum width at every browser size. SajuTeller now follows that same model: full width on phones and a centered mobile app column on larger screens. The admin route keeps its independent wide layout.
+
+Responsive rules on active consumer screens query the `saju` container instead of the browser viewport. This keeps mobile typography, single-column cards/forms, signup, compact header/footer, and the bottom dock consistent on desktop. The fixed booking action and bottom navigation share the app's width and center line, with safe-area spacing. The map height follows the available viewport height, and saved-reading buttons have 44px touch targets.
+
+The visual check script covers 320, 390, 430, 768, and 1440px browser widths. It verifies the app width, aligned header/dock/booking action, no horizontal page overflow, and the same mobile hero geometry across screen sizes, alongside the existing interaction checks.

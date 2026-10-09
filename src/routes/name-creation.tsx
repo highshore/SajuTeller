@@ -85,7 +85,7 @@ const Container = styled.div`
     z-index: 0;
   }
   
-  @media (max-width: 768px) {
+  @container saju (max-width: 768px) {
     padding: 1rem 0;
   }
 `;
@@ -106,7 +106,7 @@ const ContentWrapper = styled.div`
   z-index: 1;
   border: 1px solid rgba(255, 255, 255, 0.2);
   
-  @media (max-width: 768px) {
+  @container saju (max-width: 768px) {
     padding: 2rem 1.5rem;
     margin: 1rem;
     max-width: calc(100% - 2rem);
@@ -152,11 +152,11 @@ const Title = styled.h1<{ $language: string }>`
   line-height: 1.2;
   text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   
-  @media (max-width: 768px) {
+  @container saju (max-width: 768px) {
     font-size: 2.2rem;
   }
   
-  @media (max-width: 480px) {
+  @container saju (max-width: 480px) {
     font-size: 1.8rem;
   }
 `;
@@ -169,7 +169,7 @@ const Subtitle = styled.p<{ $language: string }>`
   line-height: 1.6;
   font-weight: 400;
   
-  @media (max-width: 768px) {
+  @container saju (max-width: 768px) {
     font-size: 1.1rem;
   }
 `;
@@ -241,7 +241,7 @@ const RadioGroup = styled.div`
   gap: 1rem;
   margin-top: 0.5rem;
   
-  @media (max-width: 768px) {
+  @container saju (max-width: 768px) {
     grid-template-columns: 1fr;
   }
 `;
@@ -286,7 +286,7 @@ const ButtonGroup = styled.div`
   justify-content: center;
   margin-top: 3rem;
   
-  @media (max-width: 768px) {
+  @container saju (max-width: 768px) {
     flex-direction: column;
     gap: 1rem;
   }
@@ -497,7 +497,7 @@ const IDCard = styled.div`
   position: relative;
   overflow: hidden;
   
-  @media (max-width: 768px) {
+  @container saju (max-width: 768px) {
     aspect-ratio: auto;
     min-height: auto;
     padding: 1rem;
@@ -544,7 +544,7 @@ const IDCardContent = styled.div`
   min-height: 280px;
   height: calc(100% - 80px);
   
-  @media (max-width: 768px) {
+  @container saju (max-width: 768px) {
     flex-direction: column;
     gap: 0.5rem;
     height: auto;
@@ -561,7 +561,7 @@ const IDCardLeft = styled.div`
   text-align: center;
   padding: 0.5rem 0;
   
-  @media (max-width: 768px) {
+  @container saju (max-width: 768px) {
     width: 100%;
     padding: 1rem 0;
   }
@@ -576,7 +576,7 @@ const IDCardRight = styled.div`
   align-items: center;
   height: 100%;
   
-  @media (max-width: 768px) {
+  @container saju (max-width: 768px) {
     display: none;
   }
 `;
@@ -590,7 +590,7 @@ const IDCardTitle = styled.h2<{ $language: string }>`
   text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.1);
   letter-spacing: 0.5px;
   
-  @media (max-width: 768px) {
+  @container saju (max-width: 768px) {
     font-size: 1.4rem;
     margin: 0 0 0.6rem 0;
   }
@@ -605,7 +605,7 @@ const IDCardName = styled.h3<{ $language: string }>`
   text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.1);
   letter-spacing: 0.5px;
   
-  @media (max-width: 768px) {
+  @container saju (max-width: 768px) {
     font-size: 1.8rem;
     margin: 0 0 0.6rem 0;
   }
@@ -618,7 +618,7 @@ const IDCardNameWithHanja = styled.div`
   gap: 0.5rem;
   margin-bottom: 1.5rem;
   
-  @media (max-width: 768px) {
+  @container saju (max-width: 768px) {
     margin-bottom: 0.3rem;
   }
 `;
@@ -629,7 +629,7 @@ const IDCardHanja = styled.span<{ $language: string }>`
   color: #2c1810;
   font-weight: 600;
   
-  @media (max-width: 768px) {
+  @container saju (max-width: 768px) {
     font-size: 1.4rem;
   }
 `;
@@ -642,7 +642,7 @@ const IDCardInfo = styled.div`
     margin-bottom: 0;
   }
   
-  @media (max-width: 768px) {
+  @container saju (max-width: 768px) {
     margin-bottom: 0.2rem;
   }
 `;
@@ -655,7 +655,7 @@ const IDCardLabel = styled.span<{ $language: string }>`
   display: block;
   margin-bottom: 0.3rem;
   
-  @media (max-width: 768px) {
+  @container saju (max-width: 768px) {
     font-size: 0.9rem;
     margin-bottom: 0.2rem;
   }
@@ -668,7 +668,7 @@ const IDCardValue = styled.span<{ $language: string }>`
   font-weight: 600;
   display: block;
   
-  @media (max-width: 768px) {
+  @container saju (max-width: 768px) {
     font-size: 1.1rem;
   }
 `;
@@ -713,7 +713,7 @@ const IDCardFooter = styled.div`
   left: 0;
   right: 0;
   
-  @media (max-width: 768px) {
+  @container saju (max-width: 768px) {
     position: static;
     margin-top: 0.5rem;
     padding-top: 0.5rem;
@@ -728,7 +728,7 @@ const IDCardIssueDate = styled.p<{ $language: string }>`
   margin: 0 0 0.5rem 0;
   font-weight: 600;
   
-  @media (max-width: 768px) {
+  @container saju (max-width: 768px) {
     font-size: 1rem;
   }
 `;
@@ -745,7 +745,7 @@ const IDCardAuthorityText = styled.p<{ $language: string }>`
   margin: 0;
   font-weight: 600;
   
-  @media (max-width: 768px) {
+  @container saju (max-width: 768px) {
     font-size: 0.9rem;
   }
 `;

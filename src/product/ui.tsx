@@ -1,8 +1,7 @@
-import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { styled } from 'styled-components';
-import { ArrowRightIcon, HeartIcon, SparklesIcon } from '@heroicons/react/24/outline';
-import { cover, money, useSaved, type Studio } from './data';
+import { ArrowRightIcon, SparklesIcon } from '@heroicons/react/24/outline';
+import { useI18n } from '../i18n/i18n';
 export const Wrap=styled.div`width:min(1160px,calc(100% - 40px));margin:0 auto;@container saju (max-width:600px){width:calc(100% - 32px);}`;
 export const Page=styled.div`background:var(--st-paper);color:var(--st-ink);min-height:65vh;padding:32px 0 64px;h1{font-family:'Cormorant Garamond',serif;font-size:clamp(32px,9cqi,38px);line-height:1.03;font-weight:600;letter-spacing:-1.5px;margin:10px 0 16px;}h2{font-size:24px;letter-spacing:-.6px;line-height:1.2;font-weight:650;}h3{font-weight:650;line-height:1.35;}p{line-height:1.65;}@container saju (min-width:800px){padding-top:48px;}`;
 export const Eyebrow=styled.div`font-size:10px;font-weight:750;letter-spacing:1.6px;text-transform:uppercase;color:var(--st-gold);display:flex;gap:8px;align-items:center;svg{width:15px;}`;
@@ -22,17 +21,6 @@ export const Field=styled.label`display:grid;gap:8px;color:var(--st-ink);font-si
 export const Note=styled.p`font-size:12px!important;color:var(--st-muted);line-height:1.6;margin-top:14px;`;
 export const Notice=styled.div`padding:12px 16px;border-radius:12px;background:var(--st-elevated);color:var(--st-muted);font-size:12px;line-height:1.5;margin-bottom:20px;`;
 export const IconBox=styled.div`width:44px;height:44px;border-radius:14px;background:var(--st-lilac);display:flex;align-items:center;justify-content:center;margin-bottom:16px;svg{width:23px;}`;
-const Card=styled.article`
-  min-width:0;position:relative;border:1px solid var(--st-line);border-radius:16px;padding:16px;background:var(--st-surface);
-  a{display:flex;flex-direction:column;gap:12px;min-height:304px;}.photo{height:132px;border-radius:12px;overflow:hidden;background:var(--st-accent);position:relative;}
-  img{width:100%;height:100%;object-fit:cover;}.fallback{height:100%;background:var(--st-accent);}
-  .category{font-size:11px;font-weight:600;letter-spacing:1.1px;color:var(--st-gold);text-transform:uppercase;}h3{font:500 26px/30px 'Cormorant Garamond',serif;}
-  p{font-size:14px;line-height:20px;color:var(--st-muted);}.metadata{display:flex;align-items:center;justify-content:space-between;gap:8px;font-size:13px;line-height:20px;margin-top:auto;}.metadata strong{color:var(--st-gold);font-weight:600;}.sample{font-size:10px;color:var(--st-gold);}
-`;
-const Save=styled.button<{$saved:boolean}>`position:absolute;right:24px;top:24px;z-index:2;width:44px;height:44px;border:1px solid var(--st-accent-line);border-radius:50%;display:grid;place-items:center;background:var(--st-surface);color:var(--st-gold);cursor:pointer;svg{width:18px;fill:${p=>p.$saved?'currentColor':'none'};}`;
-export function ExperienceCard({studio:s}:{studio:Studio}) {
- const {saved,toggle}=useSaved(); const photo=cover(s); const [imageFailed,setImageFailed]=useState(false);
- return <Card><Link to={`/business/${s.id}`}><div className="photo">{photo&&!imageFailed?<img src={photo.image_url} alt={s.is_mock?'Illustrative experience photo':photo.alt_text||s.name} loading="lazy" onError={()=>setImageFailed(true)}/>:<div className="fallback"/>}</div><span className="category">{s.modalities?.includes('tarot')?'Tarot reading':'Traditional Saju'}</span><h3>{s.name}</h3><p>{s.neighborhood} · {s.min_duration_minutes} min</p><div className="metadata"><span>{!s.is_mock&&s.review_count>0?`★ ${Number(s.average_rating).toFixed(2)}`:s.is_mock?'Preview studio':'New reading'}</span><strong>From {money(s.base_price)}</strong></div></Link><Save $saved={saved.includes(s.id)} onClick={()=>toggle(s.id)} aria-label={`${saved.includes(s.id)?'Unsave':'Save'} ${s.name}`} aria-pressed={saved.includes(s.id)}><HeartIcon/></Save></Card>;
-}
-export function Empty({title,body,to='/experiences',action='Explore experiences'}:{title:string;body:string;to?:string;action?:string}){return <Box><IconBox><SparklesIcon/></IconBox><h2>{title}</h2><p>{body}</p><ButtonLink to={to} style={{marginTop:20}}>{action}<ArrowRightIcon/></ButtonLink></Box>;}
-export function LoadingCards(){return <Grid aria-label="Loading experiences" aria-busy="true">{[1,2,3].map(n=><Box key={n} style={{height:320,background:'var(--st-surface)'}}/>)}</Grid>;}
+export { default as ExperienceCard } from '../components/experience-card';
+export function Empty({title,body,to='/experiences',action='Explore experiences'}:{title:string;body:string;to?:string;action?:string}){const {t}=useI18n();return <Box><IconBox><SparklesIcon/></IconBox><h2>{t(title)}</h2><p>{t(body)}</p><ButtonLink to={to} style={{marginTop:20}}>{t(action)}<ArrowRightIcon/></ButtonLink></Box>;}
+export function LoadingCards(){const {t}=useI18n();return <Grid aria-label={t("Loading experiences")} aria-busy="true">{[1,2,3].map(n=><Box key={n} style={{height:320,background:'var(--st-surface)'}}/>)}</Grid>;}

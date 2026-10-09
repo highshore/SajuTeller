@@ -1,3 +1,4 @@
+import { useI18n } from '../i18n/i18n';
 import { useEffect, useRef, useState, type FormEvent } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { ArrowLeftIcon, EnvelopeIcon, EyeIcon, EyeSlashIcon, ChatBubbleOvalLeftIcon } from '@heroicons/react/24/outline';
@@ -15,7 +16,7 @@ function maskEmail(value: string) {
   return domain ? `${local.slice(0, 2)}•••@${domain}` : value;
 }
 
-export default function AuthFlow({ initialMode = 'signin' }: { initialMode?: 'signin' | 'signup' | 'reset' }) {
+export default function AuthFlow({ initialMode = 'signin' }: { initialMode?: 'signin' | 'signup' | 'reset' }) {const { t } = useI18n();
   const [params] = useSearchParams();
   const navigate = useNavigate();
   const next = safeReturn(params.get('next'));
@@ -83,7 +84,7 @@ export default function AuthFlow({ initialMode = 'signin' }: { initialMode?: 'si
     if (busy) return;
     setBusy(true); setError('');
     try {
-      const { error } = await supabase.auth.signInWithOAuth({ provider, options: { redirectTo: callback() } });
+      const { error } = await supabase.auth.signInWithOAuth({ provider, options: { redirectTo: callback(), ...(provider === 'kakao' ? { queryParams: { scope: 'profile_nickname profile_image' } } : {}) } });
       if (error) throw error;
     } catch (value) { showError(value); } finally { setBusy(false); }
   }
@@ -137,25 +138,25 @@ export default function AuthFlow({ initialMode = 'signin' }: { initialMode?: 'si
   }
 
   const brand = <Link className="brand" to="/" aria-label="SajuTeller home">SAJUTELLER</Link>;
-  const legal = <div className="legal"><Link to="/terms">Terms of Use</Link><span aria-hidden="true">|</span><Link to="/privacy">Privacy Policy</Link></div>;
-  const messages = <>{error && <p className="notice" role="alert">{error}</p>}{notice && <p className="notice" role="status">{notice}</p>}</>;
+  const legal = <div className="legal"><Link to="/terms">{t("Terms of Use")}</Link><span aria-hidden="true">|</span><Link to="/privacy">{t("Privacy Policy")}</Link></div>;
+  const messages = <>{error && <p className="notice" role="alert">{t(error)}</p>}{notice && <p className="notice" role="status">{t(notice)}</p>}</>;
   if (confirmation) return <AuthPanel aria-busy={busy} data-auth-view="confirmation">
     {brand}
     <div className="security">
       <AnimatedEmoji key={confirmation} name={confirmation === 'updated' ? 'sparkles' : 'love-letter'} size={80}/>
-      <h1>{confirmation === 'updated' ? 'Password updated' : 'Check your email'}</h1>
-      {confirmation === 'updated' ? <p>Your new password is ready. You can continue to your account.</p> : <>
+      <h1>{confirmation === 'updated' ? t("Password updated") : t("Check your email")}</h1>
+      {confirmation === 'updated' ? <p>{t("Your new password is ready. You can continue to your account.")}</p> : <>
         <p><strong>{maskEmail(email.trim())}</strong></p>
-        <p>{confirmation === 'signup' ? 'If this email needs confirmation, you’ll receive a link to finish creating your account.' : 'If an account exists for this email, you’ll receive a link to reset your password.'}</p>
-        <p>{confirmation === 'signup' ? 'Already registered? Sign in or reset your password. A confirmed account won’t receive another signup email.' : 'Open the link in your email to choose a new password. Check your spam folder too.'}</p>
+        <p>{confirmation === 'signup' ? t("If this email needs confirmation, you’ll receive a link to finish creating your account.") : t("If an account exists for this email, you’ll receive a link to reset your password.")}</p>
+        <p>{confirmation === 'signup' ? t("Already registered? Sign in or reset your password. A confirmed account won’t receive another signup email.") : t("Open the link in your email to choose a new password. Check your spam folder too.")}</p>
       </>}
       {messages}
-      {confirmation === 'updated' ? <Link className="primary" to="/profile">Continue to your profile</Link> : <>
-        <button className="primary" disabled={busy || cooldown > 0} onClick={() => void resend()}>{cooldown ? `Resend in ${cooldown}s` : 'Resend email'}</button>
+      {confirmation === 'updated' ? <Link className="primary" to="/profile">{t("Continue to your profile")}</Link> : <>
+        <button className="primary" disabled={busy || cooldown > 0} onClick={() => void resend()}>{cooldown ? t('Resend in {seconds}s').replace('{seconds}', String(cooldown)) : t("Resend email")}</button>
         <div className="security-actions">
-          <button className="text-button" disabled={busy} onClick={() => switchMode(confirmation === 'signup' ? 'signup' : 'forgot')}>Change email address</button>
-          <button className="text-button" disabled={busy} onClick={() => switchMode('signin')}>Back to sign in</button>
-          {confirmation === 'signup' && <button className="text-button" disabled={busy} onClick={() => switchMode('forgot')}>Reset password instead</button>}
+          <button className="text-button" disabled={busy} onClick={() => switchMode(confirmation === 'signup' ? 'signup' : 'forgot')}>{t("Change email address")}</button>
+          <button className="text-button" disabled={busy} onClick={() => switchMode('signin')}>{t("Back to sign in")}</button>
+          {confirmation === 'signup' && <button className="text-button" disabled={busy} onClick={() => switchMode('forgot')}>{t("Reset password instead")}</button>}
         </div>
       </>}
     </div>{legal}
@@ -165,40 +166,40 @@ export default function AuthFlow({ initialMode = 'signin' }: { initialMode?: 'si
     {brand}
     <div className="method-heading">
       <AnimatedEmoji name="crystal-ball" size={88}/>
-      <h1 className="sr-only">Sign in to SajuTeller</h1>
-      <p>Sign up or sign in to begin your Saju journey.</p>
+      <h1 className="sr-only">{t("Sign in to SajuTeller")}</h1>
+      <p>{t("Sign up or sign in to begin your Saju journey.")}</p>
     </div>
     <div className="providers">
-      {!providers && !error && <p className="notice" role="status">Loading sign-in options…</p>}
-      {providers?.email && <button className="provider" disabled={busy} onClick={() => setMethods(false)}><EnvelopeIcon/><span>Continue with email</span></button>}
-      {providers?.kakao && <button className="provider" disabled={busy} onClick={() => void oauth('kakao')}><ChatBubbleOvalLeftIcon/><span>Continue with Kakao</span></button>}
-      {providers?.google && <button className="provider" disabled={busy} onClick={() => void oauth('google')}><span aria-hidden="true">G</span><span>Continue with Google</span></button>}
-      {!providers && error && <button className="provider" onClick={() => { setError(''); setAttempt(value => value + 1); }}><span aria-hidden="true">↻</span><span>Retry sign-in options</span></button>}
-      {providers && !providers.email && !providers.google && !providers.kakao && <p className="notice" role="status">Sign-in is temporarily unavailable. Please try again later.</p>}
+      {!providers && !error && <p className="notice" role="status">{t("Loading sign-in options…")}</p>}
+      {providers?.email && <button className="provider" disabled={busy} onClick={() => setMethods(false)}><EnvelopeIcon/><span>{t("Continue with email")}</span></button>}
+      {providers?.kakao && <button className="provider" disabled={busy} onClick={() => void oauth('kakao')}><ChatBubbleOvalLeftIcon/><span>{t("Continue with Kakao")}</span></button>}
+      {providers?.google && <button className="provider" disabled={busy} onClick={() => void oauth('google')}><span aria-hidden="true">G</span><span>{t("Continue with Google")}</span></button>}
+      {!providers && error && <button className="provider" onClick={() => { setError(''); setAttempt(value => value + 1); }}><span aria-hidden="true">↻</span><span>{t("Retry sign-in options")}</span></button>}
+      {providers && !providers.email && !providers.google && !providers.kakao && <p className="notice" role="status">{t("Sign-in is temporarily unavailable. Please try again later.")}</p>}
     </div>{messages}{legal}
   </AuthPanel>;
 
-  const heading = mode === 'signup' ? 'Create your account' : mode === 'forgot' ? 'Forgot your password?' : mode === 'reset' ? 'Choose a new password' : 'Welcome back';
-  const intro = mode === 'signup' ? 'Create an account to begin your Saju journey.' : mode === 'forgot' ? 'We’ll email you a link to reset it.' : mode === 'reset' ? 'Choose a strong password for your account.' : 'Sign in to your SajuTeller account.';
+  const heading = mode === 'signup' ? t("Create your account") : mode === 'forgot' ? t("Forgot your password?") : mode === 'reset' ? t("Choose a new password") : t("Welcome back");
+  const intro = mode === 'signup' ? t("Create an account to begin your Saju journey.") : mode === 'forgot' ? t("We’ll email you a link to reset it.") : mode === 'reset' ? t("Choose a strong password for your account.") : t("Sign in to your SajuTeller account.");
   const symbol: EmojiName = mode === 'signup' ? 'sparkles' : mode === 'forgot' || mode === 'reset' ? 'locked' : 'waving-hand';
   return <AuthPanel aria-busy={busy} data-auth-view={mode}>
     {consentOpen && <AuthConsent busy={busy} onAccept={() => void authenticate()} onCancel={() => setConsentOpen(false)}/>}
-    {mode !== 'reset' && <div className="topline"><button className="back" disabled={busy} onClick={allMethods}><ArrowLeftIcon/>All sign-in options</button></div>}
+    {mode !== 'reset' && <div className="topline"><button className="back" disabled={busy} onClick={allMethods}><ArrowLeftIcon/>{t("All sign-in options")}</button></div>}
     {brand}
     <div className="heading"><AnimatedEmoji key={symbol} name={symbol} size={64}/><h1>{heading}</h1><p>{intro}</p></div>
     <form onSubmit={submit}><fieldset disabled={busy || (mode !== 'reset' && !providers?.email)}>
-      {mode !== 'reset' && <label>Email address<input name="email" type="email" autoComplete="email" autoCapitalize="none" spellCheck={false} required maxLength={254} value={email} onChange={event => { setEmail(event.target.value); setError(''); }} placeholder="you@example.com"/></label>}
-      {mode !== 'forgot' && <label>Password<div className="password">
-        <input ref={passwordInput} aria-label="Password" aria-invalid={!!invalidPassword} aria-describedby={newPassword ? 'password-feedback' : undefined} name="password" type={show ? 'text' : 'password'} autoComplete={mode === 'signin' ? 'current-password' : 'new-password'} required maxLength={72} value={password} onChange={event => { setPassword(event.target.value); setError(''); }} placeholder={newPassword ? 'At least 10 characters' : 'Enter your password'}/>
-        <button type="button" aria-label={show ? 'Hide password' : 'Show password'} aria-pressed={show} onClick={() => setShow(value => !value)}>{show ? <EyeSlashIcon/> : <EyeIcon/>}</button>
-      </div>{newPassword && <small id="password-feedback" role="status" className={invalidPassword ? 'field-error' : password ? 'field-success' : ''}>{invalidPassword || (password ? '✓ Meets requirements' : 'Use 10–72 characters.')}</small>}</label>}
-      {newPassword && <label>Confirm password<input ref={confirmInput} aria-label="Confirm password" aria-invalid={mismatch} aria-describedby="confirm-feedback" name="confirm" type={show ? 'text' : 'password'} autoComplete="new-password" required maxLength={72} value={confirm} onChange={event => { setConfirm(event.target.value); setError(''); }} placeholder="Re-enter your password"/><small id="confirm-feedback" role="status" className={mismatch ? 'field-error' : passwordsReady ? 'field-success' : ''}>{mismatch ? 'Passwords do not match.' : passwordsReady ? '✓ Passwords match' : 'Re-enter your password.'}</small></label>}
-      {mode === 'signin' && <button className="forgot" type="button" onClick={() => switchMode('forgot')}>Forgot password?</button>}
+      {mode !== 'reset' && <label>{t("Email address")}<input name="email" type="email" autoComplete="email" autoCapitalize="none" spellCheck={false} required maxLength={254} value={email} onChange={event => { setEmail(event.target.value); setError(''); }} placeholder={t("you@example.com")}/></label>}
+      {mode !== 'forgot' && <label>{t("Password")}<div className="password">
+        <input ref={passwordInput} aria-label={t("Password")} aria-invalid={!!invalidPassword} aria-describedby={newPassword ? 'password-feedback' : undefined} name="password" type={show ? 'text' : 'password'} autoComplete={mode === 'signin' ? 'current-password' : 'new-password'} required maxLength={72} value={password} onChange={event => { setPassword(event.target.value); setError(''); }} placeholder={newPassword ? t("At least 10 characters") : t("Enter your password")}/>
+        <button type="button" aria-label={show ? t("Hide password") : t("Show password")} aria-pressed={show} onClick={() => setShow(value => !value)}>{show ? <EyeSlashIcon/> : <EyeIcon/>}</button>
+      </div>{newPassword && <small id="password-feedback" role="status" className={invalidPassword ? 'field-error' : password ? 'field-success' : ''}>{(invalidPassword && t(invalidPassword)) || (password ? t("✓ Meets requirements") : t("Use 10–72 characters."))}</small>}</label>}
+      {newPassword && <label>{t("Confirm password")}<input ref={confirmInput} aria-label={t("Confirm password")} aria-invalid={mismatch} aria-describedby="confirm-feedback" name="confirm" type={show ? 'text' : 'password'} autoComplete="new-password" required maxLength={72} value={confirm} onChange={event => { setConfirm(event.target.value); setError(''); }} placeholder={t("Re-enter your password")}/><small id="confirm-feedback" role="status" className={mismatch ? 'field-error' : passwordsReady ? 'field-success' : ''}>{mismatch ? t("Passwords do not match.") : passwordsReady ? t("✓ Passwords match") : t("Re-enter your password.")}</small></label>}
+      {mode === 'signin' && <button className="forgot" type="button" onClick={() => switchMode('forgot')}>{t("Forgot password?")}</button>}
       {messages}
-      <button className="primary" type="submit" disabled={newPassword && !passwordsReady}>{busy ? 'Please wait…' : mode === 'signup' ? 'Create account' : mode === 'forgot' ? 'Send reset link' : mode === 'reset' ? 'Update password' : 'Sign in'}</button>
+      <button className="primary" type="submit" disabled={newPassword && !passwordsReady}>{busy ? t("Please wait…") : mode === 'signup' ? t("Create account") : mode === 'forgot' ? t("Send reset link") : mode === 'reset' ? t("Update password") : t("Sign in")}</button>
     </fieldset></form>
-    {(mode === 'signin' || mode === 'signup') && <p className="switch">{mode === 'signup' ? 'Already have an account?' : 'Don’t have an account?'}{' '}<button disabled={busy} onClick={() => switchMode(mode === 'signup' ? 'signin' : 'signup')}>{mode === 'signup' ? 'Log in' : 'Sign up'}</button></p>}
-    {mode === 'forgot' && <button className="text-button center" disabled={busy} onClick={() => switchMode('signin')}>Back to sign in</button>}
+    {(mode === 'signin' || mode === 'signup') && <p className="switch">{mode === 'signup' ? t("Already have an account?") : t("Don’t have an account?")}{' '}<button disabled={busy} onClick={() => switchMode(mode === 'signup' ? 'signin' : 'signup')}>{mode === 'signup' ? t("Log in") : t("Sign up")}</button></p>}
+    {mode === 'forgot' && <button className="text-button center" disabled={busy} onClick={() => switchMode('signin')}>{t("Back to sign in")}</button>}
     {legal}
   </AuthPanel>;
 }

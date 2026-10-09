@@ -58,3 +58,13 @@ Roundy's current consumer shell uses a 430px maximum width at every browser size
 Responsive rules on active consumer screens query the `saju` container instead of the browser viewport. This keeps mobile typography, single-column cards/forms, signup, compact header/footer, and the bottom dock consistent on desktop. The fixed booking action and bottom navigation share the app's width and center line, with safe-area spacing. The map height follows the available viewport height, and saved-reading buttons have 44px touch targets.
 
 The visual check script covers 320, 390, 430, 768, and 1440px browser widths. It verifies the app width, aligned header/dock/booking action, no horizontal page overflow, and the same mobile hero geometry across screen sizes, alongside the existing interaction checks.
+
+## Roundy sign-in experience — October 10, 2026 (KST)
+
+Authentication now follows Roundy's current method picker, back navigation, brand/heading hierarchy, 56px outlined provider buttons, form spacing, inline sign-in/signup/reset transitions, policy review dialog, and email confirmation screen. SajuTeller's purple surfaces and gold primary actions replace Roundy's colors. Existing global navigation and the 430px app shell remain in place.
+
+Five unmodified Google Noto Lottie animations are served locally and loaded on demand. Each plays once (under four seconds); reduced-motion users see a still frame. Attribution and the CC BY 4.0 source links are in `public/emoji/NOTICE.txt`, linked from the footer details.
+
+Only configured, supported providers appear. The project currently supports email; disabled Kakao/Google methods are not presented as working options. Username and phone authentication were not added. Existing account onboarding remains responsible for authenticated, versioned database consent; the pre-signup dialog gates account creation and uses the same policy documents as the public pages.
+
+`scripts/auth-check.mjs` stubs authentication responses, so its signup/reset/resend checks do not create accounts or send emails. It covers method selection, animations, reduced motion, password reveal and validation, signup switching, policy review/cancel/accept, confirmation and resend cooldown, password recovery/update, settings retry, safe sign-in return navigation, and small/large viewport geometry.

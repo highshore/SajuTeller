@@ -1,0 +1,13 @@
+Noto Animated Emoji by Google
+Licensed under Creative Commons Attribution 4.0 International (CC BY 4.0).
+License: https://creativecommons.org/licenses/by/4.0/
+Project: https://googlefonts.github.io/noto-emoji-files/?view=docs
+
+These Lottie files are unmodified Google Noto animations downloaded from:
+crystal-ball.json — https://fonts.gstatic.com/s/e/notoemoji/latest/1f52e/lottie.json
+waving-hand.json — https://fonts.gstatic.com/s/e/notoemoji/latest/1f44b/lottie.json
+sparkles.json — https://fonts.gstatic.com/s/e/notoemoji/latest/2728/lottie.json
+love-letter.json — https://fonts.gstatic.com/s/e/notoemoji/latest/1f48c/lottie.json
+locked.json — https://fonts.gstatic.com/s/e/notoemoji/latest/1f512/lottie.json
+
+Playback is limited to one cycle. Reduced-motion preferences display a still frame.

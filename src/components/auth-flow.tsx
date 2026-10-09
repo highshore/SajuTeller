@@ -1,43 +1,204 @@
-import { useEffect, useState, type FormEvent } from 'react';
+import { useEffect, useRef, useState, type FormEvent } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { ArrowLeftIcon, EnvelopeIcon, EyeIcon, EyeSlashIcon, ChatBubbleOvalLeftIcon } from '@heroicons/react/24/outline';
-import { styled } from 'styled-components';
 import { supabase } from '../supabase';
 import { safeReturn } from '../product/plans';
 import { afterSignIn, authProviders, passwordError } from '../product/auth';
+import AnimatedEmoji, { type EmojiName } from './animated-emoji';
+import AuthConsent from './auth-consent';
+import { AuthPanel } from './auth-flow.styles';
 
-const Shell = styled.section`
-  width:min(440px,calc(100% - 40px));margin:48px auto 64px;min-height:480px;
-  .brand{text-align:center;font:500 32px/40px 'Cormorant Garamond',serif;margin:0 0 24px;}h1{font:600 28px/36px Inter,sans-serif;letter-spacing:-.7px;text-align:center;margin-bottom:10px;}
-  .intro{text-align:center;font-size:14px;line-height:22px;color:var(--st-muted);margin-bottom:28px;}.providers,form,fieldset{display:grid;gap:18px;}fieldset{border:0;margin:0;padding:0;min-width:0;}
-  .provider,.primary{min-height:56px;border:1px solid var(--st-accent-line);border-radius:999px;background:var(--st-surface);color:var(--st-ink);padding:14px 18px;cursor:pointer;font-size:15px;font-weight:500;}.provider{display:grid;grid-template-columns:26px 1fr 26px;align-items:center;gap:10px;}.provider svg{width:22px;}.primary{background:var(--st-gold);color:var(--st-paper);border-color:var(--st-gold);font-weight:600;width:100%;}
-  button:disabled{opacity:.5;cursor:not-allowed;}label{display:grid;gap:8px;font-size:14px;}input:not([type=checkbox]){width:100%;min-height:55px;border:1px solid var(--st-accent-line);border-radius:13px;background:var(--st-surface);color:var(--st-ink);padding:15px 16px;font-size:16px;}.password{position:relative;}.password input{padding-right:54px;}.password button{position:absolute;top:6px;right:6px;width:42px;height:42px;background:none;border:0;color:var(--st-muted);}.password svg{width:21px;}
-  .back,.text{background:none;border:0;color:var(--st-muted);cursor:pointer;font-size:13px;min-height:44px;}.back{display:inline-flex;align-items:center;gap:8px;margin-bottom:20px;padding:0;}.back svg{width:17px;}.forgot{text-align:right;}.switch{text-align:center;color:var(--st-muted);font-size:13px;line-height:22px;margin-top:22px;}.switch a,.legal a,.consent a{text-decoration:underline;text-underline-offset:3px;color:var(--st-ink);}.legal{display:flex;justify-content:center;gap:16px;margin-top:34px;font-size:12px;}
-  .consent{display:flex;align-items:flex-start;gap:10px;font-size:13px;line-height:20px;color:var(--st-muted);}.consent input{width:18px;height:18px;accent-color:var(--st-gold);flex-shrink:0;margin-top:2px;}small{font-size:12px;color:var(--st-muted);line-height:18px;}.notice{padding:14px;border:1px solid var(--st-accent-line);border-radius:12px;background:var(--st-elevated);font-size:13px;line-height:21px;margin:16px 0;overflow-wrap:anywhere;}[role=alert]{color:#ffb4b4;}
-  @container saju (max-width:600px){margin-top:32px;min-height:450px;}
-`;
+type Mode = 'signin' | 'signup' | 'forgot' | 'reset';
+type Confirmation = 'signup' | 'forgot' | 'updated' | null;
+function maskEmail(value: string) {
+  const [local, domain] = value.split('@');
+  return domain ? `${local.slice(0, 2)}•••@${domain}` : value;
+}
+
 export default function AuthFlow({ initialMode = 'signin' }: { initialMode?: 'signin' | 'signup' | 'reset' }) {
-  const [params] = useSearchParams(); const navigate = useNavigate(); const next = safeReturn(params.get('next'));
-  const [mode, setMode] = useState<'signin'|'signup'|'forgot'|'reset'>(initialMode);
-  const [methods, setMethods] = useState(initialMode !== 'reset'); const [providers, setProviders] = useState<Record<string, boolean> | null>(null);
-  const [email,setEmail]=useState(''); const [password,setPassword]=useState(''); const [confirm,setConfirm]=useState(''); const [show,setShow]=useState(false); const [agreed,setAgreed]=useState(false);
-  const [attempt,setAttempt]=useState(0); const [busy,setBusy]=useState(false); const [error,setError]=useState(''); const [notice,setNotice]=useState(''); const [confirmation,setConfirmation]=useState(false);
-  useEffect(()=>{const controller=new AbortController();authProviders(controller.signal).then(setProviders).catch(()=>{if(!controller.signal.aborted)setError('Sign-in options could not be loaded. Please try again.');});return()=>controller.abort();},[attempt]);
-  useEffect(()=>{setMode(initialMode);setMethods(initialMode!=='reset');setError('');setNotice('');setConfirmation(false);setPassword('');setConfirm('');},[initialMode]);
-  async function oauth(provider:'google'|'kakao') {setBusy(true);setError('');try{sessionStorage.setItem('sajuteller-return',next);const{error}=await supabase.auth.signInWithOAuth({provider,options:{redirectTo:`${window.location.origin}/auth-callback?next=${encodeURIComponent(next)}`}});if(error)throw error;}catch(e){setError(e instanceof Error?e.message:'Could not start sign-in.');}finally{setBusy(false);}}
-  async function submit(event:FormEvent<HTMLFormElement>){event.preventDefault();if(busy)return;setError('');setNotice('');
-    if(mode==='signup'||mode==='reset'){const validation=passwordError(password);if(validation){setError(validation);return;}if(password!==confirm){setError('Passwords do not match.');return;}}
-    if(mode==='signup'&&!agreed){setError('Please review and accept the required policies.');return;}
-    setBusy(true);try{
-      if(mode==='forgot'){const{error}=await supabase.auth.resetPasswordForEmail(email.trim(),{redirectTo:`${window.location.origin}/auth-callback?next=/reset-password`});if(error)throw error;setNotice('If an account exists for this email, you’ll receive a password reset link.');}
-      else if(mode==='reset'){const{error}=await supabase.auth.updateUser({password});if(error)throw error;setNotice('Your password has been updated.');setPassword('');setConfirm('');}
-      else if(mode==='signup'){const{data,error}=await supabase.auth.signUp({email:email.trim(),password,options:{emailRedirectTo:`${window.location.origin}/auth-callback?next=${encodeURIComponent(next)}`}});if(error)throw error;if(data.session)navigate(await afterSignIn(next),{replace:true});else{setConfirmation(true);setNotice('Check your email to confirm your account. Open the link in this browser to continue.');}}
-      else{const{error}=await supabase.auth.signInWithPassword({email:email.trim(),password});if(error)throw error;navigate(await afterSignIn(next),{replace:true});}
-    }catch(e){setError(e instanceof Error?e.message:'Please try again.');}finally{setBusy(false);}
+  const [params] = useSearchParams();
+  const navigate = useNavigate();
+  const next = safeReturn(params.get('next'));
+  const [mode, setMode] = useState<Mode>(initialMode);
+  const [methods, setMethods] = useState(initialMode !== 'reset');
+  const [providers, setProviders] = useState<Record<string, boolean> | null>(null);
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [confirm, setConfirm] = useState('');
+  const [show, setShow] = useState(false);
+  const [attempt, setAttempt] = useState(0);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState('');
+  const [notice, setNotice] = useState('');
+  const [confirmation, setConfirmation] = useState<Confirmation>(null);
+  const [consentOpen, setConsentOpen] = useState(false);
+  const [cooldown, setCooldown] = useState(0);
+  const resendDeadline = useRef(0);
+  const passwordInput = useRef<HTMLInputElement>(null);
+  const confirmInput = useRef<HTMLInputElement>(null);
+  const newPassword = mode === 'signup' || mode === 'reset';
+  const invalidPassword = newPassword && password.length > 0 ? passwordError(password) : '';
+  const mismatch = newPassword && confirm.length > 0 && password !== confirm;
+  const passwordsReady = password.length > 0 && !passwordError(password) && password === confirm;
+  const callback = (destination = next) => `${window.location.origin}/auth-callback?next=${encodeURIComponent(destination)}`;
+
+  useEffect(() => {
+    if (initialMode === 'reset') return;
+    const controller = new AbortController();
+    authProviders(controller.signal).then(setProviders).catch(() => {
+      if (!controller.signal.aborted) setError('Sign-in options could not be loaded. Please try again.');
+    });
+    return () => controller.abort();
+  }, [attempt, initialMode]);
+  useEffect(() => {
+    if (!cooldown) return;
+    const timer = window.setTimeout(() => setCooldown(Math.max(0, Math.ceil((resendDeadline.current - Date.now()) / 1000))), 1000);
+    return () => window.clearTimeout(timer);
+  }, [cooldown]);
+
+  function startCooldown() {
+    resendDeadline.current = Date.now() + 60_000;
+    setCooldown(60);
   }
-  const heading=mode==='signup'?'Create your account':mode==='forgot'?'Reset your password':mode==='reset'?'Choose a new password':'Welcome to SajuTeller';
-  return <Shell><div className="brand"><Link to="/">SAJUTELLER</Link></div>{!methods&&mode!=='reset'&&<button className="back" onClick={()=>{setMethods(true);setMode(initialMode);setError('');setNotice('');}}><ArrowLeftIcon/>All sign-in options</button>}<h1>{heading}</h1><p className="intro">{mode==='forgot'?'We’ll email you a link to set a new password.':'A local reader. Your language. Your next chapter.'}</p>
-    {methods?<div className="providers">{!providers&&!error&&<p role="status">Loading sign-in options…</p>}{providers?.google&&<button className="provider" disabled={busy} onClick={()=>oauth('google')}><span aria-hidden="true">G</span><span>Continue with Google</span></button>}{providers?.kakao&&<button className="provider" disabled={busy} onClick={()=>oauth('kakao')}><ChatBubbleOvalLeftIcon/><span>Continue with Kakao</span></button>}{!providers&&error&&<button className="provider" onClick={()=>{setError('');setAttempt(v=>v+1);}}><span>↻</span><span>Retry sign-in options</span></button>}{providers?.email&&<button className="provider" disabled={busy} onClick={()=>setMethods(false)}><EnvelopeIcon/><span>Continue with email</span></button>}</div>:!confirmation&&<form onSubmit={submit}><fieldset disabled={busy}>{mode!=='reset'&&<label>Email address<input name="email" type="email" autoComplete="email" required maxLength={254} value={email} onChange={e=>setEmail(e.target.value)} placeholder="you@example.com"/></label>}{mode!=='forgot'&&<label>Password<div className="password"><input aria-label="Password" name="password" type={show?'text':'password'} autoComplete={mode==='signin'?'current-password':'new-password'} required maxLength={72} value={password} onChange={e=>setPassword(e.target.value)}/><button type="button" aria-label={show?'Hide password':'Show password'} aria-pressed={show} onClick={()=>setShow(v=>!v)}>{show?<EyeSlashIcon/>:<EyeIcon/>}</button></div>{mode!=='signin'&&<small>Use 10–72 characters.</small>}</label>}{(mode==='signup'||mode==='reset')&&<label>Confirm password<input name="confirm" type={show?'text':'password'} autoComplete="new-password" required value={confirm} onChange={e=>setConfirm(e.target.value)}/></label>}{mode==='signin'&&<button className="text forgot" type="button" onClick={()=>{setMode('forgot');setError('');}}>Forgot password?</button>}{mode==='signup'&&<label className="consent"><input type="checkbox" checked={agreed} onChange={e=>setAgreed(e.target.checked)} required/><span>I agree to the <Link to="/terms" target="_blank">Terms</Link> and <Link to="/privacy" target="_blank">Privacy Policy</Link>, and have read the <Link to="/refund-policy" target="_blank">Cancellation Policy</Link>.</span></label>}<button className="primary" type="submit">{busy?'Please wait…':mode==='signup'?'Create account':mode==='forgot'?'Send reset link':mode==='reset'?'Update password':'Sign in'}</button></fieldset></form>}
-    {error&&<p className="notice" role="alert">{error}</p>}{notice&&<p className="notice" role="status">{notice}</p>}{confirmation&&<Link className="primary" style={{display:'grid',placeItems:'center'}} to={`/sign-in?next=${encodeURIComponent(next)}`}>Back to sign in</Link>}
-    {mode!=='reset'&&<p className="switch">{initialMode==='signup'?'Already have an account?':'New to SajuTeller?'} <Link to={`${initialMode==='signup'?'/sign-in':'/sign-up'}?next=${encodeURIComponent(next)}`}>{initialMode==='signup'?'Sign in':'Create an account'}</Link></p>}{mode==='reset'&&notice&&<p className="switch"><Link to="/profile">Continue to your profile</Link></p>}<div className="legal"><Link to="/privacy">Privacy</Link><Link to="/terms">Terms</Link><Link to="/support">Help</Link></div></Shell>;
+  function switchMode(value: Mode) {
+    setMode(value); setMethods(false); setError(''); setNotice('');
+    setConfirmation(null); setConsentOpen(false); setPassword(''); setConfirm(''); setShow(false);
+  }
+  function allMethods() {
+    switchMode('signin'); setMethods(true);
+  }
+  function showError(value: unknown) {
+    const authError = value as { code?: string };
+    if (authError.code === 'email_not_confirmed') {
+      setConfirmation('signup'); setPassword(''); setConfirm('');
+    } else if (authError.code === 'invalid_credentials') {
+      setError('Your email or password is incorrect. Please try again.');
+    } else if (authError.code === 'over_request_rate_limit' || authError.code === 'over_email_send_rate_limit') {
+      setError('Too many attempts. Please wait a moment and try again.');
+    } else {
+      setError('We couldn’t complete your request. Please try again.');
+    }
+  }
+  async function oauth(provider: 'google' | 'kakao') {
+    if (busy) return;
+    setBusy(true); setError('');
+    try {
+      const { error } = await supabase.auth.signInWithOAuth({ provider, options: { redirectTo: callback() } });
+      if (error) throw error;
+    } catch (value) { showError(value); } finally { setBusy(false); }
+  }
+  async function authenticate() {
+    if (busy) return;
+    setBusy(true); setError(''); setNotice('');
+    try {
+      if (mode === 'forgot') {
+        const { error } = await supabase.auth.resetPasswordForEmail(email.trim(), { redirectTo: callback('/reset-password') });
+        if (error) throw error;
+        setConfirmation('forgot'); startCooldown();
+      } else if (mode === 'reset') {
+        const { error } = await supabase.auth.updateUser({ password });
+        if (error) throw error;
+        setConfirmation('updated'); setPassword(''); setConfirm('');
+      } else if (mode === 'signup') {
+        const { data, error } = await supabase.auth.signUp({ email: email.trim(), password, options: { emailRedirectTo: callback() } });
+        if (error) throw error;
+        if (data.session) navigate(await afterSignIn(next), { replace: true });
+        else { setConfirmation('signup'); startCooldown(); setPassword(''); setConfirm(''); }
+      } else {
+        const { error } = await supabase.auth.signInWithPassword({ email: email.trim(), password });
+        if (error) throw error;
+        navigate(await afterSignIn(next), { replace: true });
+      }
+    } catch (value) { showError(value); }
+    finally { setConsentOpen(false); setBusy(false); }
+  }
+  async function submit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (busy || (mode !== 'reset' && !providers?.email)) return;
+    setError(''); setNotice('');
+    if (newPassword) {
+      if (passwordError(password)) { setError(passwordError(password)); passwordInput.current?.focus(); return; }
+      if (password !== confirm) { setError('Passwords do not match.'); confirmInput.current?.focus(); return; }
+    }
+    if (mode === 'signup') { setConsentOpen(true); return; }
+    await authenticate();
+  }
+  async function resend() {
+    if (busy || cooldown || !confirmation || confirmation === 'updated') return;
+    setBusy(true); setError(''); setNotice('');
+    try {
+      const { error } = confirmation === 'signup'
+        ? await supabase.auth.resend({ type: 'signup', email: email.trim(), options: { emailRedirectTo: callback() } })
+        : await supabase.auth.resetPasswordForEmail(email.trim(), { redirectTo: callback('/reset-password') });
+      if (error) throw error;
+      startCooldown();
+      setNotice('If this email is eligible, a new link will arrive shortly. Check your inbox and spam folder.');
+    } catch (value) { showError(value); } finally { setBusy(false); }
+  }
+
+  const brand = <Link className="brand" to="/" aria-label="SajuTeller home">SAJUTELLER</Link>;
+  const legal = <div className="legal"><Link to="/terms">Terms of Use</Link><span aria-hidden="true">|</span><Link to="/privacy">Privacy Policy</Link></div>;
+  const messages = <>{error && <p className="notice" role="alert">{error}</p>}{notice && <p className="notice" role="status">{notice}</p>}</>;
+  if (confirmation) return <AuthPanel aria-busy={busy} data-auth-view="confirmation">
+    {brand}
+    <div className="security">
+      <AnimatedEmoji key={confirmation} name={confirmation === 'updated' ? 'sparkles' : 'love-letter'} size={80}/>
+      <h1>{confirmation === 'updated' ? 'Password updated' : 'Check your email'}</h1>
+      {confirmation === 'updated' ? <p>Your new password is ready. You can continue to your account.</p> : <>
+        <p><strong>{maskEmail(email.trim())}</strong></p>
+        <p>{confirmation === 'signup' ? 'If this email needs confirmation, you’ll receive a link to finish creating your account.' : 'If an account exists for this email, you’ll receive a link to reset your password.'}</p>
+        <p>{confirmation === 'signup' ? 'Already registered? Sign in or reset your password. A confirmed account won’t receive another signup email.' : 'Open the link in your email to choose a new password. Check your spam folder too.'}</p>
+      </>}
+      {messages}
+      {confirmation === 'updated' ? <Link className="primary" to="/profile">Continue to your profile</Link> : <>
+        <button className="primary" disabled={busy || cooldown > 0} onClick={() => void resend()}>{cooldown ? `Resend in ${cooldown}s` : 'Resend email'}</button>
+        <div className="security-actions">
+          <button className="text-button" disabled={busy} onClick={() => switchMode(confirmation === 'signup' ? 'signup' : 'forgot')}>Change email address</button>
+          <button className="text-button" disabled={busy} onClick={() => switchMode('signin')}>Back to sign in</button>
+          {confirmation === 'signup' && <button className="text-button" disabled={busy} onClick={() => switchMode('forgot')}>Reset password instead</button>}
+        </div>
+      </>}
+    </div>{legal}
+  </AuthPanel>;
+
+  if (methods) return <AuthPanel aria-busy={busy} data-auth-view="methods">
+    {brand}
+    <div className="method-heading">
+      <AnimatedEmoji name="crystal-ball" size={88}/>
+      <h1 className="sr-only">Sign in to SajuTeller</h1>
+      <p>Sign up or sign in to begin your Saju journey.</p>
+    </div>
+    <div className="providers">
+      {!providers && !error && <p className="notice" role="status">Loading sign-in options…</p>}
+      {providers?.email && <button className="provider" disabled={busy} onClick={() => setMethods(false)}><EnvelopeIcon/><span>Continue with email</span></button>}
+      {providers?.kakao && <button className="provider" disabled={busy} onClick={() => void oauth('kakao')}><ChatBubbleOvalLeftIcon/><span>Continue with Kakao</span></button>}
+      {providers?.google && <button className="provider" disabled={busy} onClick={() => void oauth('google')}><span aria-hidden="true">G</span><span>Continue with Google</span></button>}
+      {!providers && error && <button className="provider" onClick={() => { setError(''); setAttempt(value => value + 1); }}><span aria-hidden="true">↻</span><span>Retry sign-in options</span></button>}
+      {providers && !providers.email && !providers.google && !providers.kakao && <p className="notice" role="status">Sign-in is temporarily unavailable. Please try again later.</p>}
+    </div>{messages}{legal}
+  </AuthPanel>;
+
+  const heading = mode === 'signup' ? 'Create your account' : mode === 'forgot' ? 'Forgot your password?' : mode === 'reset' ? 'Choose a new password' : 'Welcome back';
+  const intro = mode === 'signup' ? 'Create an account to begin your Saju journey.' : mode === 'forgot' ? 'We’ll email you a link to reset it.' : mode === 'reset' ? 'Choose a strong password for your account.' : 'Sign in to your SajuTeller account.';
+  const symbol: EmojiName = mode === 'signup' ? 'sparkles' : mode === 'forgot' || mode === 'reset' ? 'locked' : 'waving-hand';
+  return <AuthPanel aria-busy={busy} data-auth-view={mode}>
+    {consentOpen && <AuthConsent busy={busy} onAccept={() => void authenticate()} onCancel={() => setConsentOpen(false)}/>}
+    {mode !== 'reset' && <div className="topline"><button className="back" disabled={busy} onClick={allMethods}><ArrowLeftIcon/>All sign-in options</button></div>}
+    {brand}
+    <div className="heading"><AnimatedEmoji key={symbol} name={symbol} size={64}/><h1>{heading}</h1><p>{intro}</p></div>
+    <form onSubmit={submit}><fieldset disabled={busy || (mode !== 'reset' && !providers?.email)}>
+      {mode !== 'reset' && <label>Email address<input name="email" type="email" autoComplete="email" autoCapitalize="none" spellCheck={false} required maxLength={254} value={email} onChange={event => { setEmail(event.target.value); setError(''); }} placeholder="you@example.com"/></label>}
+      {mode !== 'forgot' && <label>Password<div className="password">
+        <input ref={passwordInput} aria-label="Password" aria-invalid={!!invalidPassword} aria-describedby={newPassword ? 'password-feedback' : undefined} name="password" type={show ? 'text' : 'password'} autoComplete={mode === 'signin' ? 'current-password' : 'new-password'} required maxLength={72} value={password} onChange={event => { setPassword(event.target.value); setError(''); }} placeholder={newPassword ? 'At least 10 characters' : 'Enter your password'}/>
+        <button type="button" aria-label={show ? 'Hide password' : 'Show password'} aria-pressed={show} onClick={() => setShow(value => !value)}>{show ? <EyeSlashIcon/> : <EyeIcon/>}</button>
+      </div>{newPassword && <small id="password-feedback" role="status" className={invalidPassword ? 'field-error' : password ? 'field-success' : ''}>{invalidPassword || (password ? '✓ Meets requirements' : 'Use 10–72 characters.')}</small>}</label>}
+      {newPassword && <label>Confirm password<input ref={confirmInput} aria-label="Confirm password" aria-invalid={mismatch} aria-describedby="confirm-feedback" name="confirm" type={show ? 'text' : 'password'} autoComplete="new-password" required maxLength={72} value={confirm} onChange={event => { setConfirm(event.target.value); setError(''); }} placeholder="Re-enter your password"/><small id="confirm-feedback" role="status" className={mismatch ? 'field-error' : passwordsReady ? 'field-success' : ''}>{mismatch ? 'Passwords do not match.' : passwordsReady ? '✓ Passwords match' : 'Re-enter your password.'}</small></label>}
+      {mode === 'signin' && <button className="forgot" type="button" onClick={() => switchMode('forgot')}>Forgot password?</button>}
+      {messages}
+      <button className="primary" type="submit" disabled={newPassword && !passwordsReady}>{busy ? 'Please wait…' : mode === 'signup' ? 'Create account' : mode === 'forgot' ? 'Send reset link' : mode === 'reset' ? 'Update password' : 'Sign in'}</button>
+    </fieldset></form>
+    {(mode === 'signin' || mode === 'signup') && <p className="switch">{mode === 'signup' ? 'Already have an account?' : 'Don’t have an account?'}{' '}<button disabled={busy} onClick={() => switchMode(mode === 'signup' ? 'signin' : 'signup')}>{mode === 'signup' ? 'Log in' : 'Sign up'}</button></p>}
+    {mode === 'forgot' && <button className="text-button center" disabled={busy} onClick={() => switchMode('signin')}>Back to sign in</button>}
+    {legal}
+  </AuthPanel>;
 }

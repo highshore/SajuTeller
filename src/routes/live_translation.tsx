@@ -96,7 +96,7 @@ const Page = styled.div`
     z-index: 0;
   }
   
-  @media (max-width: 768px) {
+  @container saju (max-width: 768px) {
     padding: 1rem 0;
   }
 `;
@@ -113,7 +113,7 @@ const Button = styled.button<{ $primary?: boolean; $danger?: boolean; $customer?
   transition: all 0.3s ease;
   min-width: min(180px,100%);
   max-width:100%;
-  @media(max-width:600px){padding:14px 18px;font-size:15px;}
+  @container saju (max-width:600px){padding:14px 18px;font-size:15px;}
   position: relative;
   overflow: hidden;
   
@@ -331,7 +331,7 @@ const RecordingButtons = styled.div`
   justify-content: center;
   flex-wrap: wrap;
 
-  @media (max-width: 768px) {
+  @container saju (max-width: 768px) {
     flex-direction: column;
     align-items: center;
   }

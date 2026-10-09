@@ -11,7 +11,7 @@ const Header = styled.header`
   nav{display:flex;align-items:center;gap:28px;}nav a{font-size:13px;color:var(--st-muted);padding:12px 0;}nav a[aria-current]{color:var(--st-gold);}
   .actions{display:flex;align-items:center;gap:16px;}.locale{font-size:11px;letter-spacing:1.1px;color:var(--st-gold);}
   .signin{border:1px solid var(--st-line);border-radius:999px;padding:10px 18px;min-height:44px;display:flex;align-items:center;gap:7px;font-size:12px;}svg{width:20px;height:20px;}
-  @media(max-width:850px){nav{display:none;}.inner{gap:12px;}.actions{gap:12px;}.signin{padding:8px 12px;}.brand{font-size:24px;}}
+  @container saju (max-width:850px){nav{display:none;}.inner{gap:12px;}.actions{gap:12px;}.signin{padding:8px 12px;}.brand{font-size:24px;}}
 `;
 export default function GNB() {
   const { pathname } = useLocation();

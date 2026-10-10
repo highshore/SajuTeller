@@ -30,8 +30,13 @@ export async function POST(req:Request){
   catch(error) {
    const e=error as {code?:number;status?:number};if(e.code!==16&&e.status!==404)throw error;
    const member=['read-channel','read-channel-members','create-message','add-links','create-reaction','delete-reaction-owner','flag-message'];
-   stage='create_channel_type';await client.createChannelType({name:channelType,typing_events:true,read_events:true,connect_events:true,reactions:true,replies:false,quotes:true,uploads:false,url_enrichment:false,max_message_length:4000,grants:{user:[],guest:[],anonymous:[],channel_member:member,channel_moderator:member}});
-   config=await client.getChannelType(channelType);
+   stage='create_channel_type';
+   try {await client.createChannelType({name:channelType,commands:[],typing_events:true,read_events:true,connect_events:true,reactions:true,replies:false,quotes:true,uploads:false,url_enrichment:false,max_message_length:4000,grants:{user:[],guest:[],anonymous:[],channel_member:member,channel_moderator:member}});}
+   catch(createError){
+    // Another request may finish setup first. Read the resulting config and still validate it below.
+    try {config=await client.getChannelType(channelType);}catch{throw createError;}
+   }
+   if(!config)config=await client.getChannelType(channelType);
   }
   if(!Array.isArray(config.grants?.user)||config.grants.user.length!==0||!config.grants?.channel_member?.includes('read-channel')||['guest','anonymous'].some(role=>(config.grants?.[role]||[]).length>0)||config.grants?.channel_member?.some(grant=>['create-channel','update-channel','update-channel-members'].includes(grant)))return reply(503,{code:'chat_not_configured'});
   stage='sync_user';const viewer=context.viewer as {id:string;name:string};
@@ -63,7 +68,7 @@ export async function POST(req:Request){
   }
   const expires=Math.floor(Date.now()/1000)+15*60;
   return reply(200,{apiKey,token:client.createToken(viewer.id,expires),user:viewer,channelType,channelId,expiresAt:expires});
- }catch(error){const providerCode=(error as {code?:number})?.code;console.error('business-chat request failed',{stage,name:error instanceof Error?error.name:'unknown',providerCode});return reply(503,{code:'chat_unavailable',stage,providerCode:typeof providerCode==='number'?providerCode:undefined,diagnostic:error instanceof Error?error.message.replaceAll(process.env.STREAM_API_SECRET||'__unset__','[redacted]').replaceAll(process.env.STREAM_API_KEY||'__unset__','[redacted]').replaceAll(req.headers.get('Authorization')||'__unset__','[redacted]').slice(0,240):'unknown'});}
+ }catch(error){const providerCode=(error as {code?:number})?.code;console.error('business-chat request failed',{stage,name:error instanceof Error?error.name:'unknown',providerCode});return reply(503,{code:'chat_unavailable',stage,providerCode:typeof providerCode==='number'?providerCode:undefined});}
 }
 
 // Stable message IDs make reconnects/retries safe, including simultaneous browser tabs.

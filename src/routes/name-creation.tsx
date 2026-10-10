@@ -1,3 +1,4 @@
+import LoadingScreen from '../components/loading_screen';
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import styled from 'styled-components';
@@ -336,28 +337,6 @@ const Button = styled.button<{ $variant?: 'primary'; $language: string }>`
   }
 `;
 
-const LoadingSpinner = styled.div`
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  width: 100%;
-  height: 200px;
-  
-  &::before {
-    content: '';
-    display: inline-block;
-    width: 40px;
-    height: 40px;
-    border: 4px solid #f3f4f6;
-    border-radius: 50%;
-    border-top-color: #8b5cf6;
-    animation: spin 1s ease-in-out infinite;
-  }
-  
-  @keyframes spin {
-    to { transform: rotate(360deg); }
-  }
-`;
 
 const ResultContainer = styled.div`
   text-align: center;
@@ -926,7 +905,7 @@ const NameCreation: React.FC = () => {
             <Subtitle $language={language}>{t('aiIsCreatingKoreanName')}</Subtitle>
           </Header>
           
-          <LoadingSpinner />
+          <LoadingScreen compact/>
         </ContentWrapper>
       </Container>
     );

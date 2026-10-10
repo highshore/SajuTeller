@@ -1,36 +1,16 @@
-import { styled } from "styled-components";
-import Lottie from "lottie-react";
-import loadingAnimation from "../assets/loading.json";
-
-const Wrapper = styled.div`
-  position: fixed;
-  top: 0;
-  left: 0;
-  height: 100vh;
-  width: 100vw;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  background: rgba(255, 255, 255, 0.9);
-  backdrop-filter: blur(8px);
-  z-index: 9999;
+import { styled } from 'styled-components';
+import AnimatedEmoji from './animated-emoji';
+import { useI18n } from '../i18n/i18n';
+const State = styled.div<{ $compact: boolean }>`
+  width:100%;min-width:0;flex:1;min-height:${p=>p.$compact?'160px':'min(65dvh,560px)'};
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;
+  padding:32px 20px;text-align:center;color:var(--st-muted);background:var(--st-paper);
+  p{font-size:13px;line-height:1.6;max-width:28ch;}
 `;
-
-const LottieContainer = styled.div`
-  width: 200px;
-  height: 200px;
-`;
-
-export default function LoadingScreen() {
-  return (
-    <Wrapper>
-      <LottieContainer>
-        <Lottie
-          animationData={loadingAnimation}
-          loop={true}
-          autoplay={true}
-        />
-      </LottieContainer>
-    </Wrapper>
-  );
+/** Stays inside the shell so navigation remains usable while routes load. */
+export default function LoadingScreen({label='Loading…',compact=false}:{label?:string;compact?:boolean}) {
+  const {t}=useI18n();
+  return <State $compact={compact} role="status" aria-live="polite" data-loading-screen>
+    <AnimatedEmoji name="crystal-ball" size={compact?64:88} loop/><p>{t(label)}</p>
+  </State>;
 }

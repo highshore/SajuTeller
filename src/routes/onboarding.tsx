@@ -1,3 +1,4 @@
+import LoadingScreen from '../components/loading_screen';
 import { useEffect, useRef, useState, type FormEvent } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { ArrowLeftIcon, CheckIcon, ShieldCheckIcon } from '@heroicons/react/24/outline';
@@ -70,7 +71,7 @@ export default function Onboarding() {
     {step ? <button className="back" disabled={busy} aria-label={t('Back')} onClick={() => { setError(''); setStep(step - 1); }}><ArrowLeftIcon/></button> : <Link className="back" to="/profile" aria-label={t('Back')}><ArrowLeftIcon/></Link>}
     <span className="step-label">{t('Profile')} {step + 1} / 3</span><LocaleSelector/>
   </header><progress max={3} value={step + 1} aria-label={t('Profile setup')}/>
-  {loading ? <p role="status" style={{ paddingBlock: 40 }}>{t('Loading your profile…')}</p> : !ready ? <Notice role="alert">{t(error)}<Button onClick={() => { setLoading(true); setRetry(v => v + 1); }}>{t('Retry loading profile')}</Button></Notice> : <form onSubmit={submit}>
+  {loading ? <LoadingScreen label="Loading your profile…"/> : !ready ? <Notice role="alert">{t(error)}<Button onClick={() => { setLoading(true); setRetry(v => v + 1); }}>{t('Retry loading profile')}</Button></Notice> : <form onSubmit={submit}>
     <div className="step-content"><section className="intro"><AnimatedEmoji key={step} name={moment.emoji} size={72}/><p className="eyebrow">{t('Your SajuTeller')}</p><h1 ref={heading} tabIndex={-1}>{t(moment.title)}</h1><p>{t(moment.body)}</p></section>
     {step === 0 && <><Field>{t('Display name')}<input autoComplete="nickname" maxLength={80} required value={name} onChange={e => setName(e.target.value)} placeholder={t('Your nickname')}/></Field><p className="hint">{t('You can change this later in your profile.')}</p></>}
     {step === 1 && <fieldset className="language-list"><legend className="sr-only">{t('Preferred reading language')}</legend>{Object.entries(languages).map(([code, label], i) => <label className="language-choice" key={code}><input type="radio" name="reading-language" value={code} checked={language === code} onChange={() => setLanguage(code)}/><span className="flag" aria-hidden="true">{flags[i]}</span><span lang={code}>{label}</span>{language === code && <CheckIcon/>}</label>)}</fieldset>}

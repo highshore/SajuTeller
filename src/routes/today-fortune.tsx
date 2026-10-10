@@ -1,3 +1,4 @@
+import LoadingScreen from '../components/loading_screen';
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import styled from 'styled-components';
@@ -407,28 +408,6 @@ const Button = styled.button<{ $variant?: 'primary' | 'secondary'; $language: st
   }
 `;
 
-const LoadingSpinner = styled.div`
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  width: 100%;
-  height: 200px;
-  
-  &::before {
-    content: '';
-    display: inline-block;
-    width: 40px;
-    height: 40px;
-    border: 4px solid #f3f4f6;
-    border-radius: 50%;
-    border-top-color: #8b5cf6;
-    animation: spin 1s ease-in-out infinite;
-  }
-  
-  @keyframes spin {
-    to { transform: rotate(360deg); }
-  }
-`;
 
 // 사용자 입력 폼 컴포넌트
 const InputForm = styled.div`
@@ -843,7 +822,7 @@ export default function TodayFortune() {
             <Title $language={language}>{t('fortuneAnalyzing')}</Title>
             <Subtitle $language={language}>{t('creatingYourSpecialFortune')}</Subtitle>
           </Header>
-          <LoadingSpinner />
+          <LoadingScreen compact/>
         </ContentWrapper>
       </Container>
     );

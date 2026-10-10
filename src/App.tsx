@@ -1,8 +1,9 @@
+import LoadingScreen from './components/loading_screen';
 import { lazy, Suspense } from "react";
 import { RouterProvider, createBrowserRouter, Navigate } from "react-router-dom";
 import Layout from "./components/layout";
 import { Home } from "./routes/home";
-import Profile from "./routes/account";
+const Profile = lazy(() => import("./routes/account"));
 import { Login } from "./routes/sign_in";
 import { CreateAccount } from "./routes/sign_up";
 import { createGlobalStyle, styled } from "styled-components";
@@ -13,25 +14,25 @@ import AuthCallback from "./routes/auth_callback";
 const Messages = lazy(() => import("./routes/messages.tsx"));
 import AdminRoute from "./components/admin_route";
 const AdminBroadcast = lazy(() => import("./routes/admin-broadcast"));
-import Support from "./routes/support";
-import FAQ from "./routes/faq";
+const Support = lazy(() => import("./routes/support"));
+const FAQ = lazy(() => import("./routes/faq"));
 const LiveTranslation = lazy(() => import("./routes/live_translation.tsx"));
 const Locations = lazy(() => import("./routes/reading-map"));
-import BusinessDetail from "./routes/experience";
-import Booking from "./routes/request-visit";
+const BusinessDetail = lazy(() => import("./routes/experience"));
+const Booking = lazy(() => import("./routes/request-visit"));
 
 const TodayFortune = lazy(() => import("./routes/today-fortune"));
 const NameCreation = lazy(() => import("./routes/name-creation"));
-import Learn from "./routes/learn";
-import Experiences from "./routes/experiences";
-import Match from "./routes/match";
-import Saved from "./routes/saved";
-import Trips from "./routes/trips";
-import Host from "./routes/host";
-import Search from "./routes/search";
-import Studio from "./routes/studio";
-import Onboarding from "./routes/onboarding";
-import Legal from "./routes/legal";
+const Learn = lazy(() => import("./routes/learn"));
+const Experiences = lazy(() => import("./routes/experiences"));
+const Match = lazy(() => import("./routes/match"));
+const Saved = lazy(() => import("./routes/saved"));
+const Trips = lazy(() => import("./routes/trips"));
+const Host = lazy(() => import("./routes/host"));
+const Search = lazy(() => import("./routes/search"));
+const Studio = lazy(() => import("./routes/studio"));
+const Onboarding = lazy(() => import("./routes/onboarding"));
+const Legal = lazy(() => import("./routes/legal"));
 import AuthFlow from "./components/auth-flow";
 
 const router = createBrowserRouter([
@@ -156,7 +157,7 @@ function App() {
   return (
     <Wrapper>
       <GlobalStyles />
-      <Suspense fallback={<div role="status" style={{padding:40,textAlign:"center"}}>Loading your SajuTeller experience…</div>}><RouterProvider router={router} /></Suspense>
+      <Suspense fallback={<LoadingScreen/>}><RouterProvider router={router} /></Suspense>
     </Wrapper>
   );
 }

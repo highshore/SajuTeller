@@ -6,12 +6,14 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Cinzel:wght@400;600;700&family=Cormorant+Garamond:wght@500;600;700&family=Crimson+Text:wght@400;600&family=Noto+Sans+KR:wght@400;500;600;700&family=Noto+Serif+KR:wght@500;600;700&family=Song+Myung&display=swap" rel="stylesheet" />
+    <link media="print" onload="this.media='all'" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Cinzel:wght@400;600;700&family=Cormorant+Garamond:wght@500;600;700&family=Crimson+Text:wght@400;600&family=Noto+Sans+KR:wght@400;500;600;700&family=Noto+Serif+KR:wght@500;600;700&family=Song+Myung&display=swap" rel="stylesheet" />
     <meta name="description" content="Discover Korean Saju experiences in Seoul. Find a reading for your curiosity, compare language support, and plan a visit with SajuTeller." />
+    <link rel="preload" href="/emoji/crystal-ball.json" as="fetch" crossorigin />
+    <style>body{margin:0;background:#17111e}.boot{max-width:430px;min-height:100dvh;margin:auto;background:#0b0610;color:#b8acbf;display:grid;place-content:center;text-align:center;gap:20px;font:13px system-ui}.boot span{font-size:66px;animation:boot-breathe 1.4s ease-in-out infinite alternate}@keyframes boot-breathe{to{opacity:.65;transform:translateY(-4px)}}@media(prefers-reduced-motion:reduce){.boot span{animation:none}}</style>
     <title>SajuTeller | Saju experiences in Seoul</title>
   </head>
   <body>
-    <div id="root"></div>
+    <div id="root"><div class="boot" role="status" aria-label="Loading SajuTeller"><span aria-hidden="true">🔮</span><p>SajuTeller</p></div></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

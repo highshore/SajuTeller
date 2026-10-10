@@ -24,7 +24,7 @@ const agreements = [
 ] as const;
 type DocumentPath = typeof agreements[number]['path'];
 
-export default function AuthConsent({ busy, onAccept, onCancel }: { busy: boolean; onAccept: () => void; onCancel: () => void }) {const { t } = useI18n();
+export default function AuthConsent({ busy, onAccept, onCancel, profile = false }: { profile?: boolean; busy: boolean; onAccept: () => void; onCancel: () => void }) {const { t } = useI18n();
   const dialog = useRef<HTMLDialogElement>(null);
   const [view, setView] = useState<DocumentPath | null>(null);
   const [checked, setChecked] = useState<string[]>([]);
@@ -47,12 +47,12 @@ export default function AuthConsent({ busy, onAccept, onCancel }: { busy: boolea
     </> : <>
       <ShieldCheckIcon className="icon"/>
       <h2 id="consent-title">{t("Before we get started")}</h2>
-      <p>{t("Please review the policies before creating your SajuTeller account.")}</p>
+      <p>{t(profile ? "Please review the policies before completing your profile." : "Please review the policies before creating your SajuTeller account.")}</p>
       <div className="agreements">{agreements.map(({ path, label }) => <div className="row" key={path}>
         <label><input type="checkbox" disabled={busy} checked={checked.includes(path)} onChange={e => setChecked(values => e.target.checked ? [...values, path] : values.filter(value => value !== path))}/><span>{t(label)}<br/><small>{path === '/refund-policy' ? t("I have read this policy") : t("Required agreement")}</small></span></label>
         <button type="button" className="read" disabled={busy} aria-label={`${t('Read')} ${t(label)}`} onClick={() => setView(path)}>{t("Read")}</button>
       </div>)}</div>
-      <button className="primary" type="button" disabled={busy || checked.length !== agreements.length} onClick={onAccept}>{busy ? t("Creating your account…") : t("Agree and continue")}</button>
+      <button className="primary" type="button" disabled={busy || checked.length !== agreements.length} onClick={onAccept}>{busy ? t(profile ? "Saving…" : "Creating your account…") : t("Agree and continue")}</button>
       <button className="cancel" type="button" disabled={busy} onClick={onCancel}>{t("Not now")}</button>
     </>}
   </Dialog>;

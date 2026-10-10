@@ -22,7 +22,7 @@ export async function POST(req:Request){
   const authorized=await fetch(`${supabaseUrl}/functions/v1/business-chat-context`,{method:'POST',headers:{Authorization:`Bearer ${jwt}`,'Content-Type':'application/json'},body:JSON.stringify({studioId:body.studioId})});
   const context=await authorized.json() as ChatContext;if(!authorized.ok)return reply(authorized.status,{code:context.code||'chat_unavailable'});
   const apiKey=process.env['STREAM_API_KEY'];const secret=process.env['STREAM_API_SECRET'];if(!apiKey||!secret)return reply(503,{code:'chat_not_configured'});
-  const client=new StreamChat(apiKey,secret);stage='channel_configuration';
+  const client=new StreamChat(apiKey,secret,{timeout:30000});stage='channel_configuration';
   // A dedicated type prevents browser-created channels or membership changes.
   // Initialize only this app's dedicated type; never alter other apps' channel permissions.
   let config;

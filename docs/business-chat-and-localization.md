@@ -10,7 +10,7 @@ In Supabase Authentication → Sign In / Providers → Kakao, enable **Allow use
 
 ## Stream credentials
 
-Use a dedicated SajuTeller Stream application. In Supabase → Edge Functions → Secrets for project `jbwuefecydjkieplftia`, set:
+Use a dedicated SajuTeller Stream application. In Vercel → saju → Settings → Environment Variables (Production), set:
 
 - `STREAM_API_KEY`
 - `STREAM_API_SECRET`
@@ -23,11 +23,11 @@ With these two Stream values in a trusted local shell environment, run:
 node scripts/configure-stream.mjs
 ```
 
-This creates/updates the dedicated `saju_business` channel type. Clients can read and send messages only as channel members. Creating channels and changing membership are server-only. Uploads and URL previews are disabled. The function fails closed until the channel type is configured. No external messages are sent by setup.
+This creates/updates the dedicated `saju_business` channel type. Clients can read and send messages only as channel members. Creating channels and changing membership are server-only. Uploads and URL previews are disabled. The API initializes this channel type on first use and fails closed if an existing type has unsafe grants. No external messages are sent by setup.
 
 ## Assign business staff
 
-Business staff must be existing Supabase users explicitly assigned by an administrator. They use `/messages` to reply. Customers enter from a real business's detail page; preview businesses never create conversations. Existing sample studios remain previews until their real details and staff have been confirmed.
+Business staff must be existing Supabase users explicitly assigned by an administrator. They use `/messages` to reply. Customers enter from a business detail page. Only explicitly enabled demo studios may create simulated conversations; ordinary previews remain blocked. Existing sample studios remain previews until their real details and staff have been confirmed.
 
 For staff management, set `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, `STREAM_API_KEY` and `STREAM_API_SECRET` in a trusted server/local environment. Then run:
 
@@ -49,7 +49,7 @@ Migration `20261009203716_saju_business_chat.sql` creates private staff mappings
 - `node scripts/global-experience-check.mjs` (fixtures; no real users, messages or bookings)
 - `node scripts/business-chat-check.mjs` (server authorization and token boundary checks)
 
-Live Kakao consent/login and actual two-account Stream delivery still require provider setup and real test accounts. Local UI checks do not establish those integrations are live.
+Stream demo delivery was verified in production with two temporary accounts: private channels, real messages and automated replies, idempotent retries, and cross-user access denial. Live Kakao consent/login still requires verification with a real provider account.
 
 ## Demo studios and short onboarding (October 10)
 

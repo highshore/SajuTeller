@@ -40,7 +40,7 @@ try {
   const layout = async () => {
     assert.ok(await page.locator('[data-app-shell]').evaluate(el => el.scrollWidth <= el.clientWidth + 1), 'No app overflow');
     assert.equal(await page.locator('[data-global-header]').count(), 1);
-    assert.equal(await page.locator('[data-global-bottom-nav] a').count(), 4);
+    assert.equal(await page.locator('[data-global-bottom-nav] a').count(), 5);
   };
   await navigate('/sign-in?next=/studio');
   await page.getByRole('button', { name: 'Continue with email' }).waitFor();

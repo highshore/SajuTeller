@@ -1,3 +1,4 @@
+import { NotificationProvider } from './components/notification-provider';
 import LoadingScreen from './components/loading_screen';
 import { lazy, Suspense } from "react";
 import { RouterProvider, createBrowserRouter, Navigate } from "react-router-dom";
@@ -13,7 +14,8 @@ import NotFound from "./components/not_found";
 import AuthCallback from "./routes/auth_callback";
 const Messages = lazy(() => import("./routes/messages.tsx"));
 import AdminRoute from "./components/admin_route";
-const AdminBroadcast = lazy(() => import("./routes/admin-broadcast"));
+const AdminNotifications = lazy(() => import("./routes/admin-notifications"));
+const Notifications = lazy(() => import("./routes/notifications"));
 const Support = lazy(() => import("./routes/support"));
 const FAQ = lazy(() => import("./routes/faq"));
 const LiveTranslation = lazy(() => import("./routes/live_translation.tsx"));
@@ -63,7 +65,9 @@ const router = createBrowserRouter([
       { path: "host", element: <Host /> },
       { path: "profile", element: <ProtectedRoute><Profile /></ProtectedRoute> },
       { path: "messages", element: <ProtectedRoute><Messages /></ProtectedRoute> },
-      { path: "d", element: <AdminRoute><AdminBroadcast /></AdminRoute> },
+      { path: "notifications", element: <ProtectedRoute><Notifications /></ProtectedRoute> },
+      { path: "admin/notifications", element: <AdminRoute><AdminNotifications /></AdminRoute> },
+      { path: "d", element: <Navigate to="/admin/notifications" replace/> },
       { path: "support", element: <Support /> },
       { path: "faq", element: <FAQ /> },
       { path: "live-translation", element: <LiveTranslation /> },
@@ -121,7 +125,7 @@ const GlobalStyles = createGlobalStyle`
   img, video { max-width:100%; height:auto; }
   input, select, textarea { max-width:100%; min-width:0; }
   :focus-visible { outline:2px solid #a78bfa; outline-offset:3px; }
-  html { scroll-behavior: smooth; scroll-padding-top:76px; }
+  html { scroll-behavior: smooth; scroll-padding-top:76px; scroll-padding-bottom:calc(88px + env(safe-area-inset-bottom)); }
   html, body, #root { min-height: 100%; }
   body {
     margin: 0;
@@ -157,7 +161,7 @@ function App() {
   return (
     <Wrapper>
       <GlobalStyles />
-      <Suspense fallback={<LoadingScreen/>}><RouterProvider router={router} /></Suspense>
+      <Suspense fallback={<LoadingScreen/>}><NotificationProvider><RouterProvider router={router} /></NotificationProvider></Suspense>
     </Wrapper>
   );
 }

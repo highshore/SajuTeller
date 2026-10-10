@@ -1,16 +1,23 @@
+import { useLayoutEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { styled } from 'styled-components';
 import AnimatedEmoji from './animated-emoji';
 import { useI18n } from '../i18n/i18n';
-const State = styled.div<{ $compact: boolean }>`
-  width:100%;min-width:0;flex:1;min-height:${p=>p.$compact?'160px':'min(65dvh,560px)'};
-  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;
-  padding:32px 20px;text-align:center;color:var(--st-muted);background:var(--st-paper);
-  p{font-size:13px;line-height:1.6;max-width:28ch;}
+const Overlay=styled.div`
+  position:fixed;inset:0;z-index:2000;display:grid;place-items:center;
+  background:rgb(11 6 16 / 94%);backdrop-filter:blur(3px);
+  .label{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap;}
 `;
-/** Stays inside the shell so navigation remains usable while routes load. */
-export default function LoadingScreen({label='Loading…',compact=false}:{label?:string;compact?:boolean}) {
+let overlays=0;let previousOverflow='';let previousInert=false;
+/** A portal escapes the app container, matching Roundy's viewport loading layer. */
+export default function LoadingScreen({label='Loading…'}:{label?:string;compact?:boolean}) {
   const {t}=useI18n();
-  return <State $compact={compact} role="status" aria-live="polite" data-loading-screen>
-    <AnimatedEmoji name="crystal-ball" size={compact?64:88} loop/><p>{t(label)}</p>
-  </State>;
+  useLayoutEffect(()=>{
+    const root=document.getElementById('root');
+    if(overlays++===0){previousOverflow=document.body.style.overflow;previousInert=root?.inert||false;document.body.style.overflow='hidden';if(root)root.inert=true;}
+    return()=>{if(--overlays===0){document.body.style.overflow=previousOverflow;if(root)root.inert=previousInert;}};
+  },[]);
+  return createPortal(<Overlay role="status" aria-live="polite" aria-label={t(label)} data-loading-screen>
+    <AnimatedEmoji name="crystal-ball" size={64} loop/><span className="label">{t(label)}</span>
+  </Overlay>,document.body);
 }

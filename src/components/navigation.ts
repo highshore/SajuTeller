@@ -1,10 +1,11 @@
-import { HomeIcon, MapPinIcon, CalendarDaysIcon, UserCircleIcon } from '@heroicons/react/24/outline';
+import { HomeIcon, MapPinIcon, CalendarDaysIcon, UserCircleIcon, ChatBubbleLeftRightIcon } from '@heroicons/react/24/outline';
 
 // One route definition drives both desktop and mobile navigation.
 export const navigation = [
   { to: '/', label: 'Explore', icon: HomeIcon, matches: (p: string) => p === '/' || p.startsWith('/experiences') || p.startsWith('/search') || p.startsWith('/business') },
   { to: '/map', label: 'Map', icon: MapPinIcon, matches: (p: string) => p === '/map' },
   { to: '/trips', label: 'Bookings', icon: CalendarDaysIcon, matches: (p: string) => p.startsWith('/trips') },
+  { to: '/messages', label: 'Messages', icon: ChatBubbleLeftRightIcon, matches: (p: string) => p.startsWith('/messages') },
   { to: '/profile', label: 'Profile', icon: UserCircleIcon, matches: (p: string) => p.startsWith('/profile') || p.startsWith('/saved') },
 ];
 

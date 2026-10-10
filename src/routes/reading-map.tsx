@@ -56,6 +56,7 @@ export default function ReadingMap() {
         </div>
         <div className="map" data-map-provider="google">
           {apiKey ? <iframe
+            key={`${coordinates}:${language}`}
             title={`${t('Map')} · ${studio.neighborhood}`}
             src={`https://www.google.com/maps/embed/v1/place?${mapParams}`}
             loading="lazy" referrerPolicy="strict-origin-when-cross-origin" allowFullScreen

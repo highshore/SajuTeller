@@ -38,7 +38,7 @@ try {
       assert.ok(page.url().includes('studio='+second.id));assert.ok(page.url().includes('keep=1'));
       if(key)assert.equal((await mapUrl()).searchParams.get('q'),'0,0');
       assert.equal(new URL(await page.locator('a[href*="maps/search"]').getAttribute('href')).searchParams.get('query'),'0,0');
-      await page.goBack();await page.waitForFunction(()=>document.querySelector('.chooser button')?.getAttribute('aria-pressed')==='true');assert.equal(await page.locator('.chooser button').first().getAttribute('aria-pressed'),'true');
+      await page.goBack({waitUntil:'domcontentloaded'});await page.waitForFunction(()=>document.querySelector('.chooser button')?.getAttribute('aria-pressed')==='true');assert.equal(await page.locator('.chooser button').first().getAttribute('aria-pressed'),'true');
       for(const width of [320,390,1440]){
         await page.setViewportSize({width,height:844});
         assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1));

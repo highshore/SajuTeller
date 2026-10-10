@@ -63,7 +63,7 @@ export async function POST(req:Request){
   }
   const expires=Math.floor(Date.now()/1000)+15*60;
   return reply(200,{apiKey,token:client.createToken(viewer.id,expires),user:viewer,channelType,channelId,expiresAt:expires});
- }catch(error){const providerCode=(error as {code?:number})?.code;console.error('business-chat request failed',{stage,name:error instanceof Error?error.name:'unknown',providerCode});return reply(503,{code:'chat_unavailable',stage,providerCode:typeof providerCode==='number'?providerCode:undefined});}
+ }catch(error){const providerCode=(error as {code?:number})?.code;console.error('business-chat request failed',{stage,name:error instanceof Error?error.name:'unknown',providerCode});return reply(503,{code:'chat_unavailable',stage,providerCode:typeof providerCode==='number'?providerCode:undefined,diagnostic:error instanceof Error?error.message.replaceAll(process.env.STREAM_API_SECRET||'__unset__','[redacted]').replaceAll(process.env.STREAM_API_KEY||'__unset__','[redacted]').replaceAll(req.headers.get('Authorization')||'__unset__','[redacted]').slice(0,240):'unknown'});}
 }
 
 // Stable message IDs make reconnects/retries safe, including simultaneous browser tabs.

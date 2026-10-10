@@ -18,7 +18,7 @@ try{
  const origin='http://127.0.0.1:5175';
  const noOverflow=async()=>{assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1),'Page must not overflow horizontally');assert.ok(await page.locator('[data-app-shell]').evaluate(el=>el.scrollWidth<=el.clientWidth+1),'Content must not overflow the app column');};
  await page.goto(origin,{waitUntil:'domcontentloaded'});await page.locator('article h3').first().waitFor({timeout:30000});await page.evaluate(()=>document.fonts.ready);await noOverflow();
- assert.equal(await page.locator('[data-global-header]').count(),1);assert.equal(await page.locator('[data-global-bottom-nav] a').count(),4);
+ assert.equal(await page.locator('[data-global-header]').count(),1);assert.equal(await page.locator('[data-global-bottom-nav] a').count(),5);
  const geometry=await page.locator('.hero img').evaluate(el=>({loaded:el.complete&&el.naturalWidth>0,width:el.getBoundingClientRect().width,height:el.getBoundingClientRect().height}));assert.deepEqual(geometry,{loaded:true,width:358,height:230});
  await page.screenshot({path:`${output}/home-mobile.png`,fullPage:true});
  await page.getByRole('link',{name:'Find a reading',exact:true}).click();await page.getByLabel('Studio or neighborhood').fill('Jongno');await page.getByRole('button',{name:'Show readings'}).click();await page.locator('article h3').first().waitFor();assert.ok(page.url().includes('q=Jongno'));await noOverflow();await page.screenshot({path:`${output}/search-mobile.png`,fullPage:true});

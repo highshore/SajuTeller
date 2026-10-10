@@ -61,7 +61,7 @@ try {
  await reviewSection.locator('[data-text-skeleton]').waitFor();assert.ok(!(await reviewSection.innerText()).includes('No traveler reviews'));
  assert.ok(await page.getByRole('link',{name:'Try demo chat',exact:true}).isVisible());
  reviews.release();await reviewSection.getByRole('alert').waitFor();failReviews=false;await reviewSection.getByRole('button',{name:'Retry'}).click();await reviewSection.getByText('No traveler reviews to share yet.').waitFor();
- // Pause a route chunk: the crystal ball animates inside the retained navigation shell.
+ // Pause a route chunk: the crystal ball overlays the viewport while the shell stays mounted.
  const chunk=gate();await page.route('**/src/routes/saved.tsx',async r=>{await chunk.promise;await r.continue();});
  await go('/saved');await page.locator('[data-loading-screen] [data-emoji="crystal-ball"] svg').waitFor();
  await page.locator('[data-global-header]').waitFor();await geometry();await page.screenshot({path:out+'/crystal-loading.png'});
@@ -69,18 +69,18 @@ try {
  chunk.release();await page.getByRole('heading',{name:'Keep the ones that speak to you.'}).waitFor();
  // Replay the user's long-message overflow, with the real inbox and shell at three widths.
  await page.evaluate(user=>{const token=btoa('{}')+'.'+btoa(JSON.stringify({sub:user.id,exp:Math.floor(Date.now()/1000)+3600}))+'.fixture';localStorage.setItem('sb-jbwuefecydjkieplftia-auth-token',JSON.stringify({access_token:token,refresh_token:'fixture',expires_at:Math.floor(Date.now()/1000)+3600,token_type:'bearer',user}));},user);
- await go('/messages');await page.getByRole('heading',{name:'Messages',exact:true}).waitFor();await page.locator('[data-loading-screen]').waitFor();
- chat.release();await page.locator('.conversation').first().waitFor();
+ await go('/messages');await page.locator('main h1').waitFor();await page.locator('[data-loading-screen]').waitFor();
+ chat.release();await page.locator('[data-loading-screen]').waitFor({state:'detached'});await page.locator('.conversation').first().waitFor();
  for(const width of [320,390,1440]){
   await page.setViewportSize({width,height:844});await geometry();
   const shell=await page.locator('[data-app-shell]').boundingBox();assert.equal(shell.width,Math.min(width,430));
   for(const row of await page.locator('.conversation').all()){const rect=await row.boundingBox();assert.ok(rect.x>=shell.x&&rect.x+rect.width<=shell.x+shell.width);}
   await page.screenshot({path:out+'/inbox-'+width+'.png',fullPage:true});
  }
- // Reload a room with the network paused: back action works throughout connection.
+ // Reload a room with the network paused: overlay escapes the container and locks interaction.
  chat=gate();await page.setViewportSize({width:390,height:844});await go('/messages?studio='+studio.id);
  await page.locator('.room-header').waitFor();await page.locator('[data-loading-screen]').waitFor();assert.equal(await page.locator('[data-global-header]').count(),0);await geometry();
- await page.getByRole('link',{name:'Back to messages'}).click();await page.waitForURL('**/messages');chat.release();
+ assert.equal(await page.locator('#root').evaluate(e=>e.inert),true);const overlay=await page.locator('[data-loading-screen]').boundingBox();assert.deepEqual({x:overlay.x,y:overlay.y,width:overlay.width,height:overlay.height},{x:0,y:0,width:390,height:844});chat.release();await page.locator('[data-loading-screen]').waitFor({state:'detached'});await go('/messages');
  await page.locator('.conversation').first().waitFor();assert.deepEqual(errors,[]);
- console.log(JSON.stringify({result:'PASS',checks:['boot feedback before JS','interactive catalog before data','image geometry and failure fallback','independent section loading and retry','animated crystal route loader','reduced motion','inbox overflow at 320/390/1440','room back during connection'],out}));
+ console.log(JSON.stringify({result:'PASS',checks:['boot feedback before JS','interactive catalog before data','image geometry and failure fallback','independent section loading and retry','animated crystal route loader','reduced motion','inbox overflow at 320/390/1440','viewport overlay and interaction lock'],out}));
 } finally {catalog.release();reviews.release();chat.release();image.release();await browser.close();await server.close();}

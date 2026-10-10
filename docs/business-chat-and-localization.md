@@ -50,3 +50,17 @@ Migration `20261009203716_saju_business_chat.sql` creates private staff mappings
 - `node scripts/business-chat-check.mjs` (server authorization and token boundary checks)
 
 Live Kakao consent/login and actual two-account Stream delivery still require provider setup and real test accounts. Local UI checks do not establish those integrations are live.
+
+## Demo studios and short onboarding (October 10)
+
+Three explicitly labeled fictional studios are seeded by `20261010012324_demo_studios_and_chat.sql`: Moon Gate Saju, Seoul Starlight Tarot, and Two Moons Atelier. They stay `is_mock=true` and cannot make real reservations. Only their server-managed `demo_chat_enabled` flag permits demo chat. The other sample studios remain blocked.
+
+**Current credential location: Vercel production → `saju` → Environment Variables.** `STREAM_API_KEY` and `STREAM_API_SECRET` are server-only secrets already configured there. `api/business-chat.ts` runs in Vercel and uses them directly. The Supabase `business-chat` endpoint forwards to this fixed production API, while `business-chat-context` verifies the bearer token with Supabase Auth and derives the user, studio, staff, and private channel ID. No Supabase service-role key is copied to Vercel. Deploy both Supabase functions when updating this integration. The earlier Supabase-secret instructions are not required for this deployment.
+
+The first authenticated request initializes the dedicated `saju_business` channel type if absent, with members-only permissions. Existing unsafe configuration fails closed; `scripts/configure-stream.mjs` remains the administrative repair command.
+
+Demo hosts are synthetic Stream users labeled “Demo host (automated)”. They send a welcome and scripted responses about pricing, languages, locations, availability, and preparation in all five app languages. Replies are generated only after checking the original Stream message belongs to the verified customer and the correct demo channel. Stable reply IDs prevent duplicates on retries. These are demonstrations, not real availability or confirmed appointments.
+
+Onboarding now has three steps: nickname, reading language, and review. Birth details are optional, collapsed by default, and preserved when editing an existing profile. New policy acceptance is collected in the existing review dialog; the existing atomic profile RPC handles persistence.
+
+Validation: `npm run build`, `node scripts/business-chat-check.mjs`, `node scripts/onboarding-check.mjs`, and the existing auth/global browser suites. Browser checks use the `CHROMIUM_PATH` and `PLAYWRIGHT_MODULE` environment variables in this workspace.

@@ -1,0 +1,42 @@
+name: Responsive layout QA
+
+on:
+  pull_request:
+    paths:
+      - 'src/**'
+      - 'scripts/responsive-layout-check.mjs'
+      - '.github/workflows/responsive-layout.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'src/**'
+      - 'scripts/responsive-layout-check.mjs'
+      - '.github/workflows/responsive-layout.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  responsive:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+      - run: npm install --no-save playwright
+      - run: npx playwright install --with-deps chromium
+      - run: npm run build
+      - run: npm run qa:responsive
+        env:
+          VITE_SUPABASE_URL: https://jbwuefecydjkieplftia.supabase.co
+          VITE_SUPABASE_ANON_KEY: responsive-qa-dummy-key
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: responsive-layout-screenshots
+          path: /tmp/saju-responsive-qa/*.png
+          if-no-files-found: ignore

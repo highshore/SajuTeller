@@ -8,6 +8,7 @@
     "build": "tsc -b && vite build",
     "lint": "eslint .",
     "preview": "vite preview",
+    "qa:responsive": "node scripts/responsive-layout-check.mjs",
     "predeploy": "npm run build",
     "deploy": "vercel --prod --yes"
   },

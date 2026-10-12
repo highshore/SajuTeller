@@ -4,7 +4,7 @@ import { styled } from 'styled-components';
 const FooterShell = styled.footer`
   border-top:1px solid var(--st-line);padding:28px 0;color:var(--st-muted);background:var(--st-paper);
   .inner{width:min(1160px,calc(100% - 32px));margin:auto;}.top{display:flex;align-items:center;justify-content:space-between;gap:24px;}
-  nav{display:flex;flex-wrap:wrap;gap:4px 20px;}nav a{display:inline-flex;align-items:center;min-height:44px;font-size:12px;}
+  nav{display:flex;flex-wrap:wrap;gap:4px 20px;}nav a{display:inline-flex;align-items:center;min-height:44px;font-size:12px;line-height:1.35;overflow-wrap:anywhere;}
   .brand{font:500 26px/30px 'Cormorant Garamond',serif;color:var(--st-ink);}.details{font-size:11px;line-height:1.7;margin-top:16px;max-width:620px;}summary{cursor:pointer;min-height:32px;}
   @container saju (max-width:650px){.top{align-items:flex-start;flex-direction:column;gap:12px;}.brand{order:-1;}nav{gap:0 18px;}}
 `;

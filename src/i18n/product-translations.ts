@@ -1,5 +1,18 @@
 // Source phrases: Korean, Simplified Chinese, Japanese, Spanish.
 const phrases: Record<string, readonly [string,string,string,string]> = {
+"Select a date in Seoul":["서울 기준 날짜를 선택하세요","选择首尔当地日期","ソウル時間で日付を選択","Elige una fecha en Seúl"],
+"Seoul time (KST)":["서울 시간(KST)","首尔时间（KST）","ソウル時間（KST）","Hora de Seúl (KST)"],
+"person":["명","人","人","persona"],
+"people":["명","人","人","personas"],
+"Voice translation is active":["음성을 번역하고 있어요","正在翻译语音","音声を翻訳中です","La traducción de voz está activa"],
+"Connecting to voice translation…":["음성 번역에 연결 중…","正在连接语音翻译…","音声翻訳に接続中…","Conectando la traducción de voz…"],
+"Voice translation is ready":["음성 번역 준비 완료","语音翻译已就绪","音声翻訳の準備ができました","La traducción de voz está lista"],
+"Tap the microphone to begin":["마이크를 눌러 시작하세요","点击麦克风开始","マイクをタップして開始","Toca el micrófono para comenzar"],
+"Connecting…":["연결 중…","连接中…","接続中…","Conectando…"],
+"Stop translation":["번역 중지","停止翻译","翻訳を停止","Detener traducción"],
+"Start voice translation":["음성 번역 시작","开始语音翻译","音声翻訳を開始","Iniciar traducción de voz"],
+"Tap the microphone and start speaking.":["마이크를 누르고 말해 보세요.","点击麦克风并开始说话。","マイクをタップして話してください。","Toca el micrófono y empieza a hablar."],
+"Speak in Korean or {language} for live translation.":["한국어나 {language}로 말하면 실시간으로 번역돼요.","使用韩语或{language}说话即可实时翻译。","韓国語または{language}で話すとリアルタイムに翻訳されます。","Habla en coreano o {language} para traducir en tiempo real."],
 "Notifications":["알림", "通知", "通知", "Notificaciones"],
 "Updates, helpful tips, and offers from SajuTeller.":["SajuTeller의 새 소식과 유용한 팁, 혜택을 확인하세요.", "查看SajuTeller的最新消息、实用提示和优惠。", "SajuTellerからのお知らせ、ヒント、特典をお届けします。", "Novedades, consejos y ofertas de SajuTeller."],
 "Updates and offers from SajuTeller":["SajuTeller 소식과 혜택", "SajuTeller消息和优惠", "SajuTellerのお知らせと特典", "Novedades y ofertas de SajuTeller"],

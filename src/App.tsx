@@ -138,7 +138,7 @@ const GlobalStyles = createGlobalStyle`
   a { color: inherit; text-decoration: none; }
   button, input, textarea, select { font: inherit; }
   button { -webkit-tap-highlight-color: transparent; }
-  input,select,textarea { color-scheme:dark; }
+  input,select,textarea { accent-color:var(--st-gold); }
   ::selection { background: rgba(98, 16, 204, 0.18); }
   h1, h2, h3, h4 { text-wrap: balance; }
   p { text-wrap: pretty; }

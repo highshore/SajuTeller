@@ -78,9 +78,9 @@ const Page = styled.div`
   min-height: 100vh;
   width: 100%;
 
-  background: linear-gradient(135deg, #1a1a2e 0%, #16213e 25%, #0f3460 50%, #533483 75%, #7209b7 100%);
+  background: var(--st-paper);
   position: relative;
-  padding: 2rem 0;
+  padding: 18px 16px 44px;
   
   &::before {
     content: '';
@@ -90,14 +90,13 @@ const Page = styled.div`
     right: 0;
     bottom: 0;
     background: 
-      radial-gradient(circle at 20% 80%, rgba(120, 119, 198, 0.3) 0%, transparent 50%),
-      radial-gradient(circle at 80% 20%, rgba(255, 119, 198, 0.3) 0%, transparent 50%),
-      radial-gradient(circle at 40% 40%, rgba(120, 219, 255, 0.2) 0%, transparent 50%);
+      radial-gradient(circle at 15% 80%, rgba(201, 167, 106, 0.06) 0%, transparent 54%),
+      radial-gradient(circle at 85% 15%, rgba(125, 89, 143, 0.09) 0%, transparent 56%);
     z-index: 0;
   }
   
   @container saju (max-width: 768px) {
-    padding: 1rem 0;
+    padding: 16px 12px 36px;
   }
 `;
 
@@ -172,19 +171,16 @@ const Button = styled.button<{ $primary?: boolean; $danger?: boolean; $customer?
 `;
 
 const Panel = styled.div`
-  background: rgba(255, 255, 255, 0.8);
-  backdrop-filter: blur(10px);
-  border: 2px solid rgba(226, 232, 240, 0.8);
-  border-radius: 16px;
-  padding: 2rem;
-  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+  background: #f8f6f0;
+  border: 1px solid rgba(201, 167, 106, 0.2);
+  border-radius: 18px;
+  padding: clamp(16px, 5cqi, 28px);
+  box-shadow: 0 16px 36px rgba(0, 0, 0, 0.16);
   transition: all 0.3s ease;
 
   &:hover {
-    background: rgba(255, 255, 255, 0.95);
-    border-color: rgba(139, 92, 246, 0.3);
-    transform: translateY(-2px);
-    box-shadow: 0 12px 35px rgba(0, 0, 0, 0.15);
+    background: #f8f6f0;
+    border-color: rgba(201, 167, 106, 0.45);
   }
 `;
 
@@ -211,8 +207,8 @@ const PanelTitle = styled.h2<{ $language: string }>`
 `;
 
 const ConversationArea = styled.div`
-  height: 60vh;
-  min-height: 400px;
+  height: clamp(300px, 48dvh, 520px);
+  min-height: 300px;
   overflow-y: auto;
   padding: 1.5rem;
   background: rgba(248, 250, 252, 0.8);
@@ -327,13 +323,14 @@ const SecondaryLanguage = styled.div<{ $language: string }>`
 const RecordingButtons = styled.div`
   display: flex;
   gap: 16px;
-  margin-bottom: 24px;
+  margin-bottom: 18px;
   justify-content: center;
   flex-wrap: wrap;
 
   @container saju (max-width: 768px) {
     flex-direction: column;
-    align-items: center;
+    align-items: stretch;
+    button{width:100%;}
   }
 `;
 
@@ -346,10 +343,10 @@ const StatusIndicator = styled.div<{ $isConnected: boolean; $isRecording: boolea
     if (p.$isRecording) return "linear-gradient(135deg, #ff6b6b, #ff8e53)";
     if (p.$isConnecting) return "linear-gradient(135deg, #fbbf24, #f59e0b)";
     if (p.$isConnected) return "linear-gradient(135deg, #43e97b, #38f9d7)";
-    return "linear-gradient(135deg, #e0e7ff, #c7d2fe)";
+    return "linear-gradient(135deg, #eee7f0, #e5dce9)";
   }};
   border-radius: 25px;
-  color: ${(p) => (p.$isRecording || p.$isConnected || p.$isConnecting) ? "white" : "#4338ca"};
+  color: ${(p) => (p.$isRecording || p.$isConnected || p.$isConnecting) ? "white" : "#43324b"};
   font-weight: 600;
   font-size: 14px;
   margin-bottom: 16px;
@@ -460,12 +457,12 @@ export default function LiveTranslation() {
           <StatusIndicator $isConnected={isConnected} $isRecording={isRecording} $isConnecting={isConnecting}>
             <WaveIcon $animate={isRecording || isConnecting} />
             {isRecording
-              ? "🎤 음성 번역 중..."
+              ? t("Voice translation is active")
               : isConnecting
-                ? "🔄 번역기 연결 중..."
+                ? t("Connecting to voice translation…")
                 : isConnected
-                  ? `✅ 번역기 준비됨 (${customerLanguage} ↔ 한국어)`
-                  : "🎯 녹음 버튼을 눌러 시작하세요"}
+                  ? `${t("Voice translation is ready")} (${t(customerLanguage)} ↔ ${t("Korean")})`
+                  : t("Tap the microphone to begin")}
           </StatusIndicator>
 
           {error && (
@@ -484,10 +481,10 @@ export default function LiveTranslation() {
               $language={language}
             >
               {isConnecting
-                ? "🔄 연결 중..."
+                ? t("Connecting…")
                 : isRecording
-                  ? "🛑 녹음 중지"
-                  : "🎤 음성 번역하기"}
+                  ? t("Stop translation")
+                  : t("Start voice translation")}
             </Button>
           </RecordingButtons>
 
@@ -500,9 +497,9 @@ export default function LiveTranslation() {
                 fontSize: "16px",
                 lineHeight: 1.6
               }}>
-                🎤 음성 버튼을 클릭하고 번역을 시작하세요<br/>
+                {t("Tap the microphone and start speaking.")}<br/>
                 <span style={{ fontSize: "14px" }}>
-                  한국어나 {customerLanguage}로 말씀하시면 즉시 번역해드립니다
+                  {t("Speak in Korean or {language} for live translation.").replace("{language}",t(customerLanguage))}
                 </span>
               </div>
             )}

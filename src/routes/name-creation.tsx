@@ -68,9 +68,11 @@ const Container = styled.div`
   min-height: 100vh;
   width: 100%;
 
-  background: linear-gradient(135deg, #1a1a2e 0%, #16213e 25%, #0f3460 50%, #533483 75%, #7209b7 100%);
+  background: var(--st-paper);
   position: relative;
-  padding: 2rem 0;
+  padding: 20px 0 44px;
+  input,select,textarea{color-scheme:light;color:#2d3748;max-width:100%;min-width:0;}
+  @container saju (max-width:400px){input,select,textarea{font-size:16px;}}
   
   &::before {
     content: '';
@@ -80,9 +82,8 @@ const Container = styled.div`
     right: 0;
     bottom: 0;
     background: 
-      radial-gradient(circle at 20% 80%, rgba(120, 119, 198, 0.3) 0%, transparent 50%),
-      radial-gradient(circle at 80% 20%, rgba(255, 119, 198, 0.3) 0%, transparent 50%),
-      radial-gradient(circle at 40% 40%, rgba(120, 219, 255, 0.2) 0%, transparent 50%);
+      radial-gradient(circle at 15% 80%, rgba(201, 167, 106, 0.06) 0%, transparent 54%),
+      radial-gradient(circle at 85% 15%, rgba(125, 89, 143, 0.09) 0%, transparent 56%);
     z-index: 0;
   }
   
@@ -95,35 +96,32 @@ const ContentWrapper = styled.div`
   max-width: 800px;
   width: 100%;
   margin: 0 auto;
-  background: rgba(255, 255, 255, 0.95);
-  backdrop-filter: blur(20px);
-  border-radius: 24px;
-  padding: 3rem;
-  box-shadow: 
-    0 25px 50px rgba(0, 0, 0, 0.25),
-    0 0 0 1px rgba(255, 255, 255, 0.1);
+  background: #f8f6f0;
+  border-radius: 20px;
+  padding: clamp(20px, 5cqi, 32px);
+  box-shadow: 0 16px 36px rgba(0, 0, 0, 0.16);
   overflow-y: auto;
   position: relative;
   z-index: 1;
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  border: 1px solid rgba(201, 167, 106, 0.2);
   
   @container saju (max-width: 768px) {
-    padding: 2rem 1.5rem;
-    margin: 1rem;
-    max-width: calc(100% - 2rem);
-    border-radius: 20px;
+    padding: clamp(16px, 5cqi, 24px);
+    margin: 0 16px;
+    max-width: calc(100% - 32px);
+    border-radius: 18px;
   }
 `;
 
 const Header = styled.div`
   text-align: center;
-  margin-bottom: 3rem;
+  margin-bottom: 1.75rem;
 `;
 
 const BackButton = styled.button`
-  background: rgba(255, 255, 255, 0.1);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  color: #4a5568;
+  background: #f1ebf0;
+  border: 1px solid #e8dfeb;
+  color: #43324b;
   font-size: 0.95rem;
   font-weight: 500;
   cursor: pointer;
@@ -137,18 +135,18 @@ const BackButton = styled.button`
   backdrop-filter: blur(10px);
   
   &:hover {
-    background: rgba(255, 255, 255, 0.2);
-    border-color: rgba(255, 255, 255, 0.3);
-    color: #2d3748;
+    background: #ebe1ee;
+    border-color: #d9cadf;
+    color: #2d2434;
     transform: translateY(-1px);
   }
 `;
 
 const Title = styled.h1<{ $language: string }>`
   font-family: ${props => getFontFamily(props.$language, 'heading')};
-  font-size: 3rem;
+  font-size: clamp(30px, 8cqi, 42px);
   font-weight: 700;
-  color: #1a202c;
+  color: #261b2d;
   margin-bottom: 1rem;
   line-height: 1.2;
   text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);

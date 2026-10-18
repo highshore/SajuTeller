@@ -11,7 +11,8 @@ export const navigation = [
 
 export function siteLayout(path: string) {
   const immersive = /^\/(live-translation|onboarding)(?:\/|$)/.test(path);
-  const wide = /^\/d(?:\/|$)/.test(path);
+  const adminWide = /^\/d(?:\/|$)/.test(path);
+  const wide = adminWide || path === '/map';
   const booking = /^\/business\//.test(path);
-  return { wide, header: !immersive, footer: !immersive, bottomNav: !immersive && !booking && !wide, compactFooter: path === '/' || /^\/(sign-|auth-|onboarding)/.test(path) };
+  return { wide, header: !immersive, footer: !immersive, bottomNav: !immersive && !booking && !adminWide, compactFooter: path === '/' || /^\/(sign-|auth-|onboarding)/.test(path) };
 }

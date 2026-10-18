@@ -8,10 +8,10 @@ import { useStudios } from '../product/data';
 import { ButtonLink, Empty, ExperienceCard, Notice, Wrap } from '../product/ui';
 const Root=styled.div`padding:22px 0 32px;overflow:hidden;`;
 const Hero=styled.section`
-  position:relative;height:230px;border-radius:20px;overflow:hidden;
+  position:relative;min-height:230px;border-radius:20px;overflow:hidden;
   .art{position:absolute;right:0;top:0;width:358px;height:230px;max-width:none;}
-  .copy{position:relative;padding:20px 16px;}h1{font:600 46px/50px 'Cormorant Garamond',serif;letter-spacing:-.5px;max-width:320px;}p{font-size:16px;line-height:24px;color:var(--st-muted);margin-top:18px;}
-  @container saju (min-width:700px){height:320px;background:var(--st-surface);.art{top:45px;right:50px;transform:scale(1.5);transform-origin:right center;}.copy{padding:54px 40px;}h1{font-size:64px;line-height:64px;max-width:520px;}p{margin-top:24px;}}
+  .copy{position:relative;padding:20px 16px;min-height:230px;}h1{font:600 46px/50px 'Cormorant Garamond',serif;letter-spacing:-.5px;max-width:320px;}p{font-size:16px;line-height:24px;color:var(--st-muted);margin-top:18px;}
+  @container saju (min-width:700px){min-height:320px;background:var(--st-surface);.art{top:45px;right:50px;transform:scale(1.5);transform-origin:right center;}.copy{padding:54px 40px;min-height:320px;}h1{font-size:64px;line-height:64px;max-width:520px;}p{margin-top:24px;}}
   @container saju (max-width:370px){h1{font-size:41px;line-height:46px;}}
 `;
 const Intro=styled.div`display:grid;gap:16px;.primary{width:100%;height:52px;border-radius:12px;margin-top:2px;}@container saju (min-width:850px){grid-template-columns:1fr 1fr;.hero{grid-column:1/-1;}.trust{grid-column:1/-1;}.primary{margin:0;}}`;

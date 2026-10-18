@@ -646,7 +646,7 @@ const phrases: Record<string, readonly [string,string,string,string]> = {
 "Scroll right":["오른쪽으로 스크롤","向右滚动","右へスクロール","Desplazar a la derecha"],
 "Curated readings":["엄선한 사주 풀이","精选命理解读","厳選した鑑定","Lecturas seleccionadas"],
 "Explore your":["당신의","探索你的","あなたの","Explora tu"],
-"Saju destiny.":["사주 이야기를 만나보세요.","四柱命运。","四柱推命の物語を。","destino a través del Saju."],
+"Saju destiny.":["사주를 읽어보세요.","四柱命运。","四柱推命の物語を。","destino a través del Saju."],
 "Ancient Korean wisdom, in your own language.":["오랜 한국의 사주 지혜를 나의 언어로.","用你的语言探索韩国古老的四柱智慧。","韓国の古くからの四柱推命を、あなたの言葉で。","Sabiduría ancestral coreana, en tu idioma."],
 "Explore Saju readings":["사주 풀이 둘러보기","探索四柱解读","四柱推命を探す","Explorar lecturas de Saju"],
 "CURATED FOR YOUR JOURNEY":["당신의 여정을 위한 추천","为你的旅程精选","あなたの旅へのおすすめ","SELECCIÓN PARA TU CAMINO"],

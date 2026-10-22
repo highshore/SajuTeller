@@ -77,6 +77,8 @@ function roof(x: number, y: number, w: number) {
 
 function SeoulArt() {
   return <svg className="seoul-art" viewBox="0 0 390 390" aria-hidden="true">
+    <defs><linearGradient id="seoul-dusk" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stopColor="#281438" stopOpacity="0"/><stop offset=".45" stopColor="#6c3456"/><stop offset=".75" stopColor="#aa6060"/><stop offset="1" stopColor="#c88c6e"/></linearGradient></defs>
+    <rect width="390" height="300" fill="url(#seoul-dusk)"/>
     <g transform="translate(0 -72)">
     <circle className="moon" cx="300" cy="150" r="52" fill="#fbe9c6"/>
     <path d="M0 270 C40 230 80 220 120 242 C160 262 190 230 230 215 C262 202 300 190 330 205 C360 220 375 230 390 228 L390 390 L0 390 Z" fill="#3a1e45"/>
@@ -94,7 +96,7 @@ const slides: Slide[] = [
   { id: 'pillars', head: 'Four pillars,\nread in Seoul', gold: 'read in Seoul', sub: 'Private readings with a Korean Saju master.', bg: 'linear-gradient(180deg,#130a1b,#281638 45%,#160c20)', art: <PillarsArt/> },
   { id: 'cards', head: 'Eight characters\nthat are you', gold: 'that are you', sub: 'Year, month, day and hour — the heart of Saju.', bg: 'radial-gradient(ellipse 90% 60% at 50% 32%,#4d2b61,#0d0814 72%)', art: <CardsArt/> },
   { id: 'elements', head: 'Five elements.\nOne you.', gold: 'One you.', sub: 'Find your element free, in ten seconds.', bg: 'linear-gradient(180deg,#100918,#22122f)', art: <ElementsArt/> },
-  { id: 'seoul', head: 'A night in Seoul,\nread by a master', gold: 'read by a master', sub: 'Live interpretation, both ways.', bg: 'linear-gradient(180deg,#0e0816 0%,#281438 12%,#6c3456 22%,#aa6060 30%,#c88c6e 36%,#140a1b 41%)', art: <SeoulArt/> },
+  { id: 'seoul', head: 'A night in Seoul,\nread by a master', gold: 'read by a master', sub: 'Live interpretation, both ways.', bg: 'linear-gradient(180deg,#0e0816,#1d0f2a 40%,#140a1b 60%)', art: <SeoulArt/> },
 ];
 
 function Headline({ head, gold }: { head: string; gold: string }) {
@@ -105,16 +107,20 @@ function Headline({ head, gold }: { head: string; gold: string }) {
 }
 
 const Hero = styled.section`
-  position:relative;isolation:isolate;overflow:hidden;color:#f4eee7;background:#0b0610;min-height:730px;display:flex;flex-direction:column;touch-action:pan-y;
+  position:relative;isolation:isolate;overflow:hidden;color:#f4eee7;background:#0b0610;display:flex;flex-direction:column;touch-action:pan-y;
+  /* Fill the visible screen between the sticky header and the mobile dock (svh is stable while iOS toolbars move). */
+  min-height:max(440px,calc(100svh - var(--ks-header-height) - 76px - env(safe-area-inset-bottom)));
   .layer{position:absolute;inset:0;z-index:-1;opacity:0;transition:opacity .7s cubic-bezier(.23,1,.32,1);}
   .layer[data-state=current]{opacity:1;}
-  .art{position:absolute;inset:0 0 auto;height:390px;transform:translateY(28px);transition:transform .7s cubic-bezier(.23,1,.32,1);}
+  .art{position:absolute;inset:0 0 auto;height:calc(100% - 320px);container-type:size;transform:translateY(28px);transition:transform .7s cubic-bezier(.23,1,.32,1);}
+  .stage{position:absolute;left:50%;top:50%;width:390px;height:390px;translate:-50% -50%;}
+  @container (max-height:350px){.stage{scale:.86;}}@container (max-height:300px){.stage{scale:.72;}}@container (max-height:250px){.stage{scale:.6;}}@container (max-height:205px){.stage{scale:.5;}}@container (max-height:170px){.stage{scale:.4;}}
   .layer[data-state=current] .art{transform:none;}.layer[data-state=previous] .art{transform:translateY(-28px);}
   .stars{position:absolute;inset:0;width:100%;height:100%;}
   .twinkle{animation:twinkle 3.2s ease-in-out infinite alternate;}
   @keyframes twinkle{to{opacity:.15;}}
-  .galaxy-art{position:absolute;max-width:none;width:820px;height:auto;left:calc(50% - 600px);top:-40px;}
-  .layer:first-child::after{content:'';position:absolute;inset:300px 0 0;background:linear-gradient(transparent,#0b0610 60%);}
+  .galaxy-art{position:absolute;max-width:none;width:820px;height:auto;left:calc(50% - 600px);top:calc(50% - 300px);}
+  .layer:first-child::after{content:'';position:absolute;inset:auto 0 0;height:calc(320px + 12%);background:linear-gradient(transparent,#0b0610 45%);}
   .glow{position:absolute;border-radius:50%;filter:blur(70px);pointer-events:none;}
   .glow.violet{width:380px;height:380px;left:calc(50% - 190px);top:10px;background:#7a4890;opacity:.55;}
   .glow.gold{width:170px;height:170px;left:calc(50% - 85px);top:110px;background:#c9a76a;opacity:.38;}
@@ -148,6 +154,8 @@ const Hero = styled.section`
   .pause{margin-left:auto;width:36px;height:36px;border-radius:50%;border:1px solid rgb(255 255 255 / 18%);background:none;color:#f4eee7;display:grid;place-items:center;cursor:pointer;}.pause svg{width:14px;}
   .cta{display:flex;align-items:center;justify-content:center;min-height:52px;border-radius:12px;background:#c9a76a;color:#1b1420;font-size:16px;font-weight:600;box-shadow:0 8px 28px rgb(201 167 106 / 35%);}
   .free{display:flex;align-items:center;justify-content:center;gap:6px;min-height:44px;font-size:15px;font-weight:600;}.free svg{width:16px;}
+  /* Short viewports (iPhone Safari with toolbars, SE): tighten copy so the CTA stays above the dock. */
+  @media (max-height:700px){.art{height:calc(100% - 286px);}.content{gap:10px;padding-bottom:20px;}.copy h2{font-size:38px;line-height:40px;}.copy p{margin-top:6px;}.controls{margin-top:0;}.free{min-height:36px;}}
   @media (prefers-reduced-motion:reduce){.art,.copy,.layer,.dot::before{transition-duration:.01s;}.art,.copy{transform:none!important;}.twinkle{animation:none;}}
 `;
 
@@ -180,7 +188,7 @@ export default function HeroCarousel() {
     onFocus={() => setHolding(true)} onBlur={() => setHolding(false)}
     onPointerDown={e => { drag.current = e.clientX; }}
     onPointerUp={e => { if (drag.current === null) return; const dx = e.clientX - drag.current; drag.current = null; if (Math.abs(dx) > 40) go(index + (dx < 0 ? 1 : -1)); }}>
-    {slides.map((s, i) => <div key={s.id} className="layer" data-state={state(i)} style={{ background: s.bg }} aria-hidden="true"><Starfield/><div className="art">{s.art}</div></div>)}
+    {slides.map((s, i) => <div key={s.id} className="layer" data-state={state(i)} style={{ background: s.bg }} aria-hidden="true"><Starfield/><div className="art">{s.id === 'galaxy' ? s.art : <div className="stage">{s.art}</div>}</div></div>)}
     <div className="content">
       <h1 className="eyebrow">{t('Korean fortune-telling')} · <span lang="ko">사주</span></h1>
       <div className="copies" aria-live={paused || reduced ? 'polite' : 'off'}>

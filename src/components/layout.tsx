@@ -6,7 +6,7 @@ import { styled } from "styled-components";
 import GNB from "./gnb";
 import Footer from "./footer";
 import MobileNavigation from "./mobile_navigation";
-import { siteLayout } from "./navigation";
+import { nightRoute, siteLayout } from "./navigation";
 
 const Shell = styled.div<{ $mobileDock: boolean; $wide: boolean }>`
   container: saju / inline-size;
@@ -23,6 +23,7 @@ const Shell = styled.div<{ $mobileDock: boolean; $wide: boolean }>`
   background: var(--ks-paper);
 `;
 const Main = styled.main`
+  &.st-night { background: var(--st-paper); }
   flex: 1 1 auto;
   min-height: 0;
   min-width: 0;
@@ -37,5 +38,5 @@ export default function Layout() {const { t } = useI18n();
   const chatRoom = pathname === "/messages" && (new URLSearchParams(search).has("channel") || new URLSearchParams(search).has("studio"));
   if (chatRoom) { policy.header = false; policy.footer = false; policy.bottomNav = false; }
   useEffect(() => { window.scrollTo({ top:0, left:0, behavior:"instant" }); }, [pathname]);
-  return <Shell data-app-shell $mobileDock={policy.bottomNav} $wide={policy.wide}><a href="#main-content" className="skip-link">{t("Skip to content")}</a>{policy.header && <GNB/>}<Main id="main-content"><Suspense fallback={<LoadingScreen/>}><Outlet/></Suspense></Main>{policy.footer && <Footer compact={policy.compactFooter}/>}{policy.bottomNav&&<MobileNavigation/>}</Shell>;
+  return <Shell data-app-shell $mobileDock={policy.bottomNav} $wide={policy.wide}><a href="#main-content" className="skip-link">{t("Skip to content")}</a>{policy.header && <GNB/>}<Main id="main-content" className={nightRoute(pathname) && pathname !== "/" ? "st-night" : undefined}><Suspense fallback={<LoadingScreen/>}><Outlet/></Suspense></Main>{policy.footer && <Footer compact={policy.compactFooter}/>}{policy.bottomNav&&<MobileNavigation/>}</Shell>;
 }

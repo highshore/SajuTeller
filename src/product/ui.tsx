@@ -9,8 +9,8 @@ export const Eyebrow=styled.div`font-size:10px;font-weight:750;letter-spacing:1.
 export const Lead=styled.p`color:var(--st-muted);font-size:15px;max-width:600px;line-height:1.65;margin:0 0 24px;`;
 export const Section=styled.section`padding:32px 0;@container saju (min-width:800px){padding:44px 0;}`;
 export const SectionTop=styled.div`display:flex;align-items:flex-end;justify-content:space-between;gap:16px;margin-bottom:20px;h2{font-size:clamp(23px,6cqi,30px);line-height:1.2;letter-spacing:-.6px;font-weight:650;margin:5px 0;}p{color:var(--st-muted);font-size:13px;margin-top:6px;line-height:1.5;}a{flex-shrink:0;font-size:12px;font-weight:650;min-height:44px;display:flex;align-items:center;gap:4px;}svg{width:15px;}`;
-export const Button=styled.button<{$secondary?:boolean}>`border:1px solid ${p=>p.$secondary?'var(--st-line)':'transparent'};background:${p=>p.$secondary?'transparent':'var(--st-gold)'};color:${p=>p.$secondary?'var(--st-ink)':'var(--st-paper)'};border-radius:14px;min-height:48px;padding:12px 20px;font-size:13px;font-weight:650;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:9px;min-width:0;max-width:100%;text-align:center;line-height:1.35;overflow-wrap:anywhere;transition:transform .15s,background .15s;svg{width:18px;flex-shrink:0;}&:hover{transform:translateY(-1px);}&:disabled{opacity:.45;cursor:not-allowed;transform:none;}`;
-export const ButtonLink=styled(Link)<{$secondary?:boolean}>`border:1px solid ${p=>p.$secondary?'var(--st-line)':'transparent'};background:${p=>p.$secondary?'transparent':'var(--st-gold)'};color:${p=>p.$secondary?'var(--st-ink)':'var(--st-paper)'};border-radius:14px;min-height:48px;padding:12px 20px;font-size:13px;font-weight:650;display:inline-flex;align-items:center;justify-content:center;gap:9px;min-width:0;max-width:100%;text-align:center;line-height:1.35;overflow-wrap:anywhere;svg{width:18px;flex-shrink:0;}`;
+export const Button=styled.button<{$secondary?:boolean}>`border:1px solid ${p=>p.$secondary?'var(--st-line)':'transparent'};background:${p=>p.$secondary?'transparent':'var(--st-action)'};color:${p=>p.$secondary?'var(--st-ink)':'var(--st-on-action)'};border-radius:14px;min-height:48px;padding:12px 20px;font-size:13px;font-weight:650;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:9px;min-width:0;max-width:100%;text-align:center;line-height:1.35;overflow-wrap:anywhere;transition:transform .15s,background .15s;svg{width:18px;flex-shrink:0;}&:hover{transform:translateY(-1px);}&:disabled{opacity:.45;cursor:not-allowed;transform:none;}`;
+export const ButtonLink=styled(Link)<{$secondary?:boolean}>`border:1px solid ${p=>p.$secondary?'var(--st-line)':'transparent'};background:${p=>p.$secondary?'transparent':'var(--st-action)'};color:${p=>p.$secondary?'var(--st-ink)':'var(--st-on-action)'};border-radius:14px;min-height:48px;padding:12px 20px;font-size:13px;font-weight:650;display:inline-flex;align-items:center;justify-content:center;gap:9px;min-width:0;max-width:100%;text-align:center;line-height:1.35;overflow-wrap:anywhere;svg{width:18px;flex-shrink:0;}`;
 export const InlineLink=styled(Link)`font-size:13px;font-weight:650;display:inline-flex;align-items:center;gap:6px;min-height:44px;svg{width:16px;}`;
 export const Box=styled.div<{$tone?:string}>`background:${p=>p.$tone||'var(--st-surface)'};border:1px solid var(--st-line);border-radius:20px;padding:22px;min-width:0;h2,h3{margin-bottom:10px;}p{font-size:14px;line-height:1.65;color:var(--st-muted);}p+p{margin-top:12px;}`;
 export const Stack=styled.div`display:grid;gap:16px;`;
@@ -47,7 +47,7 @@ export const Field=styled.label`
     border-radius:12px;
     background:var(--st-surface);
     color:var(--st-ink);
-    color-scheme:dark;
+    color-scheme:var(--st-scheme);
     font-size:16px;
     line-height:1.35;
   }
@@ -78,9 +78,9 @@ export const Field=styled.label`
     resize:vertical;
   }
   input:focus-visible,select:focus-visible,textarea:focus-visible{
-    outline:2px solid var(--st-gold);
+    outline:2px solid var(--st-action);
     outline-offset:2px;
-    border-color:var(--st-gold);
+    border-color:var(--st-action);
   }
   small{
     color:var(--st-muted);

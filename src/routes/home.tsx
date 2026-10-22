@@ -67,7 +67,7 @@ export function Home() {
   const { t } = useI18n();
   const { studios, loading, error, reload } = useStudios();
   return <Root>
-    <HeroCarousel/>
+    <div className="st-night"><HeroCarousel/></div>
     <AiFeatures/>
     <Readings className="section light" aria-labelledby="readings-title">
       <div className="top">

@@ -5,19 +5,20 @@ import { styled } from 'styled-components';
 import { policies } from '../product/policies';
 
 const Dialog = styled.dialog`
-  position:fixed;inset:0;margin:auto;width:min(398px,calc(100% - 32px));max-height:calc(100dvh - 48px);padding:24px;border:1px solid var(--st-accent-line);border-radius:24px;background:var(--st-surface);color:var(--st-ink);overflow-y:auto;
-  &::backdrop{background:#08040dc9;backdrop-filter:blur(5px);}
-  .icon{width:48px;height:48px;padding:12px;border-radius:16px;background:var(--st-elevated);color:var(--st-gold);margin-bottom:20px;}
-  h2{font-size:23px;line-height:1.3;margin:0 0 12px;font-weight:600;letter-spacing:-.5px;}p{font-size:14px;line-height:1.6;color:var(--st-muted);}
-  .agreements{display:grid;gap:8px;margin:24px 0;}.row{display:flex;align-items:center;gap:8px;border-bottom:1px solid var(--st-line);padding:10px 0;}
-  .row label{display:flex;align-items:center;gap:12px;flex:1;font-size:13px;line-height:1.5;cursor:pointer;min-height:44px;}
-  input[type=checkbox]{width:20px;height:20px;min-height:20px;flex:none;padding:0;accent-color:var(--st-gold);}
-  .read,.cancel,.document-back{border:0;background:none;color:var(--st-muted);font-size:13px;min-height:44px;padding:4px;cursor:pointer;}
-  .read{text-decoration:underline;text-underline-offset:3px;}.cancel{display:block;margin:8px auto 0;}.document-back{display:flex;align-items:center;gap:8px;margin-bottom:16px;}.document-back svg{width:18px;}
-  .document{max-height:48dvh;overflow-y:auto;overscroll-behavior:contain;margin:20px 0;display:grid;gap:20px;}.document h3{font-size:15px;font-weight:600;margin:0 0 8px;}
-  .primary{border:0;border-radius:999px;background:var(--st-gold);color:var(--st-paper);min-height:54px;width:100%;font-size:15px;font-weight:600;cursor:pointer;padding:12px;}.primary:disabled{opacity:.5;cursor:not-allowed;}
-`;
-const agreements = [
+  position:fixed;inset:0;margin:auto;width:min(398px,calc(100% - 32px));max-height:calc(100dvh - 48px);padding:24px 20px 20px;border:0;border-radius:24px;background:var(--st-surface);color:var(--st-ink);overflow-y:auto;box-shadow:0 24px 60px rgb(27 20 32 / 18%);
+  &::backdrop{background:rgb(27 20 32 / 45%);}
+  .icon{width:40px;height:40px;padding:9px;border-radius:12px;background:var(--st-accent);color:var(--st-brand);margin-bottom:16px;}
+  h2{font:600 28px/1.15 'Cormorant Garamond',serif;margin:0 0 8px;letter-spacing:-.2px;}p{font-size:14px;line-height:1.55;color:var(--st-muted);}
+  .agreements{display:grid;margin:18px 0 20px;border-top:1px solid var(--st-line);}.row{display:flex;align-items:center;gap:8px;border-bottom:1px solid var(--st-line);padding:6px 0;}
+  .row label{display:flex;align-items:center;gap:12px;flex:1;font-size:14px;font-weight:600;line-height:1.4;cursor:pointer;min-height:48px;}
+  .row small{font-size:12px;font-weight:400;color:var(--st-faint);}
+  input[type=checkbox]{width:20px;height:20px;min-height:20px;flex:none;padding:0;accent-color:var(--st-brand);}
+  .read,.cancel,.document-back{border:0;background:none;color:var(--st-brand);font-size:14px;font-weight:600;min-height:44px;padding:4px;cursor:pointer;}
+  .cancel{display:block;margin:8px auto 0;color:var(--st-muted);}.document-back{display:flex;align-items:center;gap:8px;margin-bottom:12px;color:var(--st-muted);}.document-back svg{width:18px;}
+  .document{max-height:48dvh;overflow-y:auto;overscroll-behavior:contain;margin:16px 0;display:grid;gap:18px;}.document h3{font-size:15px;font-weight:600;margin:0 0 6px;}
+  .primary{border:0;border-radius:14px;background:var(--st-action);color:var(--st-on-action);min-height:52px;width:100%;font-size:16px;font-weight:600;cursor:pointer;padding:12px;}.primary:disabled{opacity:.45;cursor:not-allowed;}
+  button:focus-visible{outline:2px solid var(--st-action);outline-offset:3px;}
+`;const agreements = [
   { path: '/terms', label: 'Terms of Use' },
   { path: '/privacy', label: 'Privacy Policy' },
   { path: '/refund-policy', label: 'Cancellation Policy' },

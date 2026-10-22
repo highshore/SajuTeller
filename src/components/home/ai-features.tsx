@@ -74,14 +74,14 @@ export default function AiFeatures() {
         <h3>{t('Today’s fortune')}</h3><p>{t('From your birth date. New daily.')}</p>
         <span className="go">{t('See yours')}<ArrowRightIcon/></span>
       </Card>
-      <Card to="/experiences?topic=compatibility" $tone="plum">
-        <span className="chip">{t('Coming soon')}</span>
+      <Card to="/couple" $tone="plum">
+        <span className="chip">{t('Free')}</span>
         <div className="visual" aria-hidden="true">
           <div className="pair"><span lang="zh-Hant">癸<br/>卯</span><span lang="zh-Hant">甲<br/>寅</span></div>
           <div className="seal small"><span lang="zh-Hant">相生</span></div>
         </div>
         <h3>{t('Couple match')}</h3><p>{t('Two birth dates, one reading.')}</p>
-        <span className="go">{t('See couple readings')}<ArrowRightIcon/></span>
+        <span className="go">{t('Compare')}<ArrowRightIcon/></span>
       </Card>
       <Card to="/name-creation" $tone="light">
         <span className="chip">{t('Free')}</span>

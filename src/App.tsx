@@ -35,6 +35,7 @@ const Search = lazy(() => import("./routes/search"));
 const Studio = lazy(() => import("./routes/studio"));
 const Onboarding = lazy(() => import("./routes/onboarding"));
 const Legal = lazy(() => import("./routes/legal"));
+const Couple = lazy(() => import("./routes/couple"));
 import AuthFlow from "./components/auth-flow";
 
 const router = createBrowserRouter([
@@ -75,6 +76,7 @@ const router = createBrowserRouter([
       { path: "map", element: <Locations /> },
       { path: "today-fortune", element: <TodayFortune /> },
       { path: "name-creation", element: <NameCreation /> },
+      { path: "couple", element: <Couple /> },
       { path: "business", element: <Navigate to="/experiences" replace /> },
       { path: "business/:id", element: <BusinessDetail /> },
       { path: "business/:id/booking", element: <Booking /> },

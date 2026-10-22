@@ -35,6 +35,7 @@ const Search = lazy(() => import("./routes/search"));
 const Studio = lazy(() => import("./routes/studio"));
 const Onboarding = lazy(() => import("./routes/onboarding"));
 const Legal = lazy(() => import("./routes/legal"));
+const Couple = lazy(() => import("./routes/couple"));
 import AuthFlow from "./components/auth-flow";
 
 const router = createBrowserRouter([
@@ -75,6 +76,7 @@ const router = createBrowserRouter([
       { path: "map", element: <Locations /> },
       { path: "today-fortune", element: <TodayFortune /> },
       { path: "name-creation", element: <NameCreation /> },
+      { path: "couple", element: <Couple /> },
       { path: "business", element: <Navigate to="/experiences" replace /> },
       { path: "business/:id", element: <BusinessDetail /> },
       { path: "business/:id/booking", element: <Booking /> },
@@ -87,19 +89,31 @@ const router = createBrowserRouter([
 const GlobalStyles = createGlobalStyle`
   ${reset};
 
+  /* ST v2 tokens (Figma "Sajuteller / v2"): light canvas for decisions, night for brand moments. */
   :root {
     --st-app-width:430px;
-    --st-backdrop:#17111e;
-    --st-paper:#0b0610;
-    --st-surface:#130a1b;
-    --st-elevated:#1c1027;
-    --st-accent:#4b2d5a;
-    --st-accent-line:#6c447c;
-    --st-gold:#c9a76a;
-    --st-ink:#f4eee7;
-    --st-muted:#b8acbf;
-    --st-line:#2b1a33;
-    --st-lilac:#4b2d5a;
+    --st-backdrop:#ece7e3;
+    --st-paper:#ffffff;
+    --st-surface:#ffffff;
+    --st-elevated:#f7f4f1;
+    --st-accent:#f3eef6;
+    --st-accent-line:#d3cbd8;
+    --st-gold:#86672c;
+    --st-ink:#1b1420;
+    --st-muted:#5e5566;
+    --st-faint:#857c8d;
+    --st-line:#e8e2ea;
+    --st-lilac:#f3eef6;
+    --st-brand:#4b2d5a;
+    --st-action:#4b2d5a;
+    --st-on-action:#ffffff;
+    --st-nav-bg:rgb(255 255 255 / 94%);
+    --st-dock-bg:rgb(255 255 255 / 97%);
+    --st-scheme:light;
+    --st-preview-bg:#fff4de;
+    --st-preview:#8a5a00;
+    --st-success-bg:#e7f4ec;
+    --st-success:#2e7d57;
     --ks-header-height: 72px;
     --ks-midnight: #0F0026;
     --ks-night: #180A2E;
@@ -118,13 +132,34 @@ const GlobalStyles = createGlobalStyle`
     --ks-radius-lg: 24px;
     --ks-shadow: 0 12px 34px rgba(15, 0, 38, 0.10);
   }
+  /* Opt-in night scope for brand screens (hero, live interpretation, fortune headers). */
+  .st-night {
+    --st-paper:#0b0610;
+    --st-surface:#130a1b;
+    --st-elevated:#1c1027;
+    --st-accent:#4b2d5a;
+    --st-accent-line:#6c447c;
+    --st-gold:#c9a76a;
+    --st-ink:#f4eee7;
+    --st-muted:#b8acbf;
+    --st-faint:#8f8697;
+    --st-line:#2b1a33;
+    --st-lilac:#4b2d5a;
+    --st-brand:#c9a76a;
+    --st-action:#c9a76a;
+    --st-on-action:#1b1420;
+    --st-nav-bg:rgb(11 6 16 / 94%);
+    --st-dock-bg:rgb(28 16 39 / 97%);
+    --st-scheme:dark;
+    color:var(--st-ink);
+  }
 
   * { box-sizing: border-box; }
-  .skip-link{clip-path:inset(50%);position:fixed;top:-60px;left:max(16px,calc((100% - var(--st-app-width))/2 + 16px));z-index:1000;padding:12px 18px;background:var(--st-gold);color:var(--st-paper);border-radius:10px;}
+  .skip-link{clip-path:inset(50%);position:fixed;top:-60px;left:max(16px,calc((100% - var(--st-app-width))/2 + 16px));z-index:1000;padding:12px 18px;background:var(--st-action);color:var(--st-on-action);border-radius:10px;}
   .skip-link:focus{top:8px;clip-path:none;}
   img, video { max-width:100%; height:auto; }
   input, select, textarea { max-width:100%; min-width:0; }
-  :focus-visible { outline:2px solid #a78bfa; outline-offset:3px; }
+  :focus-visible { outline:2px solid #8b6aa0; outline-offset:3px; }
   html { scroll-behavior: smooth; scroll-padding-top:76px; scroll-padding-bottom:calc(88px + env(safe-area-inset-bottom)); }
   html, body, #root { min-height: 100%; }
   body {
@@ -138,8 +173,8 @@ const GlobalStyles = createGlobalStyle`
   a { color: inherit; text-decoration: none; }
   button, input, textarea, select { font: inherit; }
   button { -webkit-tap-highlight-color: transparent; }
-  input,select,textarea { accent-color:var(--st-gold); }
-  ::selection { background: rgba(98, 16, 204, 0.18); }
+  input,select,textarea { accent-color:var(--st-action); }
+  ::selection { background: rgb(75 45 90 / 18%); }
   h1, h2, h3, h4 { text-wrap: balance; }
   p { text-wrap: pretty; }
 

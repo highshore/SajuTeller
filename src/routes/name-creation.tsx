@@ -1,765 +1,164 @@
 import LoadingScreen from '../components/loading_screen';
-import React, { useState, useEffect } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
-import styled from 'styled-components';
+import React, { useEffect, useState } from 'react';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
+import { styled } from 'styled-components';
+import { ArrowPathIcon, CheckIcon, ChevronRightIcon, ShareIcon, SpeakerWaveIcon } from '@heroicons/react/24/outline';
 import { useI18n } from '../i18n/i18n';
 import { generateKoreanName, type NameGenerationResponse } from '../services/openai';
+import {
+  Body, Boxed, Disclaimer, Display, FieldBlock, Kicker, Lede, Night, PageBar, Primary, Secondary, Segmented, Starfield, StickyAction,
+} from '../components/readings/shared';
 
-// Import mysterious fonts for multiple languages from Google Fonts
-const fontLinks = [
-  // Korean mysterious fonts
-  'https://fonts.googleapis.com/css2?family=Song+Myung&family=Jua&family=Gugi&family=Stylish:wght@400&family=Kirang+Haerang&display=swap',
-  // Korean clean fonts  
-  'https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@400;500;600;700&family=Noto+Sans+KR:wght@300;400;500;600;700&display=swap',
-  // Latin mysterious fonts
-  'https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Crimson+Text:wght@400;600;700&family=Cormorant+Garamond:wght@400;500;600;700&display=swap',
-  // Japanese fonts
-  'https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@400;500;600;700&family=Sawarabi+Mincho&display=swap',
-  // Chinese fonts
-  'https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;500;600;700&family=Ma+Shan+Zheng&display=swap'
-];
-
-fontLinks.forEach(href => {
-  const link = document.createElement('link');
-  link.href = href;
-  link.rel = 'stylesheet';
-  document.head.appendChild(link);
-});
-
-// Language-specific font configurations
-const getFontFamily = (language: string, type: 'heading' | 'body' | 'accent' | 'price') => {
-  const fontConfigs = {
-    ko: {
-      heading: "'Song Myung', 'Stylish', 'Kirang Haerang', serif",
-      body: "'Noto Sans KR', 'Jua', sans-serif",
-      accent: "'Gugi', 'Song Myung', cursive",
-      price: "'Noto Serif KR', 'Song Myung', serif"
-    },
-    en: {
-      heading: "'Cinzel', 'Crimson Text', serif",
-      body: "'Cormorant Garamond', 'Crimson Text', serif",
-      accent: "'Cinzel', 'Crimson Text', serif",
-      price: "'Crimson Text', serif"
-    },
-    ja: {
-      heading: "'Sawarabi Mincho', 'Noto Serif JP', serif",
-      body: "'Noto Sans JP', 'Sawarabi Mincho', sans-serif",
-      accent: "'Sawarabi Mincho', 'Noto Serif JP', serif",
-      price: "'Noto Serif JP', 'Sawarabi Mincho', serif"
-    },
-    zh: {
-      heading: "'Ma Shan Zheng', 'Noto Serif SC', serif",
-      body: "'Noto Sans SC', 'Ma Shan Zheng', sans-serif",
-      accent: "'Ma Shan Zheng', 'Noto Serif SC', serif",
-      price: "'Noto Serif SC', 'Ma Shan Zheng', serif"
-    },
-    es: {
-      heading: "'Cinzel', 'Crimson Text', serif",
-      body: "'Cormorant Garamond', 'Crimson Text', serif",
-      accent: "'Cinzel', 'Crimson Text', serif",
-      price: "'Crimson Text', serif"
-    }
-  };
-  
-  return fontConfigs[language as keyof typeof fontConfigs]?.[type] || fontConfigs.en[type];
-};
-
-const Container = styled.div`
-  min-height: 100vh;
-  width: 100%;
-
-  background: var(--st-paper);
-  position: relative;
-  padding: 20px 0 44px;
-  input,select,textarea{color-scheme:light;color:#2d3748;max-width:100%;min-width:0;}
-  @container saju (max-width:400px){input,select,textarea{font-size:16px;}}
-  
-  &::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: 
-      radial-gradient(circle at 15% 80%, rgba(201, 167, 106, 0.06) 0%, transparent 54%),
-      radial-gradient(circle at 85% 15%, rgba(125, 89, 143, 0.09) 0%, transparent 56%);
-    z-index: 0;
-  }
-  
-  @container saju (max-width: 768px) {
-    padding: 1rem 0;
-  }
-`;
-
-const ContentWrapper = styled.div`
-  max-width: 800px;
-  width: 100%;
-  margin: 0 auto;
-  background: #f8f6f0;
-  border-radius: 20px;
-  padding: clamp(20px, 5cqi, 32px);
-  box-shadow: 0 16px 36px rgba(0, 0, 0, 0.16);
-  overflow-y: auto;
-  position: relative;
-  z-index: 1;
-  border: 1px solid rgba(201, 167, 106, 0.2);
-  
-  @container saju (max-width: 768px) {
-    padding: clamp(16px, 5cqi, 24px);
-    margin: 0 16px;
-    max-width: calc(100% - 32px);
-    border-radius: 18px;
-  }
-`;
-
-const Header = styled.div`
-  text-align: center;
-  margin-bottom: 1.75rem;
-`;
-
-const BackButton = styled.button`
-  background: #f1ebf0;
-  border: 1px solid #e8dfeb;
-  color: #43324b;
-  font-size: 0.95rem;
-  font-weight: 500;
-  cursor: pointer;
-  margin-bottom: 2rem;
-  padding: 0.75rem 1.5rem;
-  border-radius: 12px;
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  transition: all 0.3s ease;
-  backdrop-filter: blur(10px);
-  
-  &:hover {
-    background: #ebe1ee;
-    border-color: #d9cadf;
-    color: #2d2434;
-    transform: translateY(-1px);
-  }
-`;
-
-const Title = styled.h1<{ $language: string }>`
-  font-family: ${props => getFontFamily(props.$language, 'heading')};
-  font-size: clamp(30px, 8cqi, 42px);
-  font-weight: 700;
-  color: #261b2d;
-  margin-bottom: 1rem;
-  line-height: 1.2;
-  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  
-  @container saju (max-width: 768px) {
-    font-size: 2.2rem;
-  }
-  
-  @container saju (max-width: 480px) {
-    font-size: 1.8rem;
-  }
-`;
-
-const Subtitle = styled.p<{ $language: string }>`
-  font-family: ${props => getFontFamily(props.$language, 'body')};
-  font-size: 1.2rem;
-  color: #4a5568;
-  margin-bottom: 0;
-  line-height: 1.6;
-  font-weight: 400;
-  
-  @container saju (max-width: 768px) {
-    font-size: 1.1rem;
-  }
-`;
-
-const Form = styled.form`
-  display: flex;
-  flex-direction: column;
-  gap: 2rem;
-`;
-
-const FormGroup = styled.div`
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-`;
-
-const Label = styled.label<{ $language: string }>`
-  font-family: ${props => getFontFamily(props.$language, 'body')};
-  font-weight: 600;
-  color: #2d3748;
-  font-size: 1rem;
-  margin-bottom: 0.5rem;
-`;
-
-const Required = styled.span`
-  color: #ef4444;
-  margin-left: 0.25rem;
-`;
-
-const Input = styled.input<{ $language: string }>`
-  font-family: ${props => getFontFamily(props.$language, 'body')};
-  padding: 1rem 1.25rem;
-  border: 2px solid rgba(226, 232, 240, 0.8);
-  border-radius: 12px;
-  font-size: 1rem;
-  background: rgba(255, 255, 255, 0.8);
-  backdrop-filter: blur(10px);
-  transition: all 0.3s ease;
-  
-  &:focus {
-    outline: none;
-    border-color: #8b5cf6;
-    background: rgba(255, 255, 255, 0.95);
-    box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.1);
-  }
-  
-  &::placeholder {
-    color: #a0aec0;
-  }
-`;
-
-const Select = styled.select`
-  padding: 0.875rem 1rem;
-  border: 2px solid #e5e7eb;
-  border-radius: 10px;
-  font-size: 1rem;
-  background: white;
-  transition: border-color 0.2s;
-  
-  &:focus {
-    outline: none;
-    border-color: #667eea;
-  }
-`;
-
-const RadioGroup = styled.div`
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-  gap: 1rem;
-  margin-top: 0.5rem;
-  
-  @container saju (max-width: 768px) {
-    grid-template-columns: 1fr;
-  }
-`;
-
-const RadioLabel = styled.label`
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-  cursor: pointer;
-  padding: 1.25rem;
-  border: 2px solid rgba(226, 232, 240, 0.6);
-  border-radius: 16px;
-  background: rgba(255, 255, 255, 0.6);
-  backdrop-filter: blur(10px);
-  transition: all 0.3s ease;
-  
-  &:hover {
-    border-color: rgba(139, 92, 246, 0.3);
-    background: rgba(255, 255, 255, 0.8);
-    transform: translateY(-2px);
-    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
-  }
-`;
-
-const RadioInput = styled.input`
-  width: 1.25rem;
-  height: 1.25rem;
-  cursor: pointer;
-  accent-color: #8b5cf6;
-`;
-
-const RadioText = styled.span<{ $language: string }>`
-  font-family: ${props => getFontFamily(props.$language, 'body')};
-  font-size: 1rem;
-  color: #2d3748;
-  font-weight: 500;
-`;
-
-const ButtonGroup = styled.div`
-  display: flex;
-  gap: 1.5rem;
-  justify-content: center;
-  margin-top: 3rem;
-  
-  @container saju (max-width: 768px) {
-    flex-direction: column;
-    gap: 1rem;
-  }
-`;
-
-const Button = styled.button<{ $variant?: 'primary'; $language: string }>`
-  font-family: ${props => getFontFamily(props.$language, 'body')};
-  padding: 1rem 2.5rem;
-  border: none;
-  border-radius: 12px;
-  font-size: 1.1rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  min-width: 160px;
-  
-  ${props => props.$variant === 'primary' 
-    ? `
-      background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
-      color: white;
-      box-shadow: 0 4px 15px rgba(139, 92, 246, 0.3);
-      
-      &:hover:not(:disabled) {
-        background: linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%);
-        transform: translateY(-2px);
-        box-shadow: 0 8px 25px rgba(139, 92, 246, 0.4);
-      }
-    `
-    : `
-      background: rgba(255, 255, 255, 0.8);
-      color: #4a5568;
-      border: 2px solid rgba(226, 232, 240, 0.8);
-      backdrop-filter: blur(10px);
-      
-      &:hover:not(:disabled) {
-        background: rgba(255, 255, 255, 0.95);
-        border-color: rgba(139, 92, 246, 0.3);
-        transform: translateY(-2px);
-        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
-      }
-    `
-  }
-  
-  &:disabled {
-    opacity: 0.6;
-    cursor: not-allowed;
-  }
-`;
-
-
-const ResultContainer = styled.div`
-  text-align: center;
-  padding: 2rem 0;
-`;
-
-const ResultTitle = styled.h2`
-  font-size: 1.5rem;
-  font-weight: 700;
-  color: #1f2937;
-  margin-bottom: 1rem;
-`;
-
-const NameCard = styled.div`
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
-  padding: 2rem;
-  border-radius: 15px;
-  margin-bottom: 2rem;
-  box-shadow: 0 10px 30px rgba(102, 126, 234, 0.3);
-`;
-
-const KoreanName = styled.div`
-  font-size: 2.5rem;
-  font-weight: 700;
-  margin-bottom: 0.5rem;
-`;
-
-const PronunciationSection = styled.div`
-  margin-bottom: 1rem;
-  padding: 1rem;
-  background: rgba(255, 255, 255, 0.1);
-  border-radius: 10px;
-`;
-
-const PronunciationTitle = styled.div`
-  font-size: 0.9rem;
-  opacity: 0.8;
-  margin-bottom: 0.5rem;
-  font-weight: 600;
-`;
-
-const PronunciationRow = styled.div`
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-  margin-bottom: 0.5rem;
-  
-  &:last-child {
-    margin-bottom: 0;
-  }
-`;
-
-const PronunciationLabel = styled.span`
-  font-size: 0.85rem;
-  opacity: 0.8;
-  min-width: 60px;
-`;
-
-const PronunciationText = styled.span`
-  font-size: 1.1rem;
-  font-weight: 600;
-`;
-
-const NameMeaning = styled.div`
-  font-size: 1.1rem;
-  opacity: 0.9;
-  margin-bottom: 1rem;
-`;
-
-const NameDetails = styled.div`
-  font-size: 0.95rem;
-  opacity: 0.8;
-  line-height: 1.5;
-`;
-
-const ShareButton = styled.button<{ $language: string }>`
-  font-family: ${props => getFontFamily(props.$language, 'body')};
-  background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
-  color: white;
-  border: none;
-  padding: 1rem 2rem;
-  border-radius: 12px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  min-width: 160px;
-  box-shadow: 0 4px 15px rgba(139, 92, 246, 0.3);
-  
-  &:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 8px 25px rgba(139, 92, 246, 0.4);
-  }
-`;
-
-const NewNameButton = styled.button<{ $language: string }>`
-  font-family: ${props => getFontFamily(props.$language, 'body')};
-  background: rgba(255, 255, 255, 0.8);
-  color: #4a5568;
-  border: 2px solid rgba(226, 232, 240, 0.8);
-  padding: 1rem 2rem;
-  border-radius: 12px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  min-width: 160px;
-  backdrop-filter: blur(10px);
-  
-  &:hover {
-    background: rgba(255, 255, 255, 0.95);
-    border-color: rgba(139, 92, 246, 0.3);
-    transform: translateY(-2px);
-    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
-  }
-`;
-
-const ErrorMessage = styled.div`
-  color: #ef4444;
-  font-size: 0.875rem;
-  margin-top: 0.25rem;
-`;
-
-// 주민등록증 스타일 카드
-const IDCard = styled.div`
-  background: linear-gradient(135deg, #faf8f3 0%, #f5f2e8 100%);
-  border: 2px solid #d4af37;
-  border-radius: 12px;
-  padding: 1.5rem;
-  margin: 0 auto 3rem;
-  max-width: 800px;
-  width: 100%;
-  aspect-ratio: 16/10;
-  box-shadow: 
-    0 8px 32px rgba(0, 0, 0, 0.12),
-    0 2px 8px rgba(0, 0, 0, 0.08),
-    inset 0 1px 0 rgba(255, 255, 255, 0.4);
-  position: relative;
-  overflow: hidden;
-  
-  @container saju (max-width: 768px) {
-    aspect-ratio: auto;
-    min-height: auto;
-    padding: 1rem;
-  }
-  
-  &::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: 
-      radial-gradient(circle at 15% 15%, rgba(212, 175, 55, 0.05) 0%, transparent 40%),
-      radial-gradient(circle at 85% 85%, rgba(212, 175, 55, 0.05) 0%, transparent 40%),
-      radial-gradient(circle at 50% 50%, rgba(255, 255, 255, 0.1) 0%, transparent 60%);
-    pointer-events: none;
-  }
-`;
-
-const IDCardHeader = styled.div`
-  text-align: left;
-  margin-bottom: 1rem;
-  position: relative;
-  z-index: 1;
-`;
-
-const IDCardSubtitle = styled.p<{ $language: string }>`
-  font-family: ${props => getFontFamily(props.$language, 'body')};
-  font-size: 0.8rem;
-  color: #8b4513;
-  margin: 0.3rem 0 0 0;
-  opacity: 0.9;
-  font-weight: 500;
-`;
-
-const IDCardContent = styled.div`
-  display: flex;
-  gap: 1rem;
-  align-items: center;
-  position: relative;
-  z-index: 1;
-  margin-bottom: 0.5rem;
-  min-height: 280px;
-  height: calc(100% - 80px);
-  
-  @container saju (max-width: 768px) {
-    flex-direction: column;
-    gap: 0.5rem;
-    height: auto;
-    min-height: auto;
-    margin-bottom: 0.5rem;
-  }
-`;
-
-const IDCardLeft = styled.div`
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  text-align: center;
-  padding: 0.5rem 0;
-  
-  @container saju (max-width: 768px) {
-    width: 100%;
-    padding: 1rem 0;
-  }
-`;
-
-const IDCardRight = styled.div`
-  flex: 0.6;
-  text-align: center;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-  height: 100%;
-  
-  @container saju (max-width: 768px) {
-    display: none;
-  }
-`;
-
-const IDCardTitle = styled.h2<{ $language: string }>`
-  font-family: ${props => getFontFamily(props.$language, 'heading')};
-  font-size: 2.2rem;
-  font-weight: 800;
-  color: #2c1810;
-  margin: 0 0 1.5rem 0;
-  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.1);
-  letter-spacing: 0.5px;
-  
-  @container saju (max-width: 768px) {
-    font-size: 1.4rem;
-    margin: 0 0 0.6rem 0;
-  }
-`;
-
-const IDCardName = styled.h3<{ $language: string }>`
-  font-family: ${props => getFontFamily(props.$language, 'heading')};
-  font-size: 2.8rem;
-  font-weight: 800;
-  color: #1a1a1a;
-  margin: 0 0 1rem 0;
-  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.1);
-  letter-spacing: 0.5px;
-  
-  @container saju (max-width: 768px) {
-    font-size: 1.8rem;
-    margin: 0 0 0.6rem 0;
-  }
-`;
-
-const IDCardNameWithHanja = styled.div`
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.5rem;
-  margin-bottom: 1.5rem;
-  
-  @container saju (max-width: 768px) {
-    margin-bottom: 0.3rem;
-  }
-`;
-
-const IDCardHanja = styled.span<{ $language: string }>`
-  font-family: ${props => getFontFamily(props.$language, 'body')};
-  font-size: 2.4rem;
-  color: #2c1810;
-  font-weight: 600;
-  
-  @container saju (max-width: 768px) {
-    font-size: 1.4rem;
-  }
-`;
-
-const IDCardInfo = styled.div`
-  margin-bottom: 1rem;
-  padding: 0.3rem 0;
-  
-  &:last-child {
-    margin-bottom: 0;
-  }
-  
-  @container saju (max-width: 768px) {
-    margin-bottom: 0.2rem;
-  }
-`;
-
-const IDCardLabel = styled.span<{ $language: string }>`
-  font-family: ${props => getFontFamily(props.$language, 'body')};
-  font-size: 1.1rem;
-  color: #8b4513;
-  font-weight: 600;
-  display: block;
-  margin-bottom: 0.3rem;
-  
-  @container saju (max-width: 768px) {
-    font-size: 0.9rem;
-    margin-bottom: 0.2rem;
-  }
-`;
-
-const IDCardValue = styled.span<{ $language: string }>`
-  font-family: ${props => getFontFamily(props.$language, 'body')};
-  font-size: 1.4rem;
-  color: #2c1810;
-  font-weight: 600;
-  display: block;
-  
-  @container saju (max-width: 768px) {
-    font-size: 1.1rem;
-  }
-`;
-
-const IDCardPhoto = styled.div`
-  width: 170px;
-  height: 220px;
-  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
-  border: 3px solid #d4af37;
-  border-radius: 8px;
-  margin: 0 auto 0.5rem;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  position: relative;
-  overflow: hidden;
-  box-shadow: 
-    0 4px 12px rgba(0, 0, 0, 0.15),
-    inset 0 1px 0 rgba(255, 255, 255, 0.3);
-  
-  &::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background-image: url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTQwIiBoZWlnaHQ9IjE4MCIgdmlld0JveD0iMCAwIDE0MCAxODAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIxNDAiIGhlaWdodD0iMTgwIiBmaWxsPSIjRjVGNUY1Ii8+CjxwYXRoIGQ9Ik03MCA1MEM3MCA0NS41ODE3IDczLjU4MTcgNDIgNzggNDJINjJDNjYuNDE4MyA0MiA3MCA0NS41ODE3IDcwIDUwVjU0SDcwVjUwWiIgZmlsbD0iI0Q5RDlEOSIvPgo8cGF0aCBkPSJNNzAgNThDNzAgNTMuNTgxNyA3My41ODE3IDUwIDc4IDUwSDYyQzY2LjQxODMgNTAgNzAgNTMuNTgxNyA3MCA1OFY2Mkg3MFY1OFoiIGZpbGw9IiM4MDgwODAiLz4KPHA9dGggZD0iTTcwIDY2QzcwIDYxLjU4MTcgNzMuNTgxNyA1OCA3OCA1OEg2MkM2Ni40MTgzIDU4IDcwIDYxLjU4MTcgNzAgNjZWNzBINzBWNjZaIiBmaWxsPSIjODA4MDgwIi8+CjxwYXRoIGQ9Ik03MCA3NEM3MCA2OS41ODE3IDczLjU4MTcgNjYgNzggNjZINjJDNjYuNDE4MyA2NiA3MCA2OS41ODE3IDcwIDc0Vjc4SDcwVjc0WiIgZmlsbD0iI0Q5RDlEOSIvPgo8cGF0aCBkPSJNNzAgODJDNzAgNzcuNTgxNyA3My41ODE3IDc0IDc4IDc0SDYyQzY2LjQxODMgNzQgNzAgNzcuNTgxNyA3MCA4MlY4Nkg3MFY4MloiIGZpbGw9IiM4MDgwODAiLz4KPHA9dGggZD0iTTcwIDkwQzcwIDg1LjU4MTcgNzMuNTgxNyA4MiA3OCA4Mkg2MkM2Ni40MTgzIDgyIDcwIDg1LjU4MTcgNzAgOTBWOTRINzBWOTBaIiBmaWxsPSIjODA4MDgwIi8+CjxwYXRoIGQ9Ik03MCA5OEM3MCA5My41ODE3IDczLjU4MTcgOTAgNzggOTBINjJDNjYuNDE4MyA5MCA3MCA5My41ODE3IDcwIDk4VjEwMkg3MFY5OFoiIGZpbGw9IiNGNUY1RjUiLz4KPHA9dGggZD0iTTcwIDEwNkM3MCAxMDEuNTgxNyA3My41ODE3IDk4IDc4IDk4SDYyQzY2LjQxODMgOTggNzAgMTAxLjU4MTcgNzAgMTA2VjExMEg3MFYxMDZaIiBmaWxsPSIjODA4MDgwIi8+CjxwYXRoIGQ9Ik03MCAxMTRDNzAgMTA5LjU4MTcgNzMuNTgxNyAxMDYgNzggMTA2SDYyQzY2LjQxODMgMTA2IDcwIDEwOS41ODE3IDcwIDExNFYxMThINzBWMTE0WiIgZmlsbD0iIzgwODA4MCIvPgo8cGF0aCBkPSJNNzAgMTIyQzcwIDExNy41ODE3IDczLjU4MTcgMTE0IDc4IDExNEg2MkM2Ni40MTgzIDExNCA3MCAxMTcuNTgxNyA3MCAxMjJWMjI2SDcwVjEyMloiIGZpbGw9IiM4MDgwODAiLz4KPHA9dGggZD0iTTcwIDEzMEM3MCAxMjUuNTgxNyA3My41ODE3IDEyMiA3OCAxMjJINjJDNjYuNDE4MyAxMjIgNzAgMTI1LjU4MTcgNzAgMTMwVjEzNEg3MFYxMzBaIiBmaWxsPSIjRjVGNUY1Ii8+CjxwYXRoIGQ9Ik03MCAxMzhDNzAgMTMzLjU4MTcgNzMuNTgxNyAxMzAgNzggMTMwSDYyQzY2LjQxODMgMTMwIDcwIDEzMy41ODE3IDcwIDEzOFYxNDJINzBWMTM4WiIgZmlsbD0iIzgwODA4MCIvPgo8cGF0aCBkPSJNNzAgMTQ2QzcwIDE0MS41ODE3IDczLjU4MTcgMTM4IDc4IDEzOEg2MkM2Ni40MTgzIDEzOCA3MCAxNDEuNTgxNyA3MCAxNDZWMTUwSDcwVjE0NloiIGZpbGw9IiM4MDgwODAiLz4KPC9zdmc+');
-    background-size: cover;
-    background-repeat: no-repeat;
-    background-position: center;
-  }
-`;
-
-const IDCardFooter = styled.div`
-  text-align: center;
-  margin-top: 0.3rem;
-  padding-top: 0.3rem;
-  border-top: 2px solid #d4af37;
-  position: absolute;
-  bottom: 0.5rem;
-  left: 0;
-  right: 0;
-  
-  @container saju (max-width: 768px) {
-    position: static;
-    margin-top: 0.5rem;
-    padding-top: 0.5rem;
-    border-top: 1px solid #d4af37;
-  }
-`;
-
-const IDCardIssueDate = styled.p<{ $language: string }>`
-  font-family: ${props => getFontFamily(props.$language, 'body')};
-  font-size: 1.3rem;
-  color: #2c1810;
-  margin: 0 0 0.5rem 0;
-  font-weight: 600;
-  
-  @container saju (max-width: 768px) {
-    font-size: 1rem;
-  }
-`;
-
-const IDCardAuthority = styled.div`
-  text-align: center;
-  margin-top: 0.5rem;
-`;
-
-const IDCardAuthorityText = styled.p<{ $language: string }>`
-  font-family: ${props => getFontFamily(props.$language, 'body')};
-  font-size: 1.1rem;
-  color: #8b4513;
-  margin: 0;
-  font-weight: 600;
-  
-  @container saju (max-width: 768px) {
-    font-size: 0.9rem;
-  }
-`;
-
-// 이름 설명 섹션
-const NameExplanation = styled.div`
-  background: rgba(255, 255, 255, 0.8);
-  backdrop-filter: blur(10px);
-  border-radius: 16px;
-  padding: 2rem;
-  margin-bottom: 2rem;
-  border: 1px solid rgba(255, 255, 255, 0.2);
-`;
-
-const ExplanationTitle = styled.h3<{ $language: string }>`
-  font-family: ${props => getFontFamily(props.$language, 'heading')};
-  font-size: 1.5rem;
-  font-weight: 700;
-  color: #2d3748;
-  margin: 0 0 1rem 0;
-  text-align: center;
-`;
-
-const ExplanationText = styled.p<{ $language: string }>`
-  font-family: ${props => getFontFamily(props.$language, 'body')};
-  font-size: 1.1rem;
-  color: #4a5568;
-  line-height: 1.7;
-  margin: 0;
-  text-align: center;
-`;
+// Figma 06 — Redesign: "12 Korean name — About you" (148:719), "13 — Your names" (148:798), "14 — detail" (148:896).
+// Each name comes from generateKoreanName (one name per call). "Suggest another" calls it again with the same
+// answers and adds the result to the list. Per-character meanings are read from the AI's own explanation when it
+// uses the "字 (Sound, meaning)" pattern; nothing is invented when it doesn't.
 
 interface FormData {
   originalName: string;
   gender: string;
   personality: string[];
 }
+
+const TRAITS = [['kind', 'Kind'], ['calm', 'Calm'], ['strong', 'Strong'], ['active', 'Energetic'], ['wise', 'Wise'], ['creative', 'Creative']] as const;
+const MAX_TRAITS = 2;
+
+const syllables = (value: string) => Array.from(value.replace(/[\s()（）]/g, ''));
+
+/** "大 (Dae, great)" → "great". Returns null when the explanation doesn't name the character that way. */
+function charMeaning(meaning: string, hanja: string) {
+  const match = meaning.match(new RegExp(`${hanja}\\s*[(（]([^)）]+)[)）]`));
+  if (!match) return null;
+  const parts = match[1].split(/[,，]/);
+  if (parts.length < 2) return null;
+  return parts.slice(1).join(',').trim().replace(/^["“'‘]+|["”'’]+$/g, '') || null;
+}
+
+function breakdown(result: NameGenerationResponse) {
+  const hangul = syllables(result.name_hangul);
+  const hanja = syllables(result.name_hanja);
+  const roman = result.romanization.split(/[\s\-‐]+/).filter(Boolean);
+  if (hangul.length !== hanja.length) return null;
+  return hangul.map((h, i) => ({ hangul: h, hanja: hanja[i], roman: roman.length === hangul.length ? roman[i] : null, meaning: charMeaning(result.meaning, hanja[i]) }));
+}
+
+const canSpeak = typeof window !== 'undefined' && 'speechSynthesis' in window;
+function speak(text: string) {
+  if (!canSpeak) return;
+  const utterance = new SpeechSynthesisUtterance(text);
+  utterance.lang = 'ko-KR';
+  utterance.rate = 0.85;
+  window.speechSynthesis.cancel();
+  window.speechSynthesis.speak(utterance);
+}
+
+const Intro = styled.header`
+  padding: 8px 20px 0;
+  .bar { margin: 0 -8px; }
+  h2 { margin-bottom: 10px; }
+`;
+
+const Chips = styled.div`
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  button { min-height: 40px; padding: 8px 16px; border-radius: 99px; border: 1px solid var(--st-accent-line); background: var(--st-surface); color: var(--st-ink);
+    font: 600 14px/1.2 Inter, sans-serif; display: inline-flex; align-items: center; gap: 6px; cursor: pointer; }
+  button svg { width: 16px; }
+  button[aria-pressed='true'] { background: var(--st-action); border-color: var(--st-action); color: var(--st-on-action); }
+  button:disabled { opacity: .45; cursor: not-allowed; }
+`;
+
+const NameCard = styled.article<{ $first?: boolean }>`
+  border: ${p => p.$first ? '2px solid var(--st-action)' : '1px solid var(--st-line)'};
+  border-radius: 18px;
+  padding: ${p => p.$first ? '17px' : '18px'};
+  background: var(--st-surface);
+  display: grid;
+  gap: 12px;
+  .top { display: flex; justify-content: space-between; gap: 12px; align-items: flex-start; }
+  .hangul { margin: 0; font: 500 38px/1.1 'Noto Serif KR', serif; color: var(--st-ink); overflow-wrap: anywhere; }
+  .roman { margin: 4px 0 0; font: 600 14px/1.3 Inter, sans-serif; color: var(--st-muted); }
+  .listen { flex: none; width: 44px; height: 44px; border-radius: 50%; border: 1px solid var(--st-line); background: var(--st-surface); color: var(--st-ink); display: grid; place-items: center; cursor: pointer; }
+  .listen svg { width: 20px; }
+  .meaning { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 12px; align-items: center; background: var(--st-elevated); border-radius: 12px; padding: 12px 14px; }
+  .meaning b { font: 500 22px/1.2 'Noto Serif KR', serif; color: var(--st-action); letter-spacing: 3px; }
+  .meaning span { font-size: 14px; line-height: 1.5; color: var(--st-ink); display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+  .details { justify-self: end; border: 0; background: none; padding: 0 2px; min-height: 40px; color: var(--st-action); font: 650 14px/1.2 Inter, sans-serif; display: inline-flex; align-items: center; gap: 4px; cursor: pointer; }
+  .details svg { width: 16px; }
+`;
+
+const Amber = styled.div`
+  background: var(--st-preview-bg);
+  border-radius: 16px;
+  padding: 16px 18px;
+  h3 { margin: 0 0 6px; font: 650 15px/1.35 Inter, sans-serif; color: var(--st-preview); }
+  p { margin: 0; font-size: 13px; line-height: 1.6; color: var(--st-muted); }
+`;
+
+const Master = styled.div`
+  border-radius: 18px;
+  padding: 22px 20px;
+  background: linear-gradient(180deg, #130a1b 0%, #2a1534 100%);
+  display: grid;
+  gap: 10px;
+  h3 { margin: 0; font: 500 26px/1.15 'Cormorant Garamond', serif; color: var(--st-ink); }
+  p { margin: 0; font-size: 14px; line-height: 1.6; color: var(--st-muted); }
+  a { margin-top: 6px; min-height: 52px; border-radius: 14px; background: var(--st-action); color: var(--st-on-action); display: flex; align-items: center; justify-content: center; text-align: center; padding: 12px; font: 650 15px/1.3 Inter, sans-serif; }
+`;
+
+const Seal = styled.div<{ $cols: number }>`
+  width: 112px;
+  aspect-ratio: 1;
+  margin: 8px auto 22px;
+  background: #b3261e;
+  border-radius: 14px;
+  padding: 8px;
+  transform: rotate(-4deg);
+  box-shadow: 0 10px 30px rgb(0 0 0 / 35%);
+  .inner { width: 100%; height: 100%; border: 2px solid #f8e9e4; border-radius: 6px; display: grid; direction: rtl;
+    grid-template-rows: repeat(2, 1fr); grid-auto-flow: column; grid-auto-columns: 1fr; place-items: center; padding: 4px; }
+  span { font: 600 ${p => p.$cols > 2 ? 18 : 30}px/1 'Noto Serif KR', serif; color: #fbefe9; }
+  @media (prefers-reduced-motion: reduce) { transform: none; }
+`;
+
+const Hero = styled.div`
+  text-align: center;
+  padding-bottom: 6px;
+  h2 { margin: 0; font: 500 clamp(44px, 14cqi, 56px)/1.1 'Noto Serif KR', serif; color: var(--st-ink); overflow-wrap: anywhere; }
+  .roman { margin: 6px 0 16px; font: 500 16px/1.3 Inter, sans-serif; color: var(--st-gold); }
+  button { min-height: 44px; padding: 8px 18px; border-radius: 99px; border: 1px solid var(--st-accent-line); background: rgb(11 6 16 / 45%); color: var(--st-ink);
+    font: 600 14px/1.2 Inter, sans-serif; display: inline-flex; align-items: center; gap: 8px; cursor: pointer; }
+  button svg { width: 18px; }
+`;
+
+const CharTable = styled.ol`
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  border: 1px solid var(--st-line);
+  border-radius: 16px;
+  overflow: hidden;
+  li { display: grid; grid-template-columns: 56px minmax(0, 1fr); gap: 16px; align-items: center; padding: 14px 16px; }
+  li + li { border-top: 1px solid var(--st-line); }
+  .tile { width: 56px; height: 56px; border-radius: 12px; background: var(--st-accent); display: grid; place-items: center; font: 500 28px/1 'Noto Serif KR', serif; color: var(--st-action); }
+  small { display: block; font-size: 12px; color: var(--st-muted); }
+  b { display: block; font: 650 16px/1.35 Inter, sans-serif; color: var(--st-ink); margin-top: 2px; }
+`;
+
+const Explain = styled.div`
+  background: var(--st-elevated);
+  border-radius: 16px;
+  padding: 16px 18px;
+  h3 { margin: 0 0 6px; font: 650 15px/1.35 Inter, sans-serif; }
+  p { margin: 0; font-size: 14px; line-height: 1.65; color: var(--st-muted); }
+`;
+
+const SectionHead = styled.h2`
+  margin: 0 0 12px;
+  font: 500 26px/1.2 'Cormorant Garamond', serif;
+  color: var(--st-ink);
+`;
 
 const NameCreation: React.FC = () => {
   const navigate = useNavigate();
@@ -771,318 +170,222 @@ const NameCreation: React.FC = () => {
     personality: []
   });
   const [loading, setLoading] = useState(false);
-  const [result, setResult] = useState<NameGenerationResponse | null>(null);
+  const [results, setResults] = useState<NameGenerationResponse[]>([]);
+  const [selected, setSelected] = useState<number | null>(null);
   const [errors, setErrors] = useState<Partial<Record<keyof FormData, string>>>({});
 
   useEffect(() => {
-    // 페이지 진입 시 상단으로 스크롤
-    window.scrollTo(0, 0);
-    
     // URL에서 name 파라미터를 읽어와서 폼에 미리 채우기
     const nameFromUrl = searchParams.get('name');
-    if (nameFromUrl) {
-      setFormData(prev => ({
-        ...prev,
-        originalName: nameFromUrl
-      }));
-    }
+    if (nameFromUrl) setFormData(prev => ({ ...prev, originalName: nameFromUrl }));
   }, [searchParams]);
 
+  const hasResults = results.length > 0;
+  useEffect(() => { window.scrollTo(0, 0); }, [selected, hasResults]);
+
   const handleInputChange = (field: keyof FormData, value: string | string[]) => {
-    setFormData(prev => ({
-      ...prev,
-      [field]: value
-    }));
-    
-    // 에러 메시지 제거
-    if (errors[field]) {
-      setErrors(prev => ({
-        ...prev,
-        [field]: undefined
-      }));
-    }
+    setFormData(prev => ({ ...prev, [field]: value }));
+    if (errors[field]) setErrors(prev => ({ ...prev, [field]: undefined }));
   };
 
   const handlePersonalityChange = (personality: string, checked: boolean) => {
     setFormData(prev => ({
       ...prev,
-      personality: checked 
-        ? [...prev.personality, personality]
-        : prev.personality.filter(p => p !== personality)
+      personality: checked ? [...prev.personality, personality] : prev.personality.filter(p => p !== personality)
     }));
-    
-    // 에러 메시지 제거
-    if (errors.personality) {
-      setErrors(prev => ({
-        ...prev,
-        personality: undefined
-      }));
-    }
+    if (errors.personality) setErrors(prev => ({ ...prev, personality: undefined }));
   };
 
   const validateForm = (): boolean => {
     const newErrors: Partial<Record<keyof FormData, string>> = {};
-    
-    if (!formData.originalName.trim()) {
-      newErrors.originalName = '이름을 입력해주세요';
-    }
-    if (!formData.gender) {
-      newErrors.gender = '성별을 선택해주세요';
-    }
-    if (formData.personality.length === 0) {
-      newErrors.personality = '성격을 하나 이상 선택해주세요';
-    }
-    
+    if (!formData.originalName.trim()) newErrors.originalName = t('Please enter your name.');
+    if (!formData.gender) newErrors.gender = t('Choose how the name should feel.');
+    if (formData.personality.length === 0) newErrors.personality = t('Pick at least one.');
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    if (!validateForm()) {
-      return;
-    }
-    
+  const createName = async () => {
     setLoading(true);
-    
     try {
-      // Supabase Edge Function을 통해 한국 이름 생성
+      // OpenAI 호출 (실패 시 서비스 내부 폴백)
       const nameResult = await generateKoreanName(formData);
-      setResult(nameResult);
+      setResults(prev => [...prev, nameResult]);
     } catch (error) {
       console.error('이름 생성 오류:', error);
-      const errorMessage = error instanceof Error ? error.message : '알 수 없는 오류가 발생했습니다.';
-      alert(`이름 생성 중 오류가 발생했습니다: ${errorMessage}`);
+      alert(t('We couldn’t create a name just now. Please try again.'));
     } finally {
       setLoading(false);
     }
   };
 
-  const handleBack = () => {
-    navigate('/');
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!validateForm()) return;
+    await createName();
   };
 
-  const handleShare = () => {
-    const shareText = `🎭 ${t('koreanNameCreation')} ${t('result')}\n\n📝 ${t('generatedName')}: ${result?.name_hangul} (${result?.romanization})\n${t('hanja')}: ${result?.name_hanja}\n${result?.meaning}\n\n#한국이름 #이름작명 #SajuTeller`;
-    
+  const handleBack = () => navigate('/');
+
+  const handleShare = (result: NameGenerationResponse) => {
+    const shareText = `🎭 ${t('koreanNameCreation')} ${t('result')}\n\n📝 ${t('generatedName')}: ${result.name_hangul} (${result.romanization})\n${t('hanja')}: ${result.name_hanja}\n${result.meaning}\n\n#한국이름 #이름작명 #SajuTeller`;
+
     if (navigator.share) {
-      navigator.share({
-        title: t('koreanNameCreation'),
-        text: shareText,
-        url: window.location.href
-      }).catch(console.error);
+      navigator.share({ title: t('koreanNameCreation'), text: shareText, url: window.location.href }).catch(console.error);
     } else if (navigator.clipboard) {
       navigator.clipboard.writeText(shareText).then(() => {
-        alert('이름 작명 결과가 클립보드에 복사되었습니다!');
+        alert(t('Copied. Paste it anywhere to share.'));
       }).catch(() => {
-        alert('공유할 수 없습니다. 직접 복사해주세요.');
+        alert(t('Sharing isn’t available here. Copy the name by hand.'));
       });
     } else {
-      alert('공유할 수 없습니다. 직접 복사해주세요.');
+      alert(t('Sharing isn’t available here. Copy the name by hand.'));
     }
   };
 
   const handleNewName = () => {
-    setResult(null);
-    setFormData({
-      originalName: '',
-      gender: '',
-      personality: []
-    });
+    setResults([]);
+    setSelected(null);
+    setFormData({ originalName: '', gender: '', personality: [] });
   };
 
-  if (loading) {
+  const loader = loading && <LoadingScreen label="Creating your Korean name…"/>;
+
+  // 14 — one name, character by character
+  if (selected !== null && results[selected]) {
+    const result = results[selected];
+    // Only lay out characters when the AI explained them; otherwise hangul and hanja may not correspond.
+    const parsed = breakdown(result);
+    const rows = parsed && parsed.some(r => r.meaning) ? parsed : null;
+    const sealChars = (() => { const h = syllables(result.name_hanja); return h.length === 2 ? [...h, '之', '印'] : h.length === 3 ? [...h, '印'] : h; })();
     return (
-      <Container>
-        <ContentWrapper>
-          <Header>
-            <BackButton onClick={handleBack}>‹ {t('backToHome')}</BackButton>
-            <Title $language={language}>{t('koreanNameGenerating')}</Title>
-            <Subtitle $language={language}>{t('aiIsCreatingKoreanName')}</Subtitle>
-          </Header>
-          
-          <LoadingScreen compact/>
-        </ContentWrapper>
-      </Container>
+      <div lang={language}>
+        <Night className="st-night">
+          <Starfield/>
+          <PageBar title={t('Your name')} onBack={() => setSelected(null)}/>
+          {sealChars.length <= 4 && <Seal $cols={sealChars.length} aria-hidden="true"><div className="inner">{sealChars.map((c, i) => <span key={i} lang="zh-Hant">{c}</span>)}</div></Seal>}
+          <Hero>
+            <h2 lang="ko">{result.name_hangul}</h2>
+            <p className="roman">{result.romanization} · <span lang="zh-Hant">{result.name_hanja}</span></p>
+            {canSpeak && <button type="button" onClick={() => speak(result.name_hangul)}><SpeakerWaveIcon/>{t('Hear it')}</button>}
+          </Hero>
+        </Night>
+        <Body>
+          {rows && <section>
+            <SectionHead>{t('Character by character')}</SectionHead>
+            <CharTable>
+              {rows.map((row, i) => <li key={i}>
+                <span className="tile" lang="zh-Hant">{row.hanja}</span>
+                <span>
+                  <small><span lang="ko">{row.hangul}</span>{row.roman ? ` · ${row.roman}` : ''}</small>
+                  {row.meaning && <b>{row.meaning}</b>}
+                </span>
+              </li>)}
+            </CharTable>
+          </section>}
+          <Explain>
+            <h3>{t('What the name means')}</h3>
+            <p>{result.meaning}</p>
+          </Explain>
+          <div style={{ display: 'grid', gap: 10 }}>
+            <Primary type="button" onClick={() => handleShare(result)}><ShareIcon/>{t('Share this name')}</Primary>
+            <Secondary as={Link} to="/search">{t('Ask a name master to check it')}</Secondary>
+          </div>
+          <Disclaimer style={{ textAlign: 'center' }}>{t('AI suggestion. Read the meanings before you use it officially.')}</Disclaimer>
+        </Body>
+      </div>
     );
   }
 
-  if (result) {
+  // 13 — the names so far
+  if (results.length > 0) {
+    const firstName = formData.originalName.trim().split(/\s+/)[0];
     return (
-      <Container>
-        <ContentWrapper>
-          <Header>
-            <BackButton onClick={handleBack}>‹ {t('backToHome')}</BackButton>
-            <Title $language={language}>{t('koreanNameComplete')}</Title>
-            <Subtitle $language={language}>{t('yourSpecialKoreanName')}</Subtitle>
-          </Header>
-          
-          <ResultContainer>
-            {/* 주민등록증 스타일 카드 */}
-            <IDCard>
-              <IDCardContent>
-                <IDCardLeft>
-                  <IDCardTitle $language={language}>주민등록증</IDCardTitle>
-                  
-                  <IDCardNameWithHanja>
-                    <IDCardName $language={language}>{result.name_hangul}</IDCardName>
-                    <IDCardHanja $language={language}>({result.name_hanja})</IDCardHanja>
-                  </IDCardNameWithHanja>
-                  
-                  <IDCardInfo>
-                    <IDCardLabel $language={language}>로마자</IDCardLabel>
-                    <IDCardValue $language={language}>{result.romanization}</IDCardValue>
-                  </IDCardInfo>
-                </IDCardLeft>
-                
-                <IDCardRight>
-                  <IDCardPhoto />
-                </IDCardRight>
-              </IDCardContent>
-              
-              <IDCardFooter>
-                <IDCardIssueDate $language={language}>{new Date().toLocaleDateString('ko-KR')}</IDCardIssueDate>
-                <IDCardAuthority>
-                  <IDCardAuthorityText $language={language}>SajuTeller 작명센터</IDCardAuthorityText>
-                </IDCardAuthority>
-              </IDCardFooter>
-            </IDCard>
-            
-            {/* 이름 설명 섹션 */}
-            <NameExplanation>
-              <ExplanationTitle $language={language}>이름의 의미</ExplanationTitle>
-              <ExplanationText $language={language}>{result.meaning}</ExplanationText>
-            </NameExplanation>
-            
-            <ButtonGroup>
-              <ShareButton $language={language} onClick={handleShare}>📤 {t('shareResult')}</ShareButton>
-              <NewNameButton $language={language} onClick={handleNewName}>{t('getNewName')}</NewNameButton>
-            </ButtonGroup>
-          </ResultContainer>
-        </ContentWrapper>
-      </Container>
+      <div lang={language}>
+        {loader}
+        <Intro>
+          <div className="bar"><PageBar title={t('Korean name')} onBack={() => setResults([])}/></div>
+          <Display as="h1">{t(results.length === 1 ? 'A name for {name}' : '{count} names for {name}').replace('{name}', firstName).replace('{count}', String(results.length))}</Display>
+          <Lede>{t('Open a name to see each character and what it means.')}</Lede>
+        </Intro>
+        <Body>
+          {results.map((result, i) => {
+            const rows = breakdown(result);
+            const short = rows && rows.every(r => r.meaning) ? rows.map(r => r.meaning).join(' · ') : result.meaning;
+            return <NameCard key={i} $first={i === 0}>
+              <div className="top">
+                <div>
+                  <p className="hangul" lang="ko">{result.name_hangul}</p>
+                  <p className="roman">{result.romanization}</p>
+                </div>
+                {canSpeak && <button type="button" className="listen" onClick={() => speak(result.name_hangul)} aria-label={`${t('Hear it')}: ${result.name_hangul}`}><SpeakerWaveIcon/></button>}
+              </div>
+              <div className="meaning"><b lang="zh-Hant">{result.name_hanja}</b><span>{short}</span></div>
+              <button type="button" className="details" onClick={() => setSelected(i)}>{t('Details')}<ChevronRightIcon/></button>
+            </NameCard>;
+          })}
+          <Secondary type="button" onClick={() => void createName()} disabled={loading}><ArrowPathIcon/>{t('Suggest another name')}</Secondary>
+          <Amber>
+            <h3>{t('Check before you make it official')}</h3>
+            <p>{t('These are AI suggestions. Results change each time, and a character can carry a meaning you didn’t intend. Read the meanings, or ask a native speaker.')}</p>
+          </Amber>
+          <Master className="st-night">
+            <Kicker style={{ margin: 0 }}>{t('In person')}</Kicker>
+            <h3>{t('Have a name master choose with your Four Pillars')}</h3>
+            <p>{t('작명 — naming by the elements — is a real Korean tradition. Ask a studio whether they offer it.')}</p>
+            <Link to="/search">{t('Find a reading in Seoul')}</Link>
+          </Master>
+          <Secondary type="button" onClick={handleNewName}>{t('Start over')}</Secondary>
+        </Body>
+      </div>
     );
   }
 
+  // 12 — about you
   return (
-    <Container>
-      <ContentWrapper>
-        <Header>
-          <BackButton onClick={handleBack}>‹ {t('backToHome')}</BackButton>
-            <Title $language={language}>{t('koreanNameCreation')}</Title>
-            <Subtitle $language={language}>{t('aiWillCreateKoreanName')}</Subtitle>
-        </Header>
-        
-        <Form onSubmit={handleSubmit}>
-          <FormGroup>
-            <Label $language={language}>{t('name')} <Required>*</Required></Label>
-            <Input
-              $language={language}
-              type="text"
-              value={formData.originalName}
-              onChange={(e) => handleInputChange('originalName', e.target.value)}
-              placeholder={t('enterYourName')}
-            />
-            {errors.originalName && <ErrorMessage>{errors.originalName}</ErrorMessage>}
-          </FormGroup>
-          
-          <FormGroup>
-            <Label $language={language}>{t('gender')} <Required>*</Required></Label>
-            <RadioGroup>
-              <RadioLabel>
-                <RadioInput
-                  type="radio"
-                  name="gender"
-                  value="male"
-                  checked={formData.gender === 'male'}
-                  onChange={(e) => handleInputChange('gender', e.target.value)}
-                />
-                <RadioText $language={language}>{t('male')}</RadioText>
-              </RadioLabel>
-              <RadioLabel>
-                <RadioInput
-                  type="radio"
-                  name="gender"
-                  value="female"
-                  checked={formData.gender === 'female'}
-                  onChange={(e) => handleInputChange('gender', e.target.value)}
-                />
-                <RadioText $language={language}>{t('female')}</RadioText>
-              </RadioLabel>
-            </RadioGroup>
-            {errors.gender && <ErrorMessage>{errors.gender}</ErrorMessage>}
-          </FormGroup>
-          
-          <FormGroup>
-            <Label $language={language}>{t('personality')} <Required>*</Required></Label>
-            <RadioGroup>
-              <RadioLabel>
-                <RadioInput
-                  type="checkbox"
-                  value="active"
-                  checked={formData.personality.includes('active')}
-                  onChange={(e) => handlePersonalityChange('active', e.target.checked)}
-                />
-                <RadioText $language={language}>{t('personalityActive')}</RadioText>
-              </RadioLabel>
-              <RadioLabel>
-                <RadioInput
-                  type="checkbox"
-                  value="calm"
-                  checked={formData.personality.includes('calm')}
-                  onChange={(e) => handlePersonalityChange('calm', e.target.checked)}
-                />
-                <RadioText $language={language}>{t('personalityCalm')}</RadioText>
-              </RadioLabel>
-              <RadioLabel>
-                <RadioInput
-                  type="checkbox"
-                  value="creative"
-                  checked={formData.personality.includes('creative')}
-                  onChange={(e) => handlePersonalityChange('creative', e.target.checked)}
-                />
-                <RadioText $language={language}>{t('personalityCreative')}</RadioText>
-              </RadioLabel>
-              <RadioLabel>
-                <RadioInput
-                  type="checkbox"
-                  value="kind"
-                  checked={formData.personality.includes('kind')}
-                  onChange={(e) => handlePersonalityChange('kind', e.target.checked)}
-                />
-                <RadioText $language={language}>{t('personalityKind')}</RadioText>
-              </RadioLabel>
-              <RadioLabel>
-                <RadioInput
-                  type="checkbox"
-                  value="strong"
-                  checked={formData.personality.includes('strong')}
-                  onChange={(e) => handlePersonalityChange('strong', e.target.checked)}
-                />
-                <RadioText $language={language}>{t('personalityStrong')}</RadioText>
-              </RadioLabel>
-              <RadioLabel>
-                <RadioInput
-                  type="checkbox"
-                  value="wise"
-                  checked={formData.personality.includes('wise')}
-                  onChange={(e) => handlePersonalityChange('wise', e.target.checked)}
-                />
-                <RadioText $language={language}>{t('personalityWise')}</RadioText>
-              </RadioLabel>
-            </RadioGroup>
-            {errors.personality && <ErrorMessage>{errors.personality}</ErrorMessage>}
-          </FormGroup>
-          
-          <ButtonGroup>
-            <Button type="button" onClick={handleBack} $language={language}>{t('cancel')}</Button>
-            <Button type="submit" $variant="primary" $language={language}>{t('createKoreanName')}</Button>
-          </ButtonGroup>
-        </Form>
-      </ContentWrapper>
-    </Container>
+    <div lang={language}>
+      {loader}
+      <Intro>
+        <div className="bar"><PageBar title={t('Korean name')} onBack={handleBack}/></div>
+        <Kicker style={{ color: 'var(--st-action)' }}>{t('Free · AI-assisted')}</Kicker>
+        <Display as="h1">{t('A Korean name that fits you')}</Display>
+        <Lede>{t('We take inspiration from the sound of your name and the traits you pick, and show every character so you can check it.')}</Lede>
+      </Intro>
+      <Body as="form" id="name-form" onSubmit={handleSubmit} noValidate>
+        <FieldBlock>
+          <div className="head"><label htmlFor="originalName">{t('Your name')}</label></div>
+          <Boxed><span>{t('Full name')}</span>
+            <input id="originalName" type="text" autoComplete="name" value={formData.originalName} onChange={(e) => handleInputChange('originalName', e.target.value)} placeholder={t('enterYourName')}/>
+          </Boxed>
+          {errors.originalName && <p className="error" role="alert">{errors.originalName}</p>}
+        </FieldBlock>
+
+        <FieldBlock>
+          <div className="head"><span>{t('The name should feel')}</span></div>
+          <Segmented role="group" aria-label={t('The name should feel')}>
+            <button type="button" aria-pressed={formData.gender === 'male'} onClick={() => handleInputChange('gender', 'male')}>{t('Masculine')}</button>
+            <button type="button" aria-pressed={formData.gender === 'female'} onClick={() => handleInputChange('gender', 'female')}>{t('Feminine')}</button>
+          </Segmented>
+          {errors.gender && <p className="error" role="alert">{errors.gender}</p>}
+        </FieldBlock>
+
+        <FieldBlock>
+          <div className="head"><span>{t('What should it say about you?')}</span><small>{t('Pick up to 2')}</small></div>
+          <Chips role="group" aria-label={t('What should it say about you?')}>
+            {TRAITS.map(([value, label]) => {
+              const on = formData.personality.includes(value);
+              return <button key={value} type="button" aria-pressed={on} disabled={!on && formData.personality.length >= MAX_TRAITS} onClick={() => handlePersonalityChange(value, !on)}>
+                {on && <CheckIcon/>}{t(label)}
+              </button>;
+            })}
+          </Chips>
+          {errors.personality && <p className="error" role="alert">{errors.personality}</p>}
+        </FieldBlock>
+      </Body>
+      <StickyAction>
+        <Primary type="submit" form="name-form">{t('Create my Korean name')}</Primary>
+      </StickyAction>
+    </div>
   );
 };
 

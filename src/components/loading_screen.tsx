@@ -5,7 +5,7 @@ import AnimatedEmoji from './animated-emoji';
 import { useI18n } from '../i18n/i18n';
 const Overlay=styled.div`
   position:fixed;inset:0;z-index:2000;display:grid;place-items:center;
-  background:rgb(11 6 16 / 94%);backdrop-filter:blur(3px);
+  background:color-mix(in srgb,var(--st-paper) 90%,transparent);backdrop-filter:blur(3px);
   .label{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap;}
 `;
 let overlays=0;let previousOverflow='';let previousInert=false;

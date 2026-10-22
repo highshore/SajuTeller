@@ -2,10 +2,10 @@ import { useI18n } from '../i18n/i18n';
 import { Link } from 'react-router-dom';
 import { styled } from 'styled-components';
 const FooterShell = styled.footer`
-  border-top:1px solid var(--st-line);padding:28px 0;color:var(--st-muted);background:var(--st-paper);
+  border-top:1px solid var(--st-line);padding:28px 0 32px;color:var(--st-muted);background:var(--st-elevated);
   .inner{width:min(1160px,calc(100% - 32px));margin:auto;}.top{display:flex;align-items:center;justify-content:space-between;gap:24px;}
   nav{display:flex;flex-wrap:wrap;gap:4px 20px;}nav a{display:inline-flex;align-items:center;min-height:44px;font-size:12px;line-height:1.35;overflow-wrap:anywhere;}
-  .brand{font:500 26px/30px 'Cormorant Garamond',serif;color:var(--st-ink);}.details{font-size:11px;line-height:1.7;margin-top:16px;max-width:620px;}summary{cursor:pointer;min-height:32px;}
+  .brand{font:600 24px/30px 'Cormorant Garamond',serif;letter-spacing:.5px;color:var(--st-ink);}nav a{color:var(--st-muted);font-weight:500;}nav a:hover{color:var(--st-ink);}.details{font-size:12px;line-height:1.7;margin-top:12px;max-width:620px;color:var(--st-faint);}.details a{color:var(--st-muted);}summary{cursor:pointer;min-height:44px;display:flex;align-items:center;color:var(--st-muted);}
   @container saju (max-width:650px){.top{align-items:flex-start;flex-direction:column;gap:12px;}.brand{order:-1;}nav{gap:0 18px;}}
 `;
 export default function Footer({ compact = false }: { compact?: boolean }) {const { t } = useI18n(); const detail = <p>© {new Date().getFullYear()} SajuTeller. {t("Korean Saju experiences in Seoul.")}<br/>{t("Saju is a cultural and reflective experience. Booking requests are confirmed separately by the studio.")}<br/><a href="/emoji/NOTICE.txt" target="_blank" rel="noreferrer" style={{textDecoration:"underline"}}>{t("Animated emoji credits")}</a></p>; return <FooterShell data-global-footer><div className="inner"><div className="top"><nav aria-label="Footer navigation"><Link to="/support">{t("Help")}</Link><Link to="/privacy">{t("Privacy")}</Link><Link to="/terms">{t("Terms")}</Link><Link to="/refund-policy">{t("Cancellation")}</Link><Link to="/host">{t("Become a partner")}</Link></nav><Link className="brand" to="/">SAJUTELLER</Link></div>{compact ? <details className="details"><summary>{t("About SajuTeller")}</summary>{detail}</details> : <div className="details">{detail}</div>}</div></FooterShell>; }

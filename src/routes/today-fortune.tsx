@@ -1,791 +1,215 @@
 import LoadingScreen from '../components/loading_screen';
-import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import styled from 'styled-components';
+import { useEffect, useMemo, useState, type FormEvent } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import { styled } from 'styled-components';
+import { InformationCircleIcon, ShareIcon } from '@heroicons/react/24/outline';
 import { useI18n } from '../i18n/i18n';
 import { generateFortune, type FortuneResult, type UserInput } from '../services/fortune';
+import {
+  Body, Boxed, Disclaimer, Display, FieldBlock, Kicker, Lede, Night, PageBar, Primary,
+  Secondary, Segmented, Starfield, StickyAction, SwitchRow, Upsell,
+} from '../components/readings/shared';
+import { ELEMENT_COLOR, ELEMENT_HANJA, dayStem, relationOf, type ElementName, type Relation } from '../components/readings/elements';
 
-// Import mysterious fonts for multiple languages from Google Fonts
-const fontLinks = [
-  // Korean mysterious fonts
-  'https://fonts.googleapis.com/css2?family=Song+Myung&family=Jua&family=Gugi&family=Stylish:wght@400&family=Kirang+Haerang&display=swap',
-  // Korean clean fonts  
-  'https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@400;500;600;700&family=Noto+Sans+KR:wght@300;400;500;600;700&display=swap',
-  // Latin mysterious fonts
-  'https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Crimson+Text:wght@400;600;700&family=Cormorant+Garamond:wght@400;500;600;700&display=swap',
-  // Japanese fonts
-  'https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@400;500;600;700&family=Sawarabi+Mincho&display=swap',
-  // Chinese fonts
-  'https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;500;600;700&family=Ma+Shan+Zheng&display=swap'
-];
+// Figma 06 — Redesign: "10 Today's fortune — Birth date" (148:231) and "11 Today's fortune — Result" (148:334).
+// The reading text comes from services/fortune (seeded, local templates). The element pairing is calendar math
+// on the birth date and today's date. Hour-by-hour energy and Yesterday/Tomorrow are not produced by the
+// generator, so they are not shown.
 
-fontLinks.forEach(href => {
-  const link = document.createElement('link');
-  link.href = href;
-  link.rel = 'stylesheet';
-  document.head.appendChild(link);
-});
+const STORAGE_KEY = 'st.todayFortune.profile';
 
-// Language-specific font configurations
-const getFontFamily = (language: string, type: 'heading' | 'body' | 'accent' | 'price') => {
-  const fontConfigs = {
-    ko: {
-      heading: "'Song Myung', 'Stylish', 'Kirang Haerang', serif",
-      body: "'Noto Sans KR', 'Jua', sans-serif",
-      accent: "'Gugi', 'Song Myung', cursive",
-      price: "'Noto Serif KR', 'Song Myung', serif"
-    },
-    en: {
-      heading: "'Cinzel', 'Crimson Text', serif",
-      body: "'Cormorant Garamond', 'Crimson Text', serif",
-      accent: "'Cinzel', 'Crimson Text', serif",
-      price: "'Crimson Text', serif"
-    },
-    ja: {
-      heading: "'Sawarabi Mincho', 'Noto Serif JP', serif",
-      body: "'Noto Sans JP', 'Sawarabi Mincho', sans-serif",
-      accent: "'Sawarabi Mincho', 'Noto Serif JP', serif",
-      price: "'Noto Serif JP', 'Sawarabi Mincho', serif"
-    },
-    zh: {
-      heading: "'Ma Shan Zheng', 'Noto Serif SC', serif",
-      body: "'Noto Sans SC', 'Ma Shan Zheng', sans-serif",
-      accent: "'Ma Shan Zheng', 'Noto Serif SC', serif",
-      price: "'Noto Serif SC', 'Ma Shan Zheng', serif"
-    },
-    es: {
-      heading: "'Cinzel', 'Crimson Text', serif",
-      body: "'Cormorant Garamond', 'Crimson Text', serif",
-      accent: "'Cinzel', 'Crimson Text', serif",
-      price: "'Crimson Text', serif"
-    }
-  };
-  
-  return fontConfigs[language as keyof typeof fontConfigs]?.[type] || fontConfigs.en[type];
+type Saved = { name: string; birthDate: string; birthTime: string; birthTimeUnknown: boolean };
+function readSaved(): Saved | null {
+  try {
+    const raw = window.localStorage.getItem(STORAGE_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw) as Partial<Saved>;
+    if (typeof parsed.birthDate !== 'string') return null;
+    return { name: parsed.name ?? '', birthDate: parsed.birthDate, birthTime: parsed.birthTime ?? '', birthTimeUnknown: Boolean(parsed.birthTimeUnknown) };
+  } catch { return null; }
+}
+function writeSaved(value: Saved | null) {
+  try {
+    if (value) window.localStorage.setItem(STORAGE_KEY, JSON.stringify(value));
+    else window.localStorage.removeItem(STORAGE_KEY);
+  } catch { /* storage unavailable: nothing to remember */ }
+}
+
+// The generator's short values are Korean; map them to English source keys so t() can localise them.
+const COLOR_KEYS: Record<string, [string, string]> = {
+  빨간색: ['Red', '#c8402f'], 파란색: ['Blue', '#3a64c8'], 초록색: ['Green', '#3f8f56'], 노란색: ['Yellow', '#e8c43a'],
+  보라색: ['Purple', '#6b3f8a'], 주황색: ['Orange', '#e7843a'], 분홍색: ['Pink', '#e690b0'], 검은색: ['Black', '#1b1420'],
+  흰색: ['White', '#ffffff'], 금색: ['Gold', '#c9a76a'], 은색: ['Silver', '#b9bcc4'], 청록색: ['Teal', '#2f8f8a'],
+  자주색: ['Plum', '#8a2f6b'], 갈색: ['Brown', '#7a5236'], 회색: ['Gray', '#8a8790'],
+};
+const DIRECTION_KEYS: Record<string, string> = { 동: 'East', 서: 'West', 남: 'South', 북: 'North' };
+const KEYWORD_KEYS: Record<string, string> = {
+  '새로운 시작': 'A fresh start', 기회: 'Opportunity', 성장: 'Growth', 변화: 'Change', 희망: 'Hope', 성공: 'Success',
+  행복: 'Happiness', 평화: 'Peace', 사랑: 'Love', 우정: 'Friendship', 도전: 'Challenge', 노력: 'Effort', 인내: 'Patience',
+  지혜: 'Wisdom', 용기: 'Courage', 꿈: 'Dreams', 목표: 'Goals', 성취: 'Achievement', 만족: 'Contentment',
+};
+const FOOD_KEYS: Record<string, string> = {
+  김치찌개: 'Kimchi stew', 된장찌개: 'Soybean paste stew', 불고기: 'Bulgogi', 비빔밥: 'Bibimbap', 냉면: 'Cold noodles',
+  삼겹살: 'Grilled pork belly', 치킨: 'Fried chicken', 피자: 'Pizza', 파스타: 'Pasta', 스시: 'Sushi', 라면: 'Ramyeon',
+  떡볶이: 'Tteokbokki', 순두부찌개: 'Soft tofu stew', 갈비: 'Galbi short ribs', 닭볶음탕: 'Spicy braised chicken',
+  해물탕: 'Seafood stew', 보쌈: 'Bossam', 족발: 'Jokbal', 닭갈비: 'Dak-galbi', 곱창: 'Gopchang',
 };
 
-const Container = styled.div<{ $language: string }>`
-  min-height: 100vh;
-  width: 100%;
+const RELATION_COPY: Record<Relation, [string, string]> = {
+  same: ['Today feels familiar', 'Today shares your element. Your usual way of doing things fits the day — just don’t push it too far.'],
+  feedsToday: ['Today asks you to give', 'Your {you} feeds today’s {today}. You may give more than you get — pace yourself and rest early.'],
+  todayFeeds: ['Today is on your side', 'Today’s {today} feeds your {you}. A supportive day to ask for help or begin something small.'],
+  youShape: ['Today, you set the pace', 'Your {you} keeps today’s {today} in check. Decisions come easier — make them gently.'],
+  todayPresses: ['Today leans toward patience', 'Today’s {today} presses on your {you}. Go slower than usual and let big decisions wait if you can.'],
+};
 
-  background: var(--st-paper);
-  position: relative;
-  padding: 20px 0 44px;
-  input,select,textarea{color-scheme:light;color:#2d3748;max-width:100%;min-width:0;}
-  @container saju (max-width:400px){input,select,textarea{font-size:16px;}}
-  font-family: ${props => getFontFamily(props.$language, 'body')};
-  
-  &::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: 
-      radial-gradient(circle at 15% 80%, rgba(201, 167, 106, 0.06) 0%, transparent 54%),
-      radial-gradient(circle at 85% 15%, rgba(125, 89, 143, 0.09) 0%, transparent 56%);
-    z-index: 0;
-  }
-  
-  @container saju (max-width: 768px) {
-    padding: 1rem 0;
-  }
-`;
+const LOCALES: Record<string, string> = { en: 'en-GB', ko: 'ko-KR', zh: 'zh-CN', ja: 'ja-JP', es: 'es-ES' };
 
-const ContentWrapper = styled.div`
-  max-width: 800px;
-  width: 100%;
-  margin: 0 auto;
-  background: #f8f6f0;
-  border-radius: 20px;
-  padding: clamp(20px, 5cqi, 32px);
-  box-shadow: 0 16px 36px rgba(0, 0, 0, 0.16);
-  overflow-y: auto;
-  position: relative;
-  z-index: 1;
-  border: 1px solid rgba(201, 167, 106, 0.2);
-  
-  @container saju (max-width: 768px) {
-    padding: clamp(16px, 5cqi, 24px);
-    margin: 0 16px;
-    max-width: calc(100% - 32px);
-    border-radius: 18px;
-  }
-`;
-
-const Header = styled.div`
-  text-align: center;
-  margin-bottom: 1.75rem;
-`;
-
-const BackButton = styled.button`
-  background: #f1ebf0;
-  border: 1px solid #e8dfeb;
-  color: #43324b;
-  font-size: 0.95rem;
-  font-weight: 500;
-  cursor: pointer;
-  margin-bottom: 2rem;
-  padding: 0.75rem 1.5rem;
-  border-radius: 12px;
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  transition: all 0.3s ease;
-  backdrop-filter: blur(10px);
-  
-  &:hover {
-    background: #ebe1ee;
-    border-color: #d9cadf;
-    color: #2d2434;
-    transform: translateY(-1px);
-  }
-`;
-
-const FortuneIcon = styled.div`
-  font-size: 4rem;
-  margin-bottom: 1rem;
-  display: flex;
-  justify-content: center;
-`;
-
-const Title = styled.h1<{ $language: string }>`
-  font-family: ${props => getFontFamily(props.$language, 'heading')};
-  font-size: clamp(30px, 8cqi, 42px);
-  font-weight: 700;
-  color: #261b2d;
-  margin-bottom: 1rem;
-  line-height: 1.2;
-  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  
-  @container saju (max-width: 768px) {
-    font-size: 2.2rem;
-  }
-  
-  @container saju (max-width: 480px) {
-    font-size: 1.8rem;
-  }
-`;
-
-const Subtitle = styled.p<{ $language: string }>`
-  font-family: ${props => getFontFamily(props.$language, 'body')};
-  font-size: 1.2rem;
-  color: #4a5568;
-  margin-bottom: 0;
-  line-height: 1.6;
-  font-weight: 400;
-  
-  @container saju (max-width: 768px) {
-    font-size: 1.1rem;
-  }
-`;
-
-const FortuneCard = styled.div`
-  background: linear-gradient(135deg, rgba(255, 255, 255, 0.9) 0%, rgba(248, 250, 252, 0.8) 100%);
-  backdrop-filter: blur(10px);
-  border-radius: 20px;
-  padding: 2rem;
-  margin: 2rem 0;
-  border: 2px solid rgba(139, 92, 246, 0.2);
-  box-shadow: 
-    0 8px 32px rgba(0, 0, 0, 0.12),
-    0 2px 8px rgba(0, 0, 0, 0.08),
-    inset 0 1px 0 rgba(255, 255, 255, 0.4);
-  position: relative;
-  overflow: hidden;
-  
-  &::before {
-    content: '';
-    position: absolute;
-    top: -2px;
-    left: -2px;
-    right: -2px;
-    bottom: -2px;
-    background: linear-gradient(
-      45deg,
-      rgba(139, 92, 246, 0.3) 0%,
-      rgba(212, 175, 55, 0.3) 25%,
-      rgba(139, 92, 246, 0.3) 50%,
-      rgba(212, 175, 55, 0.3) 75%,
-      rgba(139, 92, 246, 0.3) 100%
-    );
-    border-radius: 20px;
-    z-index: -1;
-    animation: borderGlow 3s ease-in-out infinite;
-  }
-  
-  @keyframes borderGlow {
-    0%, 100% { opacity: 0.6; }
-    50% { opacity: 1; }
-  }
-`;
-
-const FortuneTitle = styled.h2<{ $language: string }>`
-  font-family: ${props => getFontFamily(props.$language, 'heading')};
-  font-size: 1.8rem;
-  font-weight: 700;
-  color: #2c1810;
-  margin-bottom: 1rem;
-  text-align: center;
-  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-`;
-
-const FortuneContent = styled.div<{ $language: string }>`
-  font-family: ${props => getFontFamily(props.$language, 'body')};
-  font-size: 1.2rem;
-  line-height: 1.8;
-  color: #4a5568;
-  margin-bottom: 1.5rem;
-  text-align: center;
-`;
-
-const FortuneDetails = styled.div`
+const Orbs = styled.div`
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 1.5rem;
-  margin: 2rem 0;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  align-items: start;
+  gap: 4px;
+  margin: 22px 0 18px;
+  figure { margin: 0; display: grid; justify-items: center; gap: 4px; text-align: center; }
+  .orb { width: 92px; height: 92px; border-radius: 50%; display: grid; place-items: center; margin-bottom: 8px;
+    font: 500 40px/1 'Noto Serif KR', serif; color: #fff8ee;
+    background: radial-gradient(circle at 50% 45%, color-mix(in srgb, var(--c) 85%, white) 0%, color-mix(in srgb, var(--c) 55%, transparent) 46%, transparent 72%);
+    box-shadow: 0 0 46px color-mix(in srgb, var(--c) 45%, transparent); }
+  figcaption b { display: block; font: 600 14px/1.3 Inter, sans-serif; color: var(--st-ink); }
+  figcaption small { font-size: 12px; color: var(--st-muted); }
+  .meets { align-self: center; margin-top: -40px; display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--st-muted); }
+  .meets::before, .meets::after { content: ''; width: 14px; height: 1px; background: var(--st-accent-line); }
 `;
 
-const FortuneDetailCard = styled.div`
-  background: rgba(255, 255, 255, 0.8);
-  backdrop-filter: blur(10px);
+const Rows = styled.dl`
+  margin: 0;
+  border: 1px solid var(--st-line);
   border-radius: 16px;
-  padding: 1.5rem;
-  box-shadow: 
-    0 8px 32px rgba(0, 0, 0, 0.12),
-    0 2px 8px rgba(0, 0, 0, 0.08),
-    inset 0 1px 0 rgba(255, 255, 255, 0.4);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  border-left: 4px solid rgba(139, 92, 246, 0.6);
-  transition: all 0.3s ease;
-  
-  &:hover {
-    transform: translateY(-2px);
-    box-shadow: 
-      0 12px 40px rgba(0, 0, 0, 0.15),
-      0 4px 12px rgba(0, 0, 0, 0.1),
-      inset 0 1px 0 rgba(255, 255, 255, 0.6);
-  }
+  overflow: hidden;
+  > div { display: grid; grid-template-columns: 76px minmax(0, 1fr); gap: 12px; padding: 16px; }
+  > div + div { border-top: 1px solid var(--st-line); }
+  dt { font: 650 14px/1.4 Inter, sans-serif; color: var(--st-ink); }
+  dd { margin: 0; font-size: 14px; line-height: 1.6; color: var(--st-muted); min-width: 0; }
 `;
 
-const DetailTitle = styled.h3<{ $language: string }>`
-  font-family: ${props => getFontFamily(props.$language, 'heading')};
-  font-size: 1.1rem;
-  font-weight: 600;
-  color: #2c1810;
-  margin-bottom: 0.5rem;
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
-`;
-
-const DetailContent = styled.p<{ $language: string }>`
-  font-family: ${props => getFontFamily(props.$language, 'body')};
-  color: #4a5568;
-  font-size: 1rem;
-  line-height: 1.6;
-`;
-
-const LuckyElements = styled.div`
-  background: linear-gradient(135deg, rgba(255, 255, 255, 0.9) 0%, rgba(248, 250, 252, 0.8) 100%);
-  backdrop-filter: blur(10px);
-  border-radius: 20px;
-  padding: 2rem;
-  margin: 2rem 0;
-  border: 2px solid rgba(212, 175, 55, 0.3);
-  box-shadow: 
-    0 8px 32px rgba(0, 0, 0, 0.12),
-    0 2px 8px rgba(0, 0, 0, 0.08),
-    inset 0 1px 0 rgba(255, 255, 255, 0.4);
-`;
-
-const LuckyTitle = styled.h3<{ $language: string }>`
-  font-family: ${props => getFontFamily(props.$language, 'heading')};
-  font-size: 1.3rem;
-  font-weight: 700;
-  color: #2c1810;
-  margin-bottom: 1rem;
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-`;
-
-const LuckyGrid = styled.div`
+const Details = styled.dl`
+  margin: 0;
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-  gap: 1rem;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  > div { background: var(--st-elevated); border-radius: 12px; padding: 12px 14px; min-width: 0; }
+  > div.wide { grid-column: 1 / -1; }
+  dt { font-size: 12px; color: var(--st-muted); margin-bottom: 4px; }
+  dd { margin: 0; font: 600 15px/1.35 Inter, 'Noto Sans KR', sans-serif; color: var(--st-ink); display: flex; align-items: center; gap: 8px; overflow-wrap: anywhere; }
+  .swatch { width: 14px; height: 14px; border-radius: 50%; border: 1px solid rgb(27 20 32 / 18%); flex: none; }
 `;
 
-const LuckyItem = styled.div`
-  background: rgba(255, 255, 255, 0.8);
-  backdrop-filter: blur(10px);
-  border-radius: 12px;
-  padding: 1rem;
-  text-align: center;
-  box-shadow: 
-    0 4px 12px rgba(0, 0, 0, 0.08),
-    inset 0 1px 0 rgba(255, 255, 255, 0.4);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  transition: all 0.3s ease;
-  
-  &:hover {
-    transform: translateY(-2px);
-    box-shadow: 
-      0 8px 20px rgba(0, 0, 0, 0.12),
-      inset 0 1px 0 rgba(255, 255, 255, 0.6);
-  }
+const SectionHead = styled.h3`
+  margin: 0 0 12px;
+  font: 500 24px/1.2 'Cormorant Garamond', serif;
+  color: var(--st-ink);
 `;
 
-const LuckyEmoji = styled.div`
-  font-size: 2rem;
-  margin-bottom: 0.5rem;
+const Reading = styled.div`
+  p { margin: 0; font-size: 15px; line-height: 1.75; color: var(--st-ink); }
+  .lang-note { margin-top: 10px; font-size: 12px; color: var(--st-faint); }
 `;
 
-const LuckyLabel = styled.div<{ $language: string }>`
-  font-family: ${props => getFontFamily(props.$language, 'body')};
-  font-size: 0.9rem;
-  color: #8b4513;
-  font-weight: 500;
+const Carry = styled.div`
+  background: var(--st-accent);
+  border-radius: 16px;
+  padding: 18px;
+  .k { margin: 0 0 8px; font: 700 11px/1.4 Inter, sans-serif; letter-spacing: 1.2px; text-transform: uppercase; color: var(--st-action); }
+  p:last-child { margin: 0; font-size: 15px; line-height: 1.7; color: var(--st-ink); }
 `;
 
-const LuckyValue = styled.div<{ $language: string }>`
-  font-family: ${props => getFontFamily(props.$language, 'body')};
-  font-size: 1rem;
-  color: #2c1810;
-  font-weight: 600;
-`;
-
-const ActionButtons = styled.div`
-  display: flex;
-  gap: 1rem;
-  justify-content: center;
-  margin-top: 3rem;
-`;
-
-const Button = styled.button<{ $variant?: 'primary' | 'secondary'; $language: string }>`
-  font-family: ${props => getFontFamily(props.$language, 'body')};
-  padding: 1rem 2rem;
-  border: none;
-  border-radius: 12px;
-  font-size: 1.1rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  min-width: 160px;
-  
-  ${props => props.$variant === 'primary' ? `
-    background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
-    color: white;
-    box-shadow: 0 4px 15px rgba(139, 92, 246, 0.3);
-    
-    &:hover:not(:disabled) {
-      background: linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%);
-      transform: translateY(-2px);
-      box-shadow: 0 8px 25px rgba(139, 92, 246, 0.4);
-    }
-  ` : `
-    background: rgba(255, 255, 255, 0.8);
-    color: #4a5568;
-    border: 2px solid rgba(226, 232, 240, 0.8);
-    backdrop-filter: blur(10px);
-    
-    &:hover:not(:disabled) {
-      background: rgba(255, 255, 255, 0.95);
-      border-color: rgba(139, 92, 246, 0.3);
-      transform: translateY(-2px);
-      box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
-    }
-  `}
-  
-  &:disabled {
-    opacity: 0.6;
-    cursor: not-allowed;
-  }
-`;
-
-
-// 사용자 입력 폼 컴포넌트
-const InputForm = styled.div`
-  background: linear-gradient(135deg, rgba(255, 255, 255, 0.9) 0%, rgba(248, 250, 252, 0.8) 100%);
-  backdrop-filter: blur(10px);
-  border-radius: 20px;
-  padding: 2rem;
-  margin-bottom: 2rem;
-  border: 2px solid rgba(139, 92, 246, 0.2);
-  box-shadow: 
-    0 8px 32px rgba(0, 0, 0, 0.12),
-    0 2px 8px rgba(0, 0, 0, 0.08),
-    inset 0 1px 0 rgba(255, 255, 255, 0.4);
-`;
-
-const FormTitle = styled.h3<{ $language: string }>`
-  font-family: ${props => getFontFamily(props.$language, 'heading')};
-  font-size: 1.5rem;
-  font-weight: 700;
-  color: #2c1810;
-  margin-bottom: 1.5rem;
-  text-align: center;
-  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-`;
-
-const FormGrid = styled.div`
+const ShareCard = styled.div`
   display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 1.5rem;
-  margin-bottom: 1.5rem;
-  
-  @container saju (max-width: 768px) {
-    grid-template-columns: 1fr;
-    gap: 1rem;
-  }
-`;
-
-const FormGroup = styled.div`
-  display: flex;
-  flex-direction: column;
-  
-  /* 출생시간 모름 토글을 위한 세로 가운데 정렬 */
-  &:has([id="birthTimeUnknown"]) {
-    justify-content: center;
-  }
-`;
-
-const Label = styled.label<{ $language: string }>`
-  font-family: ${props => getFontFamily(props.$language, 'body')};
-  font-size: 0.9rem;
-  font-weight: 600;
-  color: #2d3748;
-  margin-bottom: 0.5rem;
-`;
-
-const Input = styled.input<{ $language: string }>`
-  font-family: ${props => getFontFamily(props.$language, 'body')};
-  padding: 1rem 1.25rem;
-  border: 2px solid rgba(226, 232, 240, 0.8);
-  border-radius: 12px;
-  font-size: 1rem;
-  background: rgba(255, 255, 255, 0.8);
-  backdrop-filter: blur(10px);
-  transition: all 0.3s ease;
-  
-  &:focus {
-    outline: none;
-    border-color: #8b5cf6;
-    background: rgba(255, 255, 255, 0.95);
-    box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.1);
-  }
-  
-  &::placeholder {
-    color: #a0aec0;
-  }
-  
-  /* Date and time input specific styles for better language support */
-  &[type="date"], &[type="time"] {
-    color-scheme: light;
-    
-    /* Force English locale for date/time inputs */
-    &::-webkit-datetime-edit {
-      font-family: 'Arial', sans-serif;
-      direction: ltr;
-    }
-    
-    &::-webkit-datetime-edit-fields-wrapper {
-      font-family: 'Arial', sans-serif;
-      direction: ltr;
-    }
-    
-    &::-webkit-datetime-edit-text {
-      font-family: 'Arial', sans-serif;
-      direction: ltr;
-    }
-    
-    &::-webkit-datetime-edit-month-field,
-    &::-webkit-datetime-edit-day-field,
-    &::-webkit-datetime-edit-year-field {
-      font-family: 'Arial', sans-serif;
-      direction: ltr;
-    }
-    
-    &::-webkit-datetime-edit-hour-field,
-    &::-webkit-datetime-edit-minute-field,
-    &::-webkit-datetime-edit-second-field {
-      font-family: 'Arial', sans-serif;
-      direction: ltr;
-    }
-    
-    /* Show browser's default datetime values when they have content */
-    &:not(:invalid):not(:placeholder-shown) {
-      &::-webkit-datetime-edit,
-      &::-webkit-datetime-edit-fields-wrapper,
-      &::-webkit-datetime-edit-text,
-      &::-webkit-datetime-edit-month-field,
-      &::-webkit-datetime-edit-day-field,
-      &::-webkit-datetime-edit-year-field,
-      &::-webkit-datetime-edit-hour-field,
-      &::-webkit-datetime-edit-minute-field,
-      &::-webkit-datetime-edit-second-field {
-        color: #1a202c !important;
-        opacity: 1 !important;
-      }
-    }
-    
-    /* Hide placeholders when empty */
-    &:invalid {
-      &::-webkit-datetime-edit,
-      &::-webkit-datetime-edit-fields-wrapper,
-      &::-webkit-datetime-edit-text,
-      &::-webkit-datetime-edit-month-field,
-      &::-webkit-datetime-edit-day-field,
-      &::-webkit-datetime-edit-year-field,
-      &::-webkit-datetime-edit-hour-field,
-      &::-webkit-datetime-edit-minute-field,
-      &::-webkit-datetime-edit-second-field {
-        color: transparent !important;
-        opacity: 0 !important;
-      }
-    }
-    
-    /* Show custom placeholder when no value is set */
-    &[type="date"]:invalid::before,
-    &[type="time"]:invalid::before {
-      content: attr(data-placeholder);
-      color: #a0aec0;
-      font-style: italic;
-      position: absolute;
-      top: 50%;
-      left: 1rem;
-      transform: translateY(-50%);
-      pointer-events: none;
-      z-index: 1;
-    }
-  }
-`;
-
-const Select = styled.select<{ $language: string }>`
-  font-family: ${props => getFontFamily(props.$language, 'body')};
-  padding: 1rem 1.25rem;
-  border: 2px solid rgba(226, 232, 240, 0.8);
-  border-radius: 12px;
-  font-size: 1rem;
-  background: rgba(255, 255, 255, 0.8);
-  backdrop-filter: blur(10px);
-  transition: all 0.3s ease;
-  
-  &:focus {
-    outline: none;
-    border-color: #8b5cf6;
-    background: rgba(255, 255, 255, 0.95);
-    box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.1);
-  }
-`;
-
-const GenerateButton = styled.button<{ $language: string }>`
-  font-family: ${props => getFontFamily(props.$language, 'body')};
-  width: 100%;
-  padding: 1rem;
-  background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
-  color: white;
-  border: none;
-  border-radius: 12px;
-  font-size: 1.1rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  box-shadow: 0 4px 15px rgba(139, 92, 246, 0.3);
-  
-  &:hover:not(:disabled) {
-    background: linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%);
-    transform: translateY(-2px);
-    box-shadow: 0 8px 25px rgba(139, 92, 246, 0.4);
-  }
-  
-  &:disabled {
-    background: #9ca3af;
-    cursor: not-allowed;
-    transform: none;
-    box-shadow: none;
-  }
-`;
-
-const ToggleContainer = styled.div`
-  display: flex;
+  grid-template-columns: 84px minmax(0, 1fr);
+  gap: 16px;
   align-items: center;
-  gap: 1rem;
-  margin-top: 0.5rem;
+  border: 1px solid var(--st-line);
+  border-radius: 16px;
+  padding: 14px;
+  .thumb { aspect-ratio: 9 / 14; border-radius: 10px; background: linear-gradient(180deg, #130a1b, #3c1e48); color: #f4eee7;
+    display: grid; align-content: center; justify-items: center; gap: 6px; padding: 8px; text-align: center; }
+  .thumb small { font-size: 8px; letter-spacing: .8px; color: #c9a76a; text-transform: uppercase; }
+  .thumb b { font: 500 20px/1 'Noto Serif KR', serif; }
+  .thumb i { font: italic 500 11px/1.2 'Cormorant Garamond', serif; }
+  h3 { margin: 0 0 4px; font: 650 15px/1.3 Inter, sans-serif; }
+  p { margin: 0 0 8px; font-size: 13px; line-height: 1.5; color: var(--st-muted); }
+  button { border: 0; background: none; padding: 0; min-height: 36px; color: var(--st-action); font: 650 14px/1.3 Inter, sans-serif; display: inline-flex; align-items: center; gap: 6px; cursor: pointer; }
+  button svg { width: 17px; }
 `;
 
-const ToggleLabel = styled.label<{ $language: string }>`
-  font-family: ${props => getFontFamily(props.$language, 'body')};
-  font-size: 1rem;
-  font-weight: 500;
-  color: #2d3748;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-`;
-
-const ToggleSwitch = styled.div<{ $active: boolean }>`
-  position: relative;
-  width: 50px;
-  height: 24px;
-  background: ${props => props.$active ? '#8b5cf6' : '#cbd5e0'};
-  border-radius: 12px;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  
-  &::after {
-    content: '';
-    position: absolute;
-    top: 2px;
-    left: ${props => props.$active ? '26px' : '2px'};
-    width: 20px;
-    height: 20px;
-    background: white;
-    border-radius: 50%;
-    transition: all 0.3s ease;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-  }
-`;
-
-const ToggleInput = styled.input`
-  display: none;
-`;
+const ErrorText = styled.p`margin: 8px 0 0; text-align: center; font-size: 13px; color: #b3261e;`;
 
 export default function TodayFortune() {
   const navigate = useNavigate();
   const { t, language } = useI18n();
+  const saved = useMemo(readSaved, []);
   const [fortune, setFortune] = useState<FortuneResult | null>(null);
   const [loading, setLoading] = useState(false);
   const [showForm, setShowForm] = useState(true);
   const [userInput, setUserInput] = useState<UserInput>({
-    name: '',
-    birthDate: '',
-    birthTime: '',
+    name: saved?.name ?? '',
+    birthDate: saved?.birthDate ?? '',
+    birthTime: saved?.birthTime ?? '',
     nationality: '' // 더 이상 사용하지 않지만 호환성을 위해 유지
   });
-  const [birthTimeUnknown, setBirthTimeUnknown] = useState(false);
+  const [birthTimeUnknown, setBirthTimeUnknown] = useState(saved?.birthTimeUnknown ?? false);
+  const [remember, setRemember] = useState(Boolean(saved));
+  const [formError, setFormError] = useState('');
 
-  // Helper function to get proper locale for date/time inputs
-  const getInputLocale = () => {
-    // Force English locale for date/time inputs to prevent browser localization
-    return 'en-US';
-  };
-  
-  useEffect(() => {
-    // 페이지 진입 시 상단으로 스크롤
-    window.scrollTo(0, 0);
-    
-    // Set document language for better browser compatibility
-    document.documentElement.lang = getInputLocale();
-    
-    // Set custom placeholder for date/time inputs
-    const setCustomPlaceholders = () => {
-      const dateInput = document.getElementById('birthDate') as HTMLInputElement;
-      const timeInput = document.getElementById('birthTime') as HTMLInputElement;
-      
-      if (dateInput) {
-        // Force English locale and prevent browser localization
-        dateInput.setAttribute('lang', 'en-US');
-        dateInput.setAttribute('data-locale', 'en-US');
-        dateInput.setAttribute('data-placeholder', t('datePlaceholder'));
-        dateInput.setAttribute('title', t('datePlaceholder'));
-        
-        // Remove any existing placeholder to prevent conflicts
-        dateInput.removeAttribute('placeholder');
-        
-        // Force English format by setting a temporary value and clearing it
-        const originalValue = dateInput.value;
-        dateInput.value = '';
-        if (originalValue) {
-          dateInput.value = originalValue;
-        }
-      }
-      
-      if (timeInput) {
-        // Force English locale and prevent browser localization
-        timeInput.setAttribute('lang', 'en-US');
-        timeInput.setAttribute('data-locale', 'en-US');
-        timeInput.setAttribute('data-placeholder', t('timePlaceholder'));
-        timeInput.setAttribute('title', t('timePlaceholder'));
-        
-        // Remove any existing placeholder to prevent conflicts
-        timeInput.removeAttribute('placeholder');
-        
-        // Force English format by setting a temporary value and clearing it
-        const originalValue = timeInput.value;
-        timeInput.value = '';
-        if (originalValue) {
-          timeInput.value = originalValue;
-        }
-      }
-    };
-    
-    // Set placeholders after a short delay to ensure DOM is ready
-    setTimeout(setCustomPlaceholders, 100);
-  }, [language, t]);
-  
+  useEffect(() => { window.scrollTo(0, 0); }, [showForm]);
+
   const handleInputChange = (field: keyof UserInput, value: string) => {
-    setUserInput(prev => ({
-      ...prev,
-      [field]: value
-    }));
+    setFormError('');
+    setUserInput(prev => ({ ...prev, [field]: value }));
   };
 
   const handleGenerateFortune = async () => {
     // 입력 검증
     if (!userInput.name || !userInput.birthDate || (!userInput.birthTime && !birthTimeUnknown)) {
-      alert(t('pleaseEnterAllInformation'));
+      setFormError(t('pleaseEnterAllInformation'));
       return;
     }
+    writeSaved(remember ? { name: userInput.name, birthDate: userInput.birthDate, birthTime: userInput.birthTime, birthTimeUnknown } : null);
 
     setLoading(true);
     setShowForm(false);
-    
+
     // 운세 생성 시뮬레이션 (2초 대기)
     await new Promise(resolve => setTimeout(resolve, 2000));
-    
+
     // 실제 운세 생성
     const fortuneResult = generateFortune(userInput);
     setFortune(fortuneResult);
     setLoading(false);
   };
 
-  const handleBack = () => {
-    navigate('/');
-  };
-  
+  const handleBack = () => navigate('/');
+
   const handleShareFortune = () => {
     if (!fortune) return;
-    
+
     const shareText = `🍀 ${t('todayFortune')}\n\n${fortune.overall}\n\n💕 ${t('loveFortune')}: ${fortune.love}\n💼 ${t('businessFortune')}: ${fortune.business}\n🏥 ${t('healthFortune')}: ${fortune.health}\n💰 ${t('wealthFortune')}: ${fortune.wealth}\n\n🍀 ${t('luckyColor')}: ${fortune.luckyColor}\n🔢 ${t('luckyNumber')}: ${fortune.luckyNumber}\n🧭 ${t('luckyDirection')}: ${fortune.luckyDirection}\n🎯 ${t('todayAction')}: ${fortune.luckyAction}\n🍽️ ${t('todayFood')}: ${fortune.food}\n🔑 ${t('todayKeyword')}: ${fortune.keyword}\n💡 ${t('todayAdvice')}: ${fortune.advice}\n\n#${t('todayFortune')} #SajuTeller #${t('fortune')}`;
-    
+
     if (navigator.share) {
       // 네이티브 공유 기능 사용 (모바일)
-      navigator.share({
-        title: t('todayFortune'),
-        text: shareText,
-        url: window.location.href
-      }).catch(console.error);
+      navigator.share({ title: t('todayFortune'), text: shareText, url: window.location.href }).catch(console.error);
     } else if (navigator.clipboard) {
       // 클립보드에 복사 (데스크톱)
       navigator.clipboard.writeText(shareText).then(() => {
         alert(t('fortuneCopiedToClipboard'));
-      }).catch(() => {
-        // 클립보드 실패 시 대체 방법
-        handleFallbackShare(shareText);
-      });
+      }).catch(() => handleFallbackShare(shareText));
     } else {
-      // 대체 방법
       handleFallbackShare(shareText);
     }
   };
-  
+
   const handleFallbackShare = (text: string) => {
-    // 텍스트 영역을 생성하여 사용자가 수동으로 복사할 수 있게 함
     const textArea = document.createElement('textarea');
     textArea.value = text;
     textArea.style.position = 'fixed';
@@ -794,241 +218,182 @@ export default function TodayFortune() {
     document.body.appendChild(textArea);
     textArea.focus();
     textArea.select();
-    
     try {
       document.execCommand('copy');
       alert(t('fortuneCopiedToClipboard'));
-    } catch (err) {
+    } catch {
       alert(t('cannotCopyFortune'));
     }
-    
     document.body.removeChild(textArea);
   };
-  
-  const handleBookConsultation = () => {
-    navigate('/locations');
-  };
 
-  
-  if (loading) {
-    return (
-      <Container $language={language} lang={language}>
-        <ContentWrapper>
-          <Header>
-            <BackButton onClick={handleBack}>‹ {t('backToHome')}</BackButton>
-            <FortuneIcon>🔮</FortuneIcon>
-            <Title $language={language}>{t('fortuneAnalyzing')}</Title>
-            <Subtitle $language={language}>{t('creatingYourSpecialFortune')}</Subtitle>
-          </Header>
-          <LoadingScreen compact/>
-        </ContentWrapper>
-      </Container>
-    );
-  }
+  // Element pairing: the birth day's heavenly stem against today's.
+  const pairing = useMemo(() => {
+    const [y, m, d] = userInput.birthDate.split('-').map(Number);
+    if (!y || !m || !d) return null;
+    const now = new Date();
+    const you = dayStem(y, m, d);
+    const today = dayStem(now.getFullYear(), now.getMonth() + 1, now.getDate());
+    return { you, today, relation: relationOf(you.element, today.element) };
+  }, [userInput.birthDate]);
+
+  if (loading) return <LoadingScreen label="Reading today’s energy…"/>;
 
   if (showForm) {
     return (
-      <Container $language={language} lang={language}>
-        <ContentWrapper>
-          <Header>
-            <BackButton onClick={handleBack}>‹ {t('backToHome')}</BackButton>
-            <FortuneIcon>🔮</FortuneIcon>
-            <Title $language={language}>{t('todayFortune')}</Title>
-            <Subtitle $language={language}>{t('enterYourInfoForPersonalizedFortune')}</Subtitle>
-          </Header>
-          
-          <InputForm lang={language}>
-            <FormTitle $language={language}>📝 {t('personalInfoInput')}</FormTitle>
-            <FormGrid>
-              {/* 첫 번째 행: 이름 */}
-              <FormGroup>
-                <Label $language={language} htmlFor="name">{t('name')} *</Label>
-                <Input
-                  $language={language}
-                  id="name"
-                  type="text"
-                  value={userInput.name}
-                  onChange={(e) => handleInputChange('name', e.target.value)}
-                  placeholder={t('enterYourName')}
-                />
-              </FormGroup>
-              
-              {/* 첫 번째 행: 생년월일 */}
-              <FormGroup>
-                <Label $language={language} htmlFor="birthDate">{t('birthDate')} *</Label>
-                <Input
-                  $language={language}
-                  id="birthDate"
-                  type="date"
-                  value={userInput.birthDate}
-                  onChange={(e) => handleInputChange('birthDate', e.target.value)}
-                  lang="en-US"
-                  data-locale="en-US"
-                  data-placeholder={t('datePlaceholder')}
-                  required
-                />
-              </FormGroup>
-              
-              {/* 두 번째 행: 출생시간 */}
-              <FormGroup>
-                <Label $language={language} htmlFor="birthTime">{t('birthTime')} *</Label>
-                <Input
-                  $language={language}
-                  id="birthTime"
-                  type="time"
-                  value={userInput.birthTime}
-                  onChange={(e) => handleInputChange('birthTime', e.target.value)}
-                  lang="en-US"
-                  data-locale="en-US"
-                  data-placeholder={t('timePlaceholder')}
-                  disabled={birthTimeUnknown}
-                  required={!birthTimeUnknown}
-                />
-              </FormGroup>
-              
-              {/* 두 번째 행: 출생시간 모름 토글 */}
-              <FormGroup>
-                <ToggleContainer>
-                  <ToggleLabel $language={language} htmlFor="birthTimeUnknown">
-                    <ToggleInput
-                      type="checkbox"
-                      id="birthTimeUnknown"
-                      checked={birthTimeUnknown}
-                      onChange={(e) => {
-                        setBirthTimeUnknown(e.target.checked);
-                        if (e.target.checked) {
-                          handleInputChange('birthTime', '');
-                        }
-                      }}
-                    />
-                    <ToggleSwitch $active={birthTimeUnknown} />
-                    {t('birthTimeUnknown')}
-                  </ToggleLabel>
-                </ToggleContainer>
-              </FormGroup>
-            </FormGrid>
-            
-            <GenerateButton $language={language} onClick={handleGenerateFortune}>
-              🔮 {t('generateFortune')}
-            </GenerateButton>
-          </InputForm>
-        </ContentWrapper>
-      </Container>
+      <div lang={language}>
+        <Night className="st-night">
+          <Starfield/>
+          <PageBar title={t('Today’s fortune')} onBack={handleBack}/>
+          <Kicker>{t('Free · 1 minute · no account')}</Kicker>
+          <Display>{t('When were you born?')}</Display>
+          <Lede>{t('Your birth date sets your element. Each day, we read how it meets the day’s energy.')}</Lede>
+        </Night>
+
+        <Body as="form" onSubmit={(e: FormEvent) => { e.preventDefault(); void handleGenerateFortune(); }} noValidate>
+          <FieldBlock>
+            <div className="head"><label htmlFor="name">{t('What should we call you?')}</label></div>
+            <Boxed><span>{t('First name')}</span>
+              <input id="name" type="text" autoComplete="given-name" value={userInput.name} onChange={(e) => handleInputChange('name', e.target.value)} placeholder={t('enterYourName')} required/>
+            </Boxed>
+          </FieldBlock>
+
+          <FieldBlock>
+            <div className="head"><label htmlFor="birthDate">{t('Birth date')}</label></div>
+            <Boxed><span>{t('Date')}</span>
+              <input id="birthDate" type="date" value={userInput.birthDate} max={new Date().toISOString().split('T')[0]} onChange={(e) => handleInputChange('birthDate', e.target.value)} required/>
+            </Boxed>
+            <p className="hint"><InformationCircleIcon/>{t('Use your solar (Gregorian) birth date.')}</p>
+          </FieldBlock>
+
+          <FieldBlock>
+            <div className="head"><span>{t('Birth time')}</span><small>{t('Optional')}</small></div>
+            <Segmented role="group" aria-label={t('Birth time')}>
+              <button type="button" aria-pressed={!birthTimeUnknown} onClick={() => { setFormError(''); setBirthTimeUnknown(false); }}>{t('I know it')}</button>
+              <button type="button" aria-pressed={birthTimeUnknown} onClick={() => { setFormError(''); setBirthTimeUnknown(true); handleInputChange('birthTime', ''); }}>{t('Not sure')}</button>
+            </Segmented>
+            {birthTimeUnknown
+              ? <p className="hint"><InformationCircleIcon/>{t('Without a time, we read from your birth date alone. Today’s fortune still works.')}</p>
+              : <Boxed><span>{t('Time')}</span>
+                  <input id="birthTime" type="time" value={userInput.birthTime} onChange={(e) => handleInputChange('birthTime', e.target.value)}/>
+                </Boxed>}
+          </FieldBlock>
+
+          <SwitchRow>
+            <span><b>{t('Remember on this phone')}</b><small>{t('Come back tomorrow without typing it again')}</small></span>
+            <input type="checkbox" checked={remember} onChange={(e) => { setRemember(e.target.checked); if (!e.target.checked) writeSaved(null); }}/>
+            <span className="track" aria-hidden="true"/>
+          </SwitchRow>
+          <button type="submit" hidden aria-hidden="true" tabIndex={-1}/>
+        </Body>
+
+        <StickyAction>
+          <Primary type="button" onClick={() => void handleGenerateFortune()}>{t('Show today’s fortune')}</Primary>
+          {formError && <ErrorText role="alert">{formError}</ErrorText>}
+        </StickyAction>
+      </div>
     );
   }
-  
+
   if (!fortune) {
     return (
-      <Container $language={language} lang={language}>
-        <ContentWrapper>
-          <Header>
-            <BackButton onClick={handleBack}>‹ {t('backToHome')}</BackButton>
-            <Title $language={language}>{t('cannotLoadFortune')}</Title>
-            <Subtitle $language={language}>{t('pleaseTryAgainLater')}</Subtitle>
-          </Header>
-          <ActionButtons>
-            <Button $language={language} onClick={handleBack}>{t('goHome')}</Button>
-            <Button $language={language} $variant="primary" onClick={() => window.location.reload()}>
-              {t('tryAgain')}
-            </Button>
-          </ActionButtons>
-        </ContentWrapper>
-      </Container>
+      <div lang={language}>
+        <Night className="st-night">
+          <PageBar title={t('Today’s fortune')} onBack={handleBack}/>
+          <Display>{t('cannotLoadFortune')}</Display>
+          <Lede>{t('pleaseTryAgainLater')}</Lede>
+        </Night>
+        <Body><Primary type="button" onClick={() => window.location.reload()}>{t('Try again')}</Primary></Body>
+      </div>
     );
   }
-  
+
+  const element = (name: ElementName) => t(name);
+  const [headline, line] = pairing ? RELATION_COPY[pairing.relation] : ['', ''];
+  const dateLabel = new Intl.DateTimeFormat(LOCALES[language] ?? 'en-GB', { weekday: 'long', day: 'numeric', month: 'long' }).format(new Date());
+  const color = COLOR_KEYS[fortune.luckyColor];
+  const vocab = (map: Record<string, string>, value: string) => (map[value] ? t(map[value]) : value);
+  const generatedLang = language === 'ko' ? undefined : 'ko';
+
   return (
-    <Container $language={language} lang={language}>
-      <ContentWrapper>
-        <Header>
-          <BackButton onClick={handleBack}>‹ {t('backToHome')}</BackButton>
-          <FortuneIcon>🍀</FortuneIcon>
-          <Title $language={language}>{t('todayFortune')}</Title>
-          <Subtitle $language={language}>{t('aiAnalyzedYourSpecialFortune')}</Subtitle>
-        </Header>
-        
-        <FortuneCard>
-          <FortuneTitle $language={language}>✨ {t('overallFortune')}</FortuneTitle>
-          <FortuneContent $language={language}>{fortune.overall}</FortuneContent>
-        </FortuneCard>
-        
-        <FortuneDetails>
-          <FortuneDetailCard>
-            <DetailTitle $language={language}>💕 {t('loveFortune')}</DetailTitle>
-            <DetailContent $language={language}>{fortune.love}</DetailContent>
-          </FortuneDetailCard>
-          
-          <FortuneDetailCard>
-            <DetailTitle $language={language}>💼 {t('businessFortune')}</DetailTitle>
-            <DetailContent $language={language}>{fortune.business}</DetailContent>
-          </FortuneDetailCard>
-          
-          <FortuneDetailCard>
-            <DetailTitle $language={language}>🏥 {t('healthFortune')}</DetailTitle>
-            <DetailContent $language={language}>{fortune.health}</DetailContent>
-          </FortuneDetailCard>
-          
-          <FortuneDetailCard>
-            <DetailTitle $language={language}>💰 {t('wealthFortune')}</DetailTitle>
-            <DetailContent $language={language}>{fortune.wealth}</DetailContent>
-          </FortuneDetailCard>
-        </FortuneDetails>
-        
-        <LuckyElements>
-          <LuckyTitle $language={language}>🍀 {t('todayLuckyElements')}</LuckyTitle>
-          <LuckyGrid>
-            <LuckyItem>
-              <LuckyEmoji>🎨</LuckyEmoji>
-              <LuckyLabel $language={language}>{t('luckyColor')}</LuckyLabel>
-              <LuckyValue $language={language}>{fortune.luckyColor}</LuckyValue>
-            </LuckyItem>
-            
-            <LuckyItem>
-              <LuckyEmoji>🔢</LuckyEmoji>
-              <LuckyLabel $language={language}>{t('luckyNumber')}</LuckyLabel>
-              <LuckyValue $language={language}>{fortune.luckyNumber}</LuckyValue>
-            </LuckyItem>
-            
-            <LuckyItem>
-              <LuckyEmoji>🧭</LuckyEmoji>
-              <LuckyLabel $language={language}>{t('luckyDirection')}</LuckyLabel>
-              <LuckyValue $language={language}>{fortune.luckyDirection}</LuckyValue>
-            </LuckyItem>
-            
-            <LuckyItem>
-              <LuckyEmoji>🍽️</LuckyEmoji>
-              <LuckyLabel $language={language}>{t('todayFood')}</LuckyLabel>
-              <LuckyValue $language={language}>{fortune.food}</LuckyValue>
-            </LuckyItem>
-            
-            <LuckyItem>
-              <LuckyEmoji>🔑</LuckyEmoji>
-              <LuckyLabel $language={language}>{t('todayKeyword')}</LuckyLabel>
-              <LuckyValue $language={language}>{fortune.keyword}</LuckyValue>
-            </LuckyItem>
-            
-            <LuckyItem>
-              <LuckyEmoji>🎯</LuckyEmoji>
-              <LuckyLabel $language={language}>{t('todayAction')}</LuckyLabel>
-              <LuckyValue $language={language}>{fortune.luckyAction}</LuckyValue>
-            </LuckyItem>
-          </LuckyGrid>
-        </LuckyElements>
-        
-        <FortuneCard>
-          <FortuneTitle $language={language}>💡 {t('todayAdvice')}</FortuneTitle>
-          <FortuneContent $language={language}>{fortune.advice}</FortuneContent>
-        </FortuneCard>
-        
-        <ActionButtons>
-          <Button $language={language} onClick={handleShareFortune}>
-            📤 {t('shareResult')}
-          </Button>
-          <Button $language={language} $variant="primary" onClick={handleBookConsultation}>
-            {t('getDetailedConsultation')}
-          </Button>
-        </ActionButtons>
-      </ContentWrapper>
-    </Container>
+    <div lang={language}>
+      <Night className="st-night">
+        <Starfield/>
+        <PageBar title={t('Today’s fortune')} onBack={handleBack}/>
+        <Kicker>{dateLabel}</Kicker>
+        <Display>{t(headline)}</Display>
+        {pairing && <>
+          <Orbs aria-label={`${t('You')}: ${element(pairing.you.element)} · ${t('Today')}: ${element(pairing.today.element)}`}>
+            <figure>
+              <span className="orb" style={{ ['--c' as string]: ELEMENT_COLOR[pairing.you.element] }} lang="zh-Hant" aria-hidden="true">{ELEMENT_HANJA[pairing.you.element]}</span>
+              <figcaption><b>{t('You')}</b><small>{element(pairing.you.element)} · <span lang="zh-Hant">{pairing.you.stem}</span></small></figcaption>
+            </figure>
+            <span className="meets" aria-hidden="true">{t('meets')}</span>
+            <figure>
+              <span className="orb" style={{ ['--c' as string]: ELEMENT_COLOR[pairing.today.element] }} lang="zh-Hant" aria-hidden="true">{ELEMENT_HANJA[pairing.today.element]}</span>
+              <figcaption><b>{t('Today')}</b><small>{element(pairing.today.element)} · <span lang="zh-Hant">{pairing.today.stem}</span></small></figcaption>
+            </figure>
+          </Orbs>
+          <Lede>{t(line).replace('{you}', element(pairing.you.element)).replace('{today}', element(pairing.today.element))}</Lede>
+        </>}
+      </Night>
+
+      <Body>
+        <Reading>
+          <SectionHead>{t('Today’s reading')}</SectionHead>
+          <p lang={generatedLang}>{fortune.overall}</p>
+          {generatedLang && <p className="lang-note">{t('The detailed reading is written in Korean for now.')}</p>}
+        </Reading>
+
+        <Rows>
+          <div><dt>{t('Work')}</dt><dd lang={generatedLang}>{fortune.business}</dd></div>
+          <div><dt>{t('Love')}</dt><dd lang={generatedLang}>{fortune.love}</dd></div>
+          <div><dt>{t('Money')}</dt><dd lang={generatedLang}>{fortune.wealth}</dd></div>
+          <div><dt>{t('Health')}</dt><dd lang={generatedLang}>{fortune.health}</dd></div>
+        </Rows>
+
+        <section>
+          <SectionHead>{t('Today’s details')}</SectionHead>
+          <Details>
+            <div className="wide"><dt>{t('Word for the day')}</dt><dd>{vocab(KEYWORD_KEYS, fortune.keyword)}</dd></div>
+            <div><dt>{t('Colour')}</dt><dd>{color && <span className="swatch" style={{ background: color[1] }}/>}{color ? t(color[0]) : fortune.luckyColor}</dd></div>
+            <div><dt>{t('Number')}</dt><dd>{fortune.luckyNumber}</dd></div>
+            <div><dt>{t('Direction')}</dt><dd>{vocab(DIRECTION_KEYS, fortune.luckyDirection)}</dd></div>
+            <div><dt>{t('Food')}</dt><dd>{vocab(FOOD_KEYS, fortune.food)}</dd></div>
+          </Details>
+        </section>
+
+        <Carry>
+          <p className="k">{t('Something to carry')}</p>
+          <p lang={generatedLang}>{fortune.advice}</p>
+        </Carry>
+
+        <ShareCard>
+          <div className="thumb" aria-hidden="true">
+            <small>{dateLabel}</small>
+            {pairing && <b lang="zh-Hant">{ELEMENT_HANJA[pairing.you.element]}·{ELEMENT_HANJA[pairing.today.element]}</b>}
+            <i>{t(headline)}</i>
+          </div>
+          <div>
+            <h3>{t('Share today’s fortune')}</h3>
+            <p>{t('Send it to yourself or a friend.')}</p>
+            <button type="button" onClick={handleShareFortune}><ShareIcon/>{t('Share')}</button>
+          </div>
+        </ShareCard>
+
+        <Disclaimer>{t('For reflection and fun — not advice.')}</Disclaimer>
+        <Secondary type="button" onClick={() => setShowForm(true)}>{t('Change birth details')}</Secondary>
+      </Body>
+
+      <Upsell className="st-night">
+        <Kicker>{t('Go deeper in person')}</Kicker>
+        <h2>{t('That was one pillar.\nA master reads all four.')}</h2>
+        <p>{t('Sit with a saju master in Seoul, with a live interpreter.')}</p>
+        <div className="actions">
+          <Link className="primary" to="/search">{t('Find a reading in Seoul')}</Link>
+          <Link className="secondary" to="/couple">{t('Check couple compatibility — free')}</Link>
+        </div>
+      </Upsell>
+    </div>
   );
 }

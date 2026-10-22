@@ -760,4 +760,7 @@ const phrases: Record<string, readonly [string,string,string,string]> = {
 "That’s fine. A master can read three of your four pillars from your birth date alone.":["괜찮아요. 생년월일만으로도 네 기둥 중 세 기둥을 읽을 수 있어요.","没关系。仅凭出生日期，命理师也能解读四柱中的三柱。","大丈夫です。生年月日だけでも、四柱のうち三柱を読み解けます。","No pasa nada. Un maestro puede leer tres de tus cuatro pilares solo con tu fecha de nacimiento."],
 "Studios marked Preview are samples while we sign up real partners. You can’t send them a request yet.":["‘미리보기’ 표시가 있는 상담소는 실제 파트너를 모집하는 동안 보여드리는 예시예요. 아직 요청을 보낼 수 없어요.","标有“预览”的命理馆是我们招募真实合作伙伴期间的示例，暂时无法提交申请。","「プレビュー」表示の鑑定所は、実際のパートナーを募集している間のサンプルです。まだリクエストは送れません。","Los estudios marcados como Vista previa son ejemplos mientras incorporamos socios reales. Aún no puedes enviarles solicitudes."],
 };
-export const productTranslations: Record<string, Record<string,string>> = Object.fromEntries(['en','ko','zh','ja','es'].map((language,index)=>[language,Object.fromEntries(Object.entries(phrases).map(([key,values])=>[key,index===0?key:values[index-1]]))]));
+// Per-area phrase files (src/i18n/phrases/*.ts) default-export the same [ko, zh, ja, es] shape.
+const areaPhrases = Object.values(import.meta.glob<{ default: Record<string, readonly [string,string,string,string]> }>('./phrases/*.ts', { eager: true })).map(m => m.default);
+const allPhrases: Record<string, readonly [string,string,string,string]> = Object.assign({}, phrases, ...areaPhrases);
+export const productTranslations: Record<string, Record<string,string>> = Object.fromEntries(['en','ko','zh','ja','es'].map((language,index)=>[language,Object.fromEntries(Object.entries(allPhrases).map(([key,values])=>[key,index===0?key:values[index-1]]))]));

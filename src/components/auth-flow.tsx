@@ -1,16 +1,17 @@
 import { useI18n } from '../i18n/i18n';
 import { useEffect, useRef, useState, type FormEvent } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
-import { ArrowLeftIcon, EnvelopeIcon, EyeIcon, EyeSlashIcon, ChatBubbleOvalLeftIcon } from '@heroicons/react/24/outline';
+import { ArrowLeftIcon, CheckIcon, EnvelopeIcon, EyeIcon, EyeSlashIcon } from '@heroicons/react/24/outline';
 import { supabase } from '../supabase';
 import { safeReturn } from '../product/plans';
 import { afterSignIn, authProviders, passwordError } from '../product/auth';
-import AnimatedEmoji, { type EmojiName } from './animated-emoji';
 import AuthConsent from './auth-consent';
 import { AuthPanel } from './auth-flow.styles';
 
 type Mode = 'signin' | 'signup' | 'forgot' | 'reset';
 type Confirmation = 'signup' | 'forgot' | 'updated' | null;
+const KakaoMark = () => <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="#000" d="M12 4C6.98 4 3 7.16 3 11.05c0 2.5 1.66 4.7 4.17 5.95l-.85 3.1c-.07.27.23.48.46.33l3.7-2.45c.5.06 1 .1 1.52.1 5.02 0 9-3.16 9-7.03S17.02 4 12 4z"/></svg>;
+const GoogleMark = () => <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="#4285F4" d="M21.6 12.23c0-.71-.06-1.4-.18-2.06H12v3.9h5.38a4.6 4.6 0 0 1-1.99 3.02v2.51h3.22c1.89-1.74 2.99-4.3 2.99-7.37z"/><path fill="#34A853" d="M12 22c2.7 0 4.97-.9 6.61-2.4l-3.22-2.51c-.9.6-2.04.96-3.39.96-2.6 0-4.8-1.75-5.59-4.11H3.08v2.58A10 10 0 0 0 12 22z"/><path fill="#FBBC05" d="M6.41 13.94A6 6 0 0 1 6.1 12c0-.67.11-1.32.31-1.94V7.48H3.08A10 10 0 0 0 2 12c0 1.61.39 3.13 1.08 4.52l3.33-2.58z"/><path fill="#EA4335" d="M12 5.95c1.47 0 2.79.51 3.83 1.51l2.87-2.87A9.63 9.63 0 0 0 12 2a10 10 0 0 0-8.92 5.48l3.33 2.58C7.2 7.7 9.4 5.95 12 5.95z"/></svg>;
 function maskEmail(value: string) {
   const [local, domain] = value.split('@');
   return domain ? `${local.slice(0, 2)}•••@${domain}` : value;
@@ -137,13 +138,14 @@ export default function AuthFlow({ initialMode = 'signin' }: { initialMode?: 'si
     } catch (value) { showError(value); } finally { setBusy(false); }
   }
 
-  const brand = <Link className="brand" to="/" aria-label="SajuTeller home">SAJUTELLER</Link>;
-  const legal = <div className="legal"><Link to="/terms">{t("Terms of Use")}</Link><span aria-hidden="true">|</span><Link to="/privacy">{t("Privacy Policy")}</Link></div>;
+  // Presentation only: a sign-in that comes from the request form gets the "sending" copy from Figma.
+  const sending = /^\/business\/[^/]+\/(booking|payment)/.test(next);
+  const brand = <Link className="brand" to="/" aria-label="SajuTeller home">SajuTeller</Link>;
+  const legal = <div className="legal"><span>{t("By continuing you agree to our policies.")}</span><Link to="/terms">{t("Terms of Use")}</Link><Link to="/privacy">{t("Privacy Policy")}</Link></div>;
   const messages = <>{error && <p className="notice" role="alert">{t(error)}</p>}{notice && <p className="notice" role="status">{t(notice)}</p>}</>;
   if (confirmation) return <AuthPanel aria-busy={busy} data-auth-view="confirmation">
     {brand}
     <div className="security">
-      <AnimatedEmoji key={confirmation} name={confirmation === 'updated' ? 'sparkles' : 'love-letter'} size={80}/>
       <h1>{confirmation === 'updated' ? t("Password updated") : t("Check your email")}</h1>
       {confirmation === 'updated' ? <p>{t("Your new password is ready. You can continue to your account.")}</p> : <>
         <p><strong>{maskEmail(email.trim())}</strong></p>
@@ -165,28 +167,28 @@ export default function AuthFlow({ initialMode = 'signin' }: { initialMode?: 'si
   if (methods) return <AuthPanel aria-busy={busy} data-auth-view="methods">
     {brand}
     <div className="method-heading">
-      <AnimatedEmoji name="crystal-ball" size={88}/>
-      <h1 className="sr-only">{t("Sign in to SajuTeller")}</h1>
-      <p>{t("Sign up or sign in to begin your Saju journey.")}</p>
+      <h1>{sending ? t("Sign in to send your request") : initialMode === 'signup' ? t("Create your account") : t("Sign in to SajuTeller")}</h1>
+      <p>{sending ? t("So the studio can reply to you. Browsing and saving never need an account.") : t("Sign up or sign in to begin your Saju journey.")}</p>
     </div>
     <div className="providers">
       {!providers && !error && <p className="notice" role="status">{t("Loading sign-in options…")}</p>}
+      {providers?.kakao && <button className="provider kakao" disabled={busy} onClick={() => void oauth('kakao')}><KakaoMark/><span>{t("Continue with Kakao")}</span></button>}
       {providers?.email && <button className="provider" disabled={busy} onClick={() => setMethods(false)}><EnvelopeIcon/><span>{t("Continue with email")}</span></button>}
-      {providers?.kakao && <button className="provider" disabled={busy} onClick={() => void oauth('kakao')}><ChatBubbleOvalLeftIcon/><span>{t("Continue with Kakao")}</span></button>}
-      {providers?.google && <button className="provider" disabled={busy} onClick={() => void oauth('google')}><span aria-hidden="true">G</span><span>{t("Continue with Google")}</span></button>}
+      {providers?.google && <button className="provider" disabled={busy} onClick={() => void oauth('google')}><GoogleMark/><span>{t("Continue with Google")}</span></button>}
       {!providers && error && <button className="provider" onClick={() => { setError(''); setAttempt(value => value + 1); }}><span aria-hidden="true">↻</span><span>{t("Retry sign-in options")}</span></button>}
       {providers && !providers.email && !providers.google && !providers.kakao && <p className="notice" role="status">{t("Sign-in is temporarily unavailable. Please try again later.")}</p>}
-    </div>{messages}{legal}
+    </div>{messages}
+    {sending && providers && <p className="reassure"><CheckIcon/>{t("After you sign in, you’ll come straight back to your request to send it.")}</p>}
+    {legal}
   </AuthPanel>;
 
   const heading = mode === 'signup' ? t("Create your account") : mode === 'forgot' ? t("Forgot your password?") : mode === 'reset' ? t("Choose a new password") : t("Welcome back");
   const intro = mode === 'signup' ? t("Create an account to begin your Saju journey.") : mode === 'forgot' ? t("We’ll email you a link to reset it.") : mode === 'reset' ? t("Choose a strong password for your account.") : t("Sign in to your SajuTeller account.");
-  const symbol: EmojiName = mode === 'signup' ? 'sparkles' : mode === 'forgot' || mode === 'reset' ? 'locked' : 'waving-hand';
   return <AuthPanel aria-busy={busy} data-auth-view={mode}>
     {consentOpen && <AuthConsent busy={busy} onAccept={() => void authenticate()} onCancel={() => setConsentOpen(false)}/>}
     {mode !== 'reset' && <div className="topline"><button className="back" disabled={busy} onClick={allMethods}><ArrowLeftIcon/>{t("All sign-in options")}</button></div>}
     {brand}
-    <div className="heading"><AnimatedEmoji key={symbol} name={symbol} size={64}/><h1>{heading}</h1><p>{intro}</p></div>
+    <div className="heading"><h1>{heading}</h1><p>{intro}</p></div>
     <form onSubmit={submit}><fieldset disabled={busy || (mode !== 'reset' && !providers?.email)}>
       {mode !== 'reset' && <label>{t("Email address")}<input name="email" type="email" autoComplete="email" autoCapitalize="none" spellCheck={false} required maxLength={254} value={email} onChange={event => { setEmail(event.target.value); setError(''); }} placeholder={t("you@example.com")}/></label>}
       {mode !== 'forgot' && <label>{t("Password")}<div className="password">

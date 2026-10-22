@@ -16,3 +16,8 @@ export function siteLayout(path: string) {
   const booking = /^\/business\//.test(path);
   return { wide, header: !immersive, footer: !immersive, bottomNav: !immersive && !booking && !adminWide, compactFooter: path === '/' || /^\/(sign-|auth-|onboarding)/.test(path) };
 }
+
+// Brand routes keep the night header (Figma: Home hero, live interpretation).
+export function nightRoute(path: string) {
+  return path === '/' || /^\/live-translation(?:\/|$)/.test(path);
+}

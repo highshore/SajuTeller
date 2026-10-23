@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
 import { RealtimeAgent, RealtimeSession, OpenAIRealtimeWebSocket } from '@openai/agents/realtime';
+import { supabase } from '../supabase';
 
 interface RealtimeAgentConfig {
   customerLanguage?: string;
@@ -210,20 +211,28 @@ TRANSLATE ONLY. SPEAK WITH MYSTICAL TONE BUT ADD NOTHING EXTRA.`;
     setError(null);
 
     try {
-      const apiKey = import.meta.env.VITE_OPENAI_API_KEY;
-      if (!apiKey) {
-        throw new Error('OpenAI API key not found. Please set VITE_OPENAI_API_KEY in your .env file');
+      // The server mints a short-lived client key (ek_…) for signed-in users; the OpenAI key stays server-side.
+      const { data: { session: authSession } } = await supabase.auth.getSession();
+      if (!authSession) {
+        throw new Error('Sign in to start live interpretation.');
       }
+      const keyResponse = await fetch('/api/realtime-session', {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${authSession.access_token}` },
+      });
+      if (!keyResponse.ok) {
+        throw new Error(keyResponse.status === 401
+          ? 'Sign in to start live interpretation.'
+          : 'Live interpretation is unavailable right now. Please try again later.');
+      }
+      const { value: apiKey, model } = await keyResponse.json() as { value: string; model: string };
 
       const agent = createAgent();
 
-      // WebSocket transport with useInsecureApiKey option
-      const transport = new OpenAIRealtimeWebSocket({
-        useInsecureApiKey: true
-      });
+      const transport = new OpenAIRealtimeWebSocket();
 
       const session = new RealtimeSession(agent, {
-        model: 'gpt-4o-realtime-preview-2025-06-03',
+        model,
         transport,
         config: {
           inputAudioFormat: 'pcm16',
@@ -819,7 +828,7 @@ TRANSLATE ONLY. SPEAK WITH MYSTICAL TONE BUT ADD NOTHING EXTRA.`;
         });
       });
 
-      // 연결 (transport에서 이미 useInsecureApiKey 설정됨)
+      // 연결 (서버에서 받은 임시 클라이언트 키 사용)
       await session.connect({ apiKey });
       sessionRef.current = session;
       setIsConnected(true);

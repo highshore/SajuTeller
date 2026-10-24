@@ -6,7 +6,7 @@ export type Service = {id:string;studio_id:string;name:string;description:string
 export type Review = {id:string;reviewer_display_name:string;rating:number;body:string;title:string;is_mock:boolean;verified_booking:boolean};
 export const money=(n:number,locale:string='en')=>new Intl.NumberFormat(locale==='zh'?'zh-CN':locale,{style:'currency',currency:'KRW',maximumFractionDigits:0}).format(n);
 export const languageNames:Record<string,string>={en:'English',ko:'Korean',zh:'Chinese',ja:'Japanese',es:'Spanish',fr:'French'};
-export const supportLabel=(s:string)=>s==='ai_interpreter'?'AI interpretation':s==='native'?'Reader speaks':'Conversational';
+export const supportLabel=(s:string)=>s==='ai_interpreter'?'AI interpretation':s==='native'?'Reader speaks':s==='interpreter'?'Human interpreter':'Conversational';
 export function cover(s:Studio){return [...(s.studio_images||[])].sort((a,b)=>a.sort_order-b.sort_order)[0];}
 export const studioSelect='id,slug,name,name_ko,latitude,longitude,tagline,tagline_i18n,description,description_i18n,neighborhood,district,city,address_line1,phone,email,website,nearest_station,station_walk_minutes,base_price,min_duration_minutes,max_guests,min_age,specialties,modalities,ai_interpretation_available,wheelchair_accessible,average_rating,review_count,is_mock,demo_chat_enabled,verified,is_featured,studio_images(image_url,alt_text,sort_order),studio_languages(language_code,support_type)';
 let cached:Studio[]|null=null;

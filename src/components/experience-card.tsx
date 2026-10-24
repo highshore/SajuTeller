@@ -21,6 +21,7 @@ const Card = styled.article`
   .copy{padding:12px 2px 0;display:grid;gap:3px;}
   h3{font:600 22px/28px 'Cormorant Garamond',serif;letter-spacing:0;overflow-wrap:anywhere;margin:0;}
   .meta{font-size:13px;line-height:19px;color:var(--st-muted);overflow-wrap:anywhere;}
+  .rating b{color:var(--st-ink);font-weight:600;}
   .price{font-size:14px;line-height:20px;font-weight:600;margin-top:2px;}
   .save{position:absolute;top:8px;right:8px;width:44px;height:44px;border:0;border-radius:50%;background:rgb(27 20 32 / 48%);color:#fff;display:grid;place-items:center;cursor:pointer;backdrop-filter:blur(6px);}
   .save svg{width:20px;}
@@ -46,6 +47,7 @@ export default function ExperienceCard({ studio: s }: { studio: Studio }) {
       </div>
       <div className="copy">
         <h3>{name}</h3>
+        {s.review_count > 0 && <span className="meta rating" aria-label={t('Rated {r} out of 5 from {n} reviews').replace('{r}', s.average_rating.toFixed(1)).replace('{n}', String(s.review_count))}><b aria-hidden="true">★ {s.average_rating.toFixed(1)}</b> <span aria-hidden="true">({s.review_count}){s.is_mock ? ` · ${t('Sample reviews')}` : ''}</span></span>}
         <span className="meta">{s.neighborhood} · {s.min_duration_minutes} {t('min')}{guests}</span>
         {languages && <span className="meta">{languages}</span>}
         <span className="price">{t('From')} {money(s.base_price, language)}</span>

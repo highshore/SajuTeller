@@ -7,15 +7,14 @@ export const languageShort = (code: string) => shortLanguage[code] || code.toUpp
 export const studioName = (s: Studio, language: string) => (language === 'ko' && s.name_ko ? s.name_ko : s.name);
 
 /**
- * One honest line about language support, from studio_languages:
- * AI-interpreted languages → "Live interpreter: …", otherwise the languages the reader speaks.
+ * One honest line about language support, from studio_languages, grouped by who does the talking:
+ * "Reader speaks: 한국어 · EN / Interpreter: 日本語 / AI interpretation: 中文".
  */
 export function languageLine(s: Studio, t: (key: string) => string) {
   const langs = s.studio_languages || [];
-  const interpreted = langs.filter(l => l.support_type === 'ai_interpreter').map(l => languageShort(l.language_code));
-  if (interpreted.length) return `${t('Live interpreter')}: ${interpreted.join(' · ')}`;
-  const spoken = langs.map(l => languageShort(l.language_code));
-  return spoken.length ? `${t('Reader speaks')}: ${spoken.join(' · ')}` : '';
+  const group = (types: string[]) => langs.filter(l => types.includes(l.support_type)).map(l => languageShort(l.language_code)).join(' · ');
+  return ([['Reader speaks', group(['native', 'conversational'])], ['Interpreter', group(['interpreter'])], ['AI interpretation', group(['ai_interpreter'])]] as const)
+    .filter(([, list]) => list).map(([label, list]) => `${t(label)}: ${list}`).join(' / ');
 }
 
 /** "Bukchon · 4 min from Anguk" when station data exists, otherwise just the area. */

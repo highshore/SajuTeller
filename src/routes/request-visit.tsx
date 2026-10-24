@@ -7,13 +7,14 @@ import { Link, useParams, useSearchParams } from 'react-router-dom';
 import { ArrowRightIcon, CheckCircleIcon, ChevronLeftIcon, InformationCircleIcon, MinusIcon, PlusIcon } from '@heroicons/react/24/outline';
 import { supabase } from '../supabase';
 import { money, supportLabel, useAccount, useStudios, type Service } from '../product/data';
-import { savePlan, seoulToday } from '../product/plans';
+import { seoulToday } from '../product/plans';
 import { Button, ButtonLink, Empty, Field, Notice, Page, Wrap } from '../product/ui';
 import { Card, PreviewBanner, Screen, SignInSheet, StickyBar } from '../components/studio/studio-ui';
 import { clearDraft, composeNotes, dayParts, languageLabel, nextDays, readDraft, seoulNowTime, shortDate, timeSlots, writeDraft, type Draft } from '../components/studio/request-helpers';
 
 // Figma: "04 Request — Choose a time" (141:165), "05 Request — Review & send" (141:507),
 // "06 Sign in — only when sending" (142:179). Same insert as before; nothing is charged or booked.
+// Preview studios take demo requests: the database marks them is_demo and a sample studio replies automatically.
 const Flow = styled.div`
   .top{display:grid;grid-template-columns:44px 1fr 44px;align-items:center;margin:4px -10px 0;}
   .top a,.top button{width:44px;height:44px;display:grid;place-items:center;border:0;background:none;color:var(--st-ink);cursor:pointer;}
@@ -112,26 +113,25 @@ export default function RequestVisit(){
  async function send(){
   if(!s||!service||busy||!ready)return;
   if(date<seoulToday()){setError('Please choose today or a later date in Seoul.');return;}
-  if(!s.is_mock&&!account){if(accountLoading)return;writeDraft(s.id,draft());setSheet(true);return;}
+  if(!account){if(accountLoading)return;writeDraft(s.id,draft());setSheet(true);return;}
   setBusy(true);setError('');
   try{
-   if(s.is_mock){savePlan({id:crypto.randomUUID(),studioId:s.id,serviceId,date,time,language:language_,guests:guestCount,createdAt:new Date().toISOString()});}
-   else{const{error}=await supabase.from('sajuteller_booking_requests').insert({studio_id:s.id,service_id:serviceId,requested_date:date,requested_time:time,language:language_,guests:guestCount,notes:composeNotes(message,birthDate,birthTime)});if(error)throw error;}
+   const{error}=await supabase.from('sajuteller_booking_requests').insert({studio_id:s.id,service_id:serviceId,requested_date:date,requested_time:time,language:language_,guests:guestCount,notes:composeNotes(message,birthDate,birthTime)});if(error)throw error;
    clearDraft(s.id);setDone(true);window.scrollTo({top:0});
-  }catch{setError(s.is_mock?'Your browser could not save the preview. Please allow local storage and try again.':'Your request could not be sent. Nothing has been reserved or charged. Please try again.');}
+  }catch{setError('Your request could not be sent. Nothing has been reserved or charged. Please try again.');}
   finally{setBusy(false);}
  }
  if(done)return <Screen><div className="body"><Done>
   <CheckCircleIcon aria-hidden="true"/>
-  <h1 className="display">{s.is_mock?t("Your preview plan is saved."):t("Your request is in.")}</h1>
-  <p>{s.is_mock?t("This plan is saved on this device. It is not a reservation, and no request or payment has been sent."):t("Your preferred time is awaiting review. This is not a confirmed reservation. No payment has been taken.")}</p>
+  <h1 className="display">{s.is_mock?t("Your demo request is in."):t("Your request is in.")}</h1>
+  <p>{s.is_mock?t("This sample studio replies automatically in about two minutes. Watch it change in My Journey. Nothing is booked and no payment is taken."):t("Your preferred time is awaiting review. This is not a confirmed reservation. No payment has been taken.")}</p>
   <ButtonLink to="/trips">{t("See my trips")}<ArrowRightIcon/></ButtonLink>
  </Done></div></Screen>;
  const header=<><div className="top">{review?<button type="button" onClick={()=>goStep(1)} aria-label={t('Back')}><ChevronLeftIcon/></button>:<Link to={`/business/${s.id}`} aria-label={t('Back to the experience')}><ChevronLeftIcon/></Link>}<h1>{t(review?'Review request':'Request a time')}</h1><span className="count">{t(review?'2 of 2':'1 of 2')}</span></div>
   <div className="progress" aria-hidden="true"><span className="on"/><span className={review?'on':''}/></div></>;
  const cover=[...s.studio_images].sort((a,b)=>a.sort_order-b.sort_order)[0];
  if(review&&service)return <Screen $tone="var(--st-elevated)"><div className="body"><Flow>{header}
-  {s.is_mock?<PreviewBanner><div className="title"><span className="tag">{t('Preview')}</span><strong>{t('Sample studio')}</strong></div><p>{t('This saves a preview plan on this device only. Nothing is sent to a studio, and nothing is booked.')}</p></PreviewBanner>
+  {s.is_mock?<PreviewBanner><div className="title"><span className="tag">{t('Preview')}</span><strong>{t('Sample studio')}</strong></div><p>{t('This is a demo request. No real studio receives it: the sample studio replies automatically, and nothing is booked.')}</p></PreviewBanner>
    :<div className="request-note"><strong>{t('This is a request, not a booking')}</strong><p>{t('{name} will accept or decline. Your time is only held once they accept.').replace('{name}',name)}</p></div>}
   <Card style={{marginTop:16}}>
    <div className="head"><span className="tile">{cover&&!s.is_mock?<ProgressiveImage src={cover.image_url} alt=""/>:(s.name_ko||s.name).slice(0,2)}</span><div><b>{name}</b><small>{t(service.name)} · {service.duration_minutes} {t('min')}</small></div></div>
@@ -139,7 +139,7 @@ export default function RequestVisit(){
     <div><dt>{t('Requested time')}</dt><dd>{shortDate(date,language)}, {time}</dd><button type="button" onClick={()=>goStep(1,'when')}>{t('Edit')}</button></div>
     <div><dt>{t('Guests')}</dt><dd>{peopleText(guestCount)}</dd><button type="button" onClick={()=>goStep(1,'guests')}>{t('Edit')}</button></div>
     <div><dt>{t('Interpretation')}</dt><dd>{languageLabel(language_)}</dd><button type="button" onClick={()=>goStep(1,'language')}>{t('Edit')}</button></div>
-    {!s.is_mock&&<div><dt>{t('Birth details')}</dt><dd>{birthDate?t(birthTime?'Date and time added':'Date added · time unknown'):t('Not added')}</dd><button type="button" onClick={()=>goStep(1,'birth')}>{t('Edit')}</button></div>}
+    <div><dt>{t('Birth details')}</dt><dd>{birthDate?t(birthTime?'Date and time added':'Date added · time unknown'):t('Not added')}</dd><button type="button" onClick={()=>goStep(1,'birth')}>{t('Edit')}</button></div>
    </dl>
   </Card>
   <Card style={{marginTop:12}}>
@@ -147,22 +147,22 @@ export default function RequestVisit(){
     <div><span>{money(service.price,language)} × {peopleText(guestCount)}</span><b>{money(total,language)}</b></div>
     <div className="total"><span>{t(s.is_mock?'Sample total':'Estimated total')}</span><b>{money(total,language)}</b></div>
    </div>
-   <div className="info"><InformationCircleIcon aria-hidden="true"/><span>{t(s.is_mock?'Preview readings never collect payment.':'You won’t be charged. Payment isn’t available in the app yet — the studio confirms the price when they accept.')}</span></div>
+   <div className="info"><InformationCircleIcon aria-hidden="true"/><span>{t(s.is_mock?'Demo requests never collect payment.':'You won’t be charged. Payment isn’t available in the app yet — the studio confirms the price when they accept.')}</span></div>
   </Card>
-  {!s.is_mock&&<div className="block"><Field>{t('Message to the studio (optional)')}<textarea value={message} onChange={e=>setMessage(e.target.value)} maxLength={1900} placeholder={t("Accessibility needs, the topic on your mind, or a question about language support.")}/></Field></div>}
-  <div className="block"><p className="small-h">{t('Cancellation')}</p><p className="faint">{t(s.is_mock?'Preview plans can be removed at any time.':'You can cancel free while your request is pending. Once a studio accepts, check its cancellation terms.')} <Link to="/refund-policy" style={{color:'var(--st-brand)',fontWeight:600}}>{t('Cancellation policy')}</Link></p></div>
+  <div className="block"><Field>{t('Message to the studio (optional)')}<textarea value={message} onChange={e=>setMessage(e.target.value)} maxLength={1900} placeholder={t("Accessibility needs, the topic on your mind, or a question about language support.")}/></Field></div>
+  <div className="block"><p className="small-h">{t('Cancellation')}</p><p className="faint">{t(s.is_mock?'You can cancel a demo request before the automated reply arrives.':'You can cancel free while your request is pending. Once a studio accepts, check its cancellation terms.')} <Link to="/refund-policy" style={{color:'var(--st-brand)',fontWeight:600}}>{t('Cancellation policy')}</Link></p></div>
   {error&&<Notice role="alert" style={{marginTop:16}}>{t(error)}</Notice>}
  </Flow></div>
  <StickyBar data-booking-checkout>
-  <Button className="full" type="button" onClick={()=>void send()} disabled={busy||(!s.is_mock&&accountLoading)}>{busy?t(s.is_mock?'Saving…':'Sending…'):t(s.is_mock?'Save preview plan':'Send request')}</Button>
-  <p className="caption">{t(s.is_mock?'Saved on this device only. Nothing is sent or booked.':'Free to send. Nothing is booked yet.')}</p>
+  <Button className="full" type="button" onClick={()=>void send()} disabled={busy||accountLoading}>{busy?t('Sending…'):t(s.is_mock?'Send demo request':'Send request')}</Button>
+  <p className="caption">{t(s.is_mock?'Automated reply from a sample studio. Nothing is booked.':'Free to send. Nothing is booked yet.')}</p>
  </StickyBar>
  <SignInSheet open={sheet} next={reviewPath} onClose={closeSheet}/>
  </Screen>;
  const month=dayParts(date||today,language).month;
  return <Screen><div className="body"><Flow>{header}
   <p className="studio"><b>{name}</b>{service&&` · ${service.duration_minutes} ${t('min')}`} · {s.neighborhood}</p>
-  {s.is_mock&&<PreviewBanner style={{marginTop:14}}><div className="title"><span className="tag">{t('Preview')}</span><strong>{t('Sample studio')}</strong></div><p>{t('Try the steps. This saves a preview on your device, not a real request.')}</p></PreviewBanner>}
+  {s.is_mock&&<PreviewBanner style={{marginTop:14}}><div className="title"><span className="tag">{t('Preview')}</span><strong>{t('Sample studio')}</strong></div><p>{t('Send a demo request to try the whole flow. The sample studio replies automatically and nothing is booked.')}</p></PreviewBanner>}
   {services.length>1&&<div className="block"><div className="label-row"><h2>{t('Session')}</h2></div><div className="chips" role="group" aria-label={t('Session')}>{services.map(v=><button type="button" key={v.id} className="chip session" aria-pressed={v.id===serviceId} onClick={()=>setServiceId(v.id)}>{t(v.name)}<span>{v.duration_minutes} {t('min')} · {money(v.price,language)}</span></button>)}</div></div>}
   <div className="block" id="when"><div className="label-row"><h2>{t('Date')}</h2><span>{month}</span></div>
    <div className="dates" role="group" aria-label={t('Date')}>{days.map(d=>{const p=dayParts(d,language);const open=dayOpen(d);return <button type="button" key={d} className="date" aria-pressed={d===date} disabled={!open} onClick={()=>{setDate(d);if(time&&!slotOpen(d,time))setTime('');}} aria-label={shortDate(d,language)}><small>{p.weekday}</small><b>{p.day}</b><em>{d===today?t('Today'):''}</em></button>;})}</div>
@@ -177,10 +177,10 @@ export default function RequestVisit(){
   <div className="block" id="guests"><div className="label-row"><h2>{t('Guests')}</h2><span>{t('Up to {n} at this studio').replace('{n}',String(maxGuests))}</span></div>
    <div className="stepper"><div><b>{peopleText(guestCount)}</b><small>{guestText(guestCount)}</small></div><div className="ctl"><button type="button" onClick={()=>setGuests(Math.max(1,guestCount-1))} disabled={guestCount<=1} aria-label={t('Fewer guests')}><MinusIcon/></button><output aria-live="polite">{guestCount}</output><button type="button" onClick={()=>setGuests(Math.min(maxGuests,guestCount+1))} disabled={guestCount>=maxGuests} aria-label={t('More guests')}><PlusIcon/></button></div></div>
   </div>
-  {!s.is_mock&&<div className="block" id="birth"><div className="label-row"><h2>{t('Birth details')}</h2><span>{t('Optional')}</span></div>
+  <div className="block" id="birth"><div className="label-row"><h2>{t('Birth details')}</h2><span>{t('Optional')}</span></div>
    <div className="fields"><Field>{t('Birth date')}<input type="date" value={birthDate} max={today} onChange={e=>setBirthDate(e.target.value)}/></Field><Field>{t('Birth time')}<input type="time" value={birthTime} onChange={e=>setBirthTime(e.target.value)}/><small>{t('Not sure? Leave it empty.')}</small></Field></div>
    <p className="faint" style={{marginTop:10}}>{t('Shared with the studio in your request message. You can also share them at the studio.')}</p>
-  </div>}
+  </div>
   {error&&<Notice role="alert" style={{marginTop:16}}>{t(error)}</Notice>}
  </Flow></div>
  <StickyBar data-booking-checkout><div className="row">

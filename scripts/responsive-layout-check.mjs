@@ -157,8 +157,10 @@ try {
   await page.locator('[role=group][aria-label=Date] button:not([disabled])').nth(1).click();
   await page.locator('[role=group][aria-label=Time] button:not([disabled])').first().click();
   await page.getByRole('button', { name: 'Continue' }).click();
-  await page.getByRole('button', { name: 'Save preview plan' }).click();
-  await page.getByText('Your preview plan is saved.').waitFor();
+  // Preview studios take labelled demo requests; signed out, sending asks for sign-in first.
+  await page.getByText('This is a demo request.', { exact: false }).waitFor();
+  await page.getByRole('button', { name: 'Send demo request' }).click();
+  await page.getByRole('dialog', { name: 'Sign in to send your request' }).waitFor();
   assert.deepEqual(errors, [], 'No uncaught page errors');
   console.log(JSON.stringify({ result: 'PASS', checks: reports.length, screenshots: output }));
 } finally {

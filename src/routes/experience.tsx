@@ -5,6 +5,7 @@ import { useEffect, useRef, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { styled } from 'styled-components';
 import { BanknotesIcon, ChatBubbleLeftRightIcon, ChevronLeftIcon, ChevronRightIcon, ClockIcon, HeartIcon, LanguageIcon, MapPinIcon, ShareIcon, UsersIcon } from '@heroicons/react/24/outline';
+import { StarIcon } from '@heroicons/react/24/solid';
 import { supabase } from '../supabase';
 import { money, supportLabel, useSaved, useStudios, type Review, type Service } from '../product/data';
 import { Button, ButtonLink, Empty, Notice, Page, Wrap } from '../product/ui';
@@ -60,6 +61,12 @@ const Detail=styled.div`
   .review{display:grid;gap:6px;}
   .review+.review{margin-top:10px;}
   .review .meta{font-size:12px;color:var(--st-faint);}
+  .review .stars{font-size:14px;letter-spacing:1px;color:var(--st-gold);}
+  .review .stars span{color:var(--st-line);}
+  .review .sample{font-weight:600;color:var(--st-preview);}
+  .rating{display:flex;align-items:center;flex-wrap:wrap;gap:6px;font-size:14px;color:var(--st-muted);}
+  .rating svg{width:16px;color:var(--st-gold);}
+  .rating b{color:var(--st-ink);}
 `;
 const Cover=styled.div`
   position:relative;border-radius:16px;overflow:hidden;background:var(--st-accent);aspect-ratio:5/3;
@@ -83,7 +90,7 @@ export default function Experience(){
  const failed=(section:'services'|'reviews'|'reader')=>{if(alive)setSectionErrors(previous=>({...previous,[section]:true}));};
  const finished=(section:'services'|'reviews'|'reader')=>{if(alive)setPending(previous=>({...previous,[section]:false}));};
  void Promise.resolve(supabase.from('studio_services').select('id,studio_id,name,description,duration_minutes,price,max_guests,requires_birth_date,birth_time_recommended').eq('studio_id',studio.id).eq('active',true).order('sort_order')).then(({data,error})=>{if(error)throw error;if(alive){setServices(data||[]);setServiceId(data?.[0]?.id||'');}}).catch(()=>failed('services')).finally(()=>finished('services'));
- void Promise.resolve(supabase.from('studio_reviews').select('id,reviewer_display_name,rating,body,title,is_mock,verified_booking').eq('studio_id',studio.id).eq('status','published').eq('is_mock',false).limit(6)).then(({data,error})=>{if(error)throw error;if(alive)setReviews(data||[]);}).catch(()=>failed('reviews')).finally(()=>finished('reviews'));
+ void Promise.resolve(supabase.from('studio_reviews').select('id,reviewer_display_name,rating,body,title,is_mock,verified_booking').eq('studio_id',studio.id).eq('status','published').order('created_at',{ascending:false}).limit(6)).then(({data,error})=>{if(error)throw error;if(alive)setReviews(data||[]);}).catch(()=>failed('reviews')).finally(()=>finished('reviews'));
  void Promise.resolve(supabase.from('studio_practitioners').select('id,display_name,display_name_ko,title,bio,bio_i18n,avatar_url,years_experience').eq('studio_id',studio.id).eq('is_active',true).order('is_primary',{ascending:false}).limit(1).maybeSingle()).then(({data,error})=>{if(error)throw error;if(alive)setReader(data);}).catch(()=>failed('reader')).finally(()=>finished('reader'));
  return()=>{alive=false;};},[studio,retry]);
  const sectionError=<Notice role="alert">{t('Some reading details could not be loaded. Please try again.')} <Button $secondary onClick={()=>setRetry(x=>x+1)}>{t('Retry')}</Button></Notice>;
@@ -108,10 +115,11 @@ export default function Experience(){
    {images.length>1&&<div className="nav"><button disabled={!photo} onClick={()=>move(photo-1)} aria-label={t('Previous photo')}><ChevronLeftIcon/></button><span aria-live="polite">{photo+1} / {images.length}</span><button disabled={photo===images.length-1} onClick={()=>move(photo+1)} aria-label={t('Next photo')}><ChevronRightIcon/></button></div>}</Cover>
   <header className="headline"><h1 className="display">{name}</h1>
    <p className="where"><MapPinIcon aria-hidden="true"/><span>{studio.is_mock?`${studio.neighborhood} · ${t('Illustrative location in Seoul')}`:`${studio.neighborhood}${studio.nearest_station?` · ${t('{n} min walk from {station}').replace('{n}',String(studio.station_walk_minutes)).replace('{station}',studio.nearest_station)}`:''}`}</span></p>
-   {!studio.is_mock&&!pending.reviews&&!sectionErrors.reviews&&!reviews.length&&<span className="chip">{t('New · no reviews yet')}</span>}
+   {studio.review_count>0?<p className="rating"><StarIcon aria-hidden="true"/><b>{studio.average_rating.toFixed(1)}</b><span>{t(studio.review_count===1?'{n} review':'{n} reviews').replace('{n}',String(studio.review_count))}</span>{studio.is_mock&&<span className="chip">{t('Sample reviews')}</span>}</p>
+    :!pending.reviews&&!sectionErrors.reviews&&!reviews.length&&<span className="chip">{t('New · no reviews yet')}</span>}
    {(studio.tagline_i18n?.[language]||studio.tagline)&&<p className="tagline">{studio.tagline_i18n?.[language]||studio.tagline}</p>}
   </header>
-  {studio.is_mock&&<PreviewBanner style={{marginTop:20}}><div className="title"><span className="tag">{t('Preview')}</span><strong>{t('Sample studio')}</strong></div><p>{t(studio.demo_chat_enabled?'{name} is an example with an automated demo host. It can’t take requests, and its details are illustrative.':'{name} is an example while we sign up real partners. It can’t take requests, and its details are illustrative.').replace('{name}',name)}</p>{studio.demo_chat_enabled&&<Link to={`/messages?studio=${studio.id}`}>{t('Try demo chat')}</Link>}</PreviewBanner>}
+  {studio.is_mock&&<PreviewBanner style={{marginTop:20}}><div className="title"><span className="tag">{t('Preview')}</span><strong>{t('Sample studio')}</strong></div><p>{t('{name} is a sample studio for trying SajuTeller. Demo requests and chat get automated replies, its reviews are samples, and nothing is booked.').replace('{name}',name)}</p>{studio.demo_chat_enabled&&<Link to={`/messages?studio=${studio.id}`}>{t('Try demo chat')}</Link>}</PreviewBanner>}
   <div className="facts">
    <div className="fact"><ClockIcon aria-hidden="true"/><span>{t('Session')}</span><strong>{t('{n} min, private').replace('{n}',String(duration))}</strong></div>
    <div className="fact"><UsersIcon aria-hidden="true"/><span>{t('Guests')}</span><strong>{guestsLabel}</strong></div>
@@ -128,14 +136,14 @@ export default function Experience(){
    <p className="faint" style={{marginTop:14}}>{t('Each studio runs its own session. This is the usual shape.')}</p>
   </section>
   <hr className="rule"/>
-  <section><h2>{t(studio.demo_chat_enabled?'Meet your demo host':'Your reader')}</h2>
-   {studio.demo_chat_enabled?<p className="muted">{t('Ask about pricing, languages, or how to prepare. Replies are automated for this demo.')}</p>:pending.reader?<TextSkeleton/>:sectionErrors.reader?sectionError:reader?<>
+  <section><h2>{t('Your reader')}</h2>
+   {pending.reader?<TextSkeleton/>:sectionErrors.reader?sectionError:reader?<>
     <div className="reader">{reader.avatar_url&&!studio.is_mock?<img className="avatar" src={reader.avatar_url} alt="" onError={e=>{e.currentTarget.style.display='none';}}/>:<span className="avatar" aria-hidden="true">{(reader.display_name_ko||reader.display_name).slice(0,1)}</span>}<div><b>{readerName}</b><p>{[reader.title?t(reader.title):t('Saju practitioner'),reader.years_experience!==null?`${reader.years_experience} ${t('years of practice')}`:''].filter(Boolean).join(' · ')}</p></div></div>
     {(reader.bio_i18n?.[language]||reader.bio)&&<p className="muted bio">{reader.bio_i18n?.[language]||reader.bio}</p>}
     <p className="faint" style={{marginTop:12}}>{t(studio.is_mock?'This reader profile is illustrative.':'Background is provided by the studio.')}</p>
    </>:<p className="muted">{t('Reader details will be shared by the studio.')}</p>}
    {studio.specialties.length>0&&<div className="pills">{studio.specialties.map(topic=><span className="pill" key={topic}>{t(topic.replaceAll('_',' ').replace(/^./,c=>c.toUpperCase()))}</span>)}</div>}
-   {!studio.is_mock&&<Link className="text-link" to={`/messages?studio=${studio.id}`} style={{marginTop:8}}><ChatBubbleLeftRightIcon/>{t('Message the studio')}</Link>}
+   {(!studio.is_mock||studio.demo_chat_enabled)&&<Link className="text-link" to={`/messages?studio=${studio.id}`} style={{marginTop:8}}><ChatBubbleLeftRightIcon/>{t(studio.is_mock?'Chat with the demo host (automated)':'Message the studio')}</Link>}
   </section>
   <hr className="rule"/>
   <section><h2>{t('Bring with you')}</h2><CheckList><Check>{t('Your birth date')}</Check><Check>{t('Birth time and city, if you know them — a date alone still works')}</Check><Check>{t('Your phone, for live interpretation')}</Check></CheckList>
@@ -148,14 +156,14 @@ export default function Experience(){
   </section>
   <hr className="rule"/>
   <section><h2>{t('Reviews')}</h2>
-   {pending.reviews?<TextSkeleton/>:sectionErrors.reviews?sectionError:reviews.length?reviews.map(r=><Card key={r.id} className="review">{r.title&&<strong>{r.title}</strong>}<p style={{color:'var(--st-ink)',fontSize:14}}>{r.body}</p><span className="meta">{r.reviewer_display_name} · {r.rating}/5{r.verified_booking?` · ${t('Verified booking')}`:''}</span></Card>):<Card><strong>{t('No reviews yet')}</strong><p>{t(studio.is_mock?'Sample studios don’t have reviews. We never show made-up ones.':'Reviews appear here after guests visit. We never show made-up ones.')}</p></Card>}
+   {pending.reviews?<TextSkeleton/>:sectionErrors.reviews?sectionError:reviews.length?reviews.map(r=><Card key={r.id} className="review"><span className="stars" role="img" aria-label={t('{n} out of 5 stars').replace('{n}',String(r.rating))}>{'★'.repeat(r.rating)}<span>{'★'.repeat(5-r.rating)}</span></span>{r.title&&<strong>{r.title}</strong>}<p style={{color:'var(--st-ink)',fontSize:14}}>{r.body}</p><span className="meta">{r.reviewer_display_name}{r.verified_booking?` · ${t('Verified booking')}`:''}{r.is_mock&&<> · <span className="sample">{t('Sample review')}</span></>}</span></Card>):<Card><strong>{t('No reviews yet')}</strong><p>{t('Reviews appear here after guests visit.')}</p></Card>}
   </section>
-  {studio.is_mock&&<><hr className="rule"/><p className="muted">{t('Want a reading like this? Tell us — we sign up studios in the areas people ask for first.')}</p>{service&&!studio.demo_chat_enabled&&<Link className="text-link" to={destination}>{t('Try the request steps as a preview')}</Link>}</>}
+  {studio.is_mock&&<><hr className="rule"/><p className="muted">{t('Want a reading like this? Tell us — we sign up studios in the areas people ask for first.')}</p></>}
  </Detail></div>
  {studio.is_mock?<StickyBar data-booking-action>
    <div className="row"><div className="summary"><strong>{t('From')} {money(price,language)}</strong></div><span className="faint">{t('Sample price')}</span></div>
-   {isSaved?<ButtonLink $secondary className="full" to="/saved">{t('Saved · see your list')}</ButtonLink>:<Button $secondary className="full" onClick={()=>toggle(studio.id)}>{t('Save for when it opens')}</Button>}
-   <p className="caption">{t(isSaved?'Saved on this device. We can’t send alerts yet.':'Alerts aren’t available yet. This saves the studio to your list.')}</p>
+   {service?<ButtonLink className="full" to={destination}>{t('Send a demo request')}</ButtonLink>:<Button className="full" disabled>{t(pending.services?'Loading…':'Session options unavailable')}</Button>}
+   <p className="caption">{t('Sample studio: the reply is automated and nothing is booked.')}</p>
   </StickyBar>:<StickyBar data-booking-action>
    <div className="row"><div className="summary"><strong>{t('{price} / person').replace('{price}',money(price,language))}</strong><span>{t('No payment in the app')}</span></div>
    {service?<ButtonLink to={destination}>{t('Request a time')}</ButtonLink>:<Button disabled>{t(pending.services?'Loading…':'Session options unavailable')}</Button>}</div>

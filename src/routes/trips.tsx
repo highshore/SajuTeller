@@ -10,7 +10,8 @@ import { cover, useAccount, useSaved, useStudios, type Studio } from '../product
 import { ButtonLink, Notice, Page, Wrap } from '../product/ui';
 
 // Figma: "07 Trips — Request status" (142:508). A request is never a booking: statuses map 1:1 to the database.
-type Request = { id: string; studio_id: string; requested_date: string; requested_time: string; status: string; guests: number; language: string; created_at?: string };
+// Demo requests (to Preview studios) get an automated reply; sajuteller_advance_demo_requests applies replies that are due.
+type Request = { id: string; studio_id: string; requested_date: string; requested_time: string; status: string; guests: number; language: string; created_at?: string; is_demo?: boolean; demo_reply_at?: string | null };
 type Tab = 'requests' | 'saved' | 'past';
 
 const Root = styled.div`
@@ -29,6 +30,7 @@ const Root = styled.div`
   .studio>div{min-width:0;flex:1;}
   .badge{display:inline-flex;align-items:center;margin-top:14px;padding:4px 8px;border-radius:6px;font-size:12px;font-weight:600;line-height:1.4;background:var(--st-elevated);color:var(--st-muted);}
   .badge.waiting,.badge.preview{background:var(--st-preview-bg);color:var(--st-preview);}
+  .badge.demo{margin-left:6px;}
   .badge.accepted{background:var(--st-success-bg);color:var(--st-success);}
   ol{list-style:none;margin:14px 0 0;padding:14px 0 0;border-top:1px solid var(--st-line);}
   li{display:grid;grid-template-columns:24px minmax(0,1fr);column-gap:14px;position:relative;padding-bottom:16px;}
@@ -91,13 +93,23 @@ export default function Trips() {
   const [error, setError] = useState('');
   const [busy, setBusy] = useState('');
   const [tab, setTab] = useState<Tab>('requests');
+  const [refresh, setRefresh] = useState(0);
   useEffect(() => {
     let live = true;
-    if (account) supabase.from('sajuteller_booking_requests').select('id,studio_id,requested_date,requested_time,status,guests,language,created_at').eq('user_id', account.id).order('created_at', { ascending: false }).then(({ data, error }) => {
+    if (account) void (async () => {
+      await supabase.rpc('sajuteller_advance_demo_requests');
+      const { data, error } = await supabase.from('sajuteller_booking_requests').select('id,studio_id,requested_date,requested_time,status,guests,language,created_at,is_demo,demo_reply_at').eq('user_id', account.id).order('created_at', { ascending: false });
       if (live) { setRequests(data || []); setOwner(account.id); setError(error ? 'Your requests could not be loaded. Please refresh to try again.' : ''); }
-    });
+    })();
     return () => { live = false; };
-  }, [account]);
+  }, [account, refresh]);
+  // While a demo reply is pending, check again shortly after it is due.
+  const nextReply = requests.filter(r => r.is_demo && r.status === 'requested' && r.demo_reply_at).map(r => new Date(r.demo_reply_at!).getTime()).sort()[0];
+  useEffect(() => {
+    if (!nextReply) return;
+    const timer = setTimeout(() => setRefresh(x => x + 1), Math.max(3000, nextReply - Date.now() + 1500));
+    return () => clearTimeout(timer);
+  }, [nextReply]);
   async function cancel(id: string) {
     setBusy(id);
     const { data, error } = await supabase.from('sajuteller_booking_requests').update({ status: 'cancelled' }).eq('id', id).eq('status', 'requested').select('id');
@@ -127,19 +139,19 @@ export default function Trips() {
     const sent = stampLabel(r.created_at, language);
     const steps: [string, string, 'done' | 'current' | ''][] = [
       ['Request sent', sent, 'done'],
-      ['Studio is reviewing', 'You’ll get a reply in Messages', accepted ? 'done' : 'current'],
-      ['Accepted', 'The studio confirms your time in Messages', accepted ? 'done' : ''],
+      ['Studio is reviewing', r.is_demo ? 'The sample studio replies automatically in about two minutes' : 'You’ll get a reply in Messages', accepted ? 'done' : 'current'],
+      ['Accepted', r.is_demo ? 'You’ll also get a notification' : 'The studio confirms your time in Messages', accepted ? 'done' : ''],
       ['Your reading', `${dateLabel(r.requested_date, language)} · ${r.requested_time.slice(0, 5)} KST`, ''],
     ];
     return <article className="card" key={r.id} aria-label={studio?.name || t('Saju experience')}>
       <Link className="studio" to={`/business/${r.studio_id}`}><Thumb studio={studio}/><div><h2>{studio?.name || t('Saju experience')}</h2><p>{when(r.requested_date, r.requested_time, r.guests)}</p></div></Link>
-      <span className={`badge ${tone}`}>{t(label)}</span>
+      <span className={`badge ${tone}`}>{t(label)}</span>{r.is_demo && <span className="badge preview demo">{t('Demo request')}</span>}
       <ol aria-label={t('Request status')}>{steps.map(([title, body, state], i) => <li key={title} className={state} aria-current={state === 'current' ? 'step' : undefined}><span className="n" aria-hidden="true">{i + 1}</span><div><h3>{t(title)}</h3>{body && <p>{i === 0 || i === 3 ? body : t(body)}</p>}</div></li>)}</ol>
       <div className="actions">
-        <ButtonLink className="message" $secondary to={`/messages?studio=${r.studio_id}`}>{t('Message studio')}</ButtonLink>
+        <ButtonLink className="message" $secondary to={`/messages?studio=${r.studio_id}`}>{t(r.is_demo ? 'Chat with the demo host' : 'Message studio')}</ButtonLink>
         {r.status === 'requested' && <button className="text-action" onClick={() => void cancel(r.id)} disabled={busy === r.id}>{t('Cancel request')}</button>}
       </div>
-      <p className="fine">{t(accepted ? 'Online payment is not yet available. Contact the studio after confirmation to arrange payment.' : 'Nothing is booked until the studio accepts. You won’t be charged.')}</p>
+      <p className="fine">{t(r.is_demo ? 'Demo request to a sample studio. The reply is automated, nothing is booked and no studio expects you.' : accepted ? 'Online payment is not yet available. Contact the studio after confirmation to arrange payment.' : 'Nothing is booked until the studio accepts. You won’t be charged.')}</p>
     </article>;
   }
   function pastCard(r: Request) {
@@ -147,7 +159,7 @@ export default function Trips() {
     const [tone, label] = badge(r);
     return <article className="card" key={r.id}>
       <Link className="studio" to={`/business/${r.studio_id}`}><Thumb studio={studio}/><div><h2>{studio?.name || t('Saju experience')}</h2><p>{when(r.requested_date, r.requested_time, r.guests)}</p></div></Link>
-      <span className={`badge ${tone}`}>{t(label)}</span>
+      <span className={`badge ${tone}`}>{t(label)}</span>{r.is_demo && <span className="badge preview demo">{t('Demo request')}</span>}
       <div className="row-actions"><Link className="view" to={`/business/${r.studio_id}`}>{t('View experience')}<ArrowRightIcon/></Link></div>
     </article>;
   }

@@ -269,7 +269,7 @@ export default function LiveTranslation() {
         {error && (
           <ErrorBox role="alert">
             <ExclamationTriangleIcon aria-hidden="true" />
-            <span>{error}</span>
+            <span>{t(error)}</span>
           </ErrorBox>
         )}
 

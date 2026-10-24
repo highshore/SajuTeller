@@ -19,6 +19,8 @@ const phrases: Record<string, readonly [string, string, string, string]> = {
     "リアルタイム翻訳のため音声は OpenAI に送信されます。記録はこの画面にのみ残り、離れると消去されます。",
     "Tu voz se envía a OpenAI para la traducción en vivo. La transcripción solo queda en esta pantalla y se borra al salir.",
   ],
+  "Sign in to start live interpretation.": ["실시간 통역을 시작하려면 로그인하세요.", "请登录后开始实时口译。", "リアルタイム通訳を始めるにはログインしてください。", "Inicia sesión para empezar la interpretación en vivo."],
+  "Live interpretation is unavailable right now. Please try again later.": ["지금은 실시간 통역을 사용할 수 없어요. 잠시 후 다시 시도해 주세요.", "实时口译暂时无法使用，请稍后再试。", "現在リアルタイム通訳はご利用いただけません。しばらくしてからもう一度お試しください。", "La interpretación en vivo no está disponible ahora. Inténtalo más tarde."],
 };
 
 export default phrases;

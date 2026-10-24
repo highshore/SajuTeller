@@ -1,0 +1,111 @@
+// Shared vocabulary for the Preview (is_mock) marketplace seed. See scripts/generate-mock-seed.mjs.
+
+// Neighbourhood centres. Pins are jittered around these, and the app labels every mock location "Illustrative".
+export const areas = {
+  'Insadong': { district: 'Jongno-gu', lat: 37.5740, lng: 126.9855, station: 'Anguk', street: 'Insadong-gil' },
+  'Bukchon': { district: 'Jongno-gu', lat: 37.5826, lng: 126.9836, station: 'Anguk', street: 'Bukchon-ro' },
+  'Samcheong-dong': { district: 'Jongno-gu', lat: 37.5856, lng: 126.9810, station: 'Anguk', street: 'Samcheong-ro' },
+  'Ikseon-dong': { district: 'Jongno-gu', lat: 37.5729, lng: 126.9899, station: 'Jongno 3-ga', street: 'Supyo-ro 28-gil' },
+  'Seochon': { district: 'Jongno-gu', lat: 37.5794, lng: 126.9707, station: 'Gyeongbokgung', street: 'Jahamun-ro' },
+  'Myeongdong': { district: 'Jung-gu', lat: 37.5636, lng: 126.9850, station: 'Myeongdong', street: 'Myeongdong-gil' },
+  'Euljiro': { district: 'Jung-gu', lat: 37.5662, lng: 126.9920, station: 'Euljiro 3-ga', street: 'Eulji-ro' },
+  'Dongdaemun': { district: 'Jung-gu', lat: 37.5663, lng: 127.0092, station: 'Dongdaemun History & Culture Park', street: 'Jangchungdan-ro' },
+  'Hongdae': { district: 'Mapo-gu', lat: 37.5563, lng: 126.9236, station: 'Hongik Univ.', street: 'Wausan-ro' },
+  'Yeonnam-dong': { district: 'Mapo-gu', lat: 37.5627, lng: 126.9230, station: 'Hongik Univ.', street: 'Donggyo-ro' },
+  'Mangwon': { district: 'Mapo-gu', lat: 37.5559, lng: 126.9015, station: 'Mangwon', street: 'Poeun-ro' },
+  'Sinchon': { district: 'Seodaemun-gu', lat: 37.5551, lng: 126.9368, station: 'Sinchon', street: 'Yonsei-ro' },
+  'Itaewon': { district: 'Yongsan-gu', lat: 37.5345, lng: 126.9946, station: 'Itaewon', street: 'Itaewon-ro' },
+  'Hannam-dong': { district: 'Yongsan-gu', lat: 37.5347, lng: 127.0060, station: 'Hangangjin', street: 'Dokseodang-ro' },
+  'Seongsu': { district: 'Seongdong-gu', lat: 37.5446, lng: 127.0557, station: 'Seongsu', street: 'Yeonmujang-gil' },
+  'Gangnam': { district: 'Gangnam-gu', lat: 37.4979, lng: 127.0276, station: 'Gangnam', street: 'Teheran-ro' },
+  'Sinsa': { district: 'Gangnam-gu', lat: 37.5206, lng: 127.0230, station: 'Sinsa', street: 'Garosu-gil' },
+  'Apgujeong': { district: 'Gangnam-gu', lat: 37.5271, lng: 127.0285, station: 'Apgujeong Rodeo', street: 'Apgujeong-ro' },
+  'Jamsil': { district: 'Songpa-gu', lat: 37.5113, lng: 127.0980, station: 'Jamsil', street: 'Olympic-ro' },
+  'Yeouido': { district: 'Yeongdeungpo-gu', lat: 37.5216, lng: 126.9243, station: 'Yeouido', street: 'Yeoui-daero' },
+};
+
+// Opening hours by weekday (0 = Sunday). null = closed.
+export const hours = {
+  standard: [['11:00', '19:00'], null, ['11:00', '20:00'], ['11:00', '20:00'], ['11:00', '20:00'], ['11:00', '21:00'], ['10:00', '21:00']],
+  daily: [['10:00', '21:00'], ['10:00', '21:00'], ['10:00', '21:00'], ['10:00', '21:00'], ['10:00', '21:00'], ['10:00', '21:00'], ['10:00', '21:00']],
+  late: [['14:00', '22:00'], ['15:00', '22:00'], null, ['15:00', '22:00'], ['15:00', '23:00'], ['15:00', '23:00'], ['13:00', '23:00']],
+  office: [null, ['10:00', '19:00'], ['10:00', '19:00'], ['10:00', '19:00'], ['10:00', '19:00'], ['10:00', '19:00'], ['10:00', '17:00']],
+  weekend: [['10:00', '18:00'], null, null, ['13:00', '20:00'], ['13:00', '20:00'], ['13:00', '21:00'], ['10:00', '21:00']],
+};
+
+// Checked to load (HTTP 200) on 2026-10-24. Illustrative only; the app never presents them as the studio's own photos.
+export const photos = {
+  room1: ['photo-1586023492125-27b2c045efd7', 'Bright reading room with a yellow armchair'],
+  room2: ['photo-1513694203232-719a280e022f', 'Quiet consultation corner with plants'],
+  room3: ['photo-1519710164239-da123dc03ef4', 'Small round table by a sunny window'],
+  room4: ['photo-1600210492486-724fe5c67fb0', 'Lounge with low sofas and framed prints'],
+  room5: ['photo-1505691938895-1758d7feb511', 'Calm sitting room with soft light'],
+  room6: ['photo-1524758631624-e2822e304c36', 'Airy studio with white chairs'],
+  room7: ['photo-1555041469-a586c61ea9bc', 'Green velvet sofa in a waiting area'],
+  lamps: ['photo-1540932239986-30128078f3c5', 'Warm pendant lamps over the reading table'],
+  candles: ['photo-1602523961358-f9f03dd557db', 'Candles on a dark wooden table'],
+  candle: ['photo-1603006905003-be475563bc59', 'A single candle glowing in a dim room'],
+  tea1: ['photo-1571934811356-5cc061b6821f', 'Herbal tea served before the reading'],
+  tea2: ['photo-1563822249366-3efb23b8e0c9', 'Loose-leaf teas on spoons'],
+  tea3: ['photo-1576092768241-dec231879fc3', 'Glass cup of green tea'],
+  tea4: ['photo-1597318181409-cf64d0b5d8a2', 'Tea and dried flowers on a tray'],
+  tea5: ['photo-1558160074-4d7d8bdf4256', 'Teapot and cup on a wooden tray'],
+  books1: ['photo-1507842217343-583bb7270b66', 'Shelves of old books'],
+  books2: ['photo-1524995997946-a1c2e315a42f', 'Curved library shelves'],
+  books3: ['photo-1495446815901-a7297e633e8d', 'Worn books on a shelf'],
+  books4: ['photo-1481627834876-b7833e8f5570', 'Dim aisle of bookshelves'],
+  notes: ['photo-1544819667-9bfc1de23d4e', 'Chart notes and pens on the desk'],
+  seoulStreet: ['photo-1517154421773-0529f29ea451', 'Seoul side street at dusk'],
+  seoulNeon: ['photo-1538485399081-7191377e8241', 'Neon signs in a Seoul alley'],
+  seoulRiver: ['photo-1534274867514-d5b47ef89ed7', 'Han River and Lotte Tower at dawn'],
+  seoulNight: ['photo-1546874177-9e664107314e', 'Seoul skyline and Namsan Tower at night'],
+  stream: ['photo-1601621915196-2621bfb0cd6e', 'Cheonggyecheon stream at sunset'],
+  hanok: ['photo-1548115184-bc6544d06a58', 'Hanok rooftops at sunrise'],
+  moon: ['photo-1532693322450-2cb5c511067d', 'Full moon'],
+  stars: ['photo-1419242902214-272b3f66ee7a', 'Night sky full of stars'],
+  starfield: ['photo-1475274047050-1d0c0975c63e', 'Dark starfield'],
+};
+
+// Service templates: [service_type, minutes, base KRW, max guests, requires birth date, birth time recommended, names, descriptions]
+const L = (en, ko, zh, ja, es) => ({ en, ko, zh, ja, es });
+export const services = {
+  intro: ['general', 30, 35000, 1, true, false,
+    L('First Saju Reading', '첫 사주 상담', '初次四柱体验', 'はじめての四柱推命', 'Primera lectura de Saju'),
+    L('A short introduction for first-timers: your day master, your element balance and one question of your choice.', '처음 오신 분을 위한 짧은 상담. 일간과 오행의 균형, 그리고 원하는 질문 하나를 봐 드립니다.', '为初次体验者准备的简短解读：日主、五行平衡，以及您想问的一个问题。', '初めての方向けの短いセッション。日主と五行のバランス、気になる質問をひとつ読みます。', 'Una introducción breve: tu maestro del día, el equilibrio de tus elementos y una pregunta a tu elección.')],
+  pillars: ['traditional_saju', 60, 60000, 1, true, true,
+    L('Four Pillars Reading', '정통 사주 풀이', '四柱八字详解', '四柱推命フルリーディング', 'Lectura de los Cuatro Pilares'),
+    L('Your chart laid out pillar by pillar: temperament, strengths, and the ten-year luck cycles ahead.', '사주팔자를 기둥별로 풀어 성향과 강점, 앞으로의 대운 흐름을 짚어 드립니다.', '逐柱解读命盘：性格、优势，以及未来的十年大运。', '命式を柱ごとに読み解き、気質や強み、これからの大運の流れをお伝えします。', 'Tu carta pilar por pilar: temperamento, fortalezas y los ciclos de suerte de diez años que vienen.')],
+  love: ['love', 50, 55000, 1, true, true,
+    L('Love & Relationship Reading', '연애·결혼운 상담', '感情与婚姻解读', '恋愛・結婚運リーディング', 'Lectura de amor y relaciones'),
+    L('Your patterns in relationships, the years that favour meeting someone or settling down, and what suits you in a partner.', '연애 패턴과 인연이 들어오는 시기, 결혼운, 잘 맞는 상대의 성향을 봐 드립니다.', '感情模式、适合遇见对象或成家的年份，以及适合您的伴侣类型。', '恋愛の傾向、出会いや結婚に向く時期、相性の良い相手のタイプを読みます。', 'Tus patrones en pareja, los años favorables para conocer a alguien o asentarte y qué te conviene en una pareja.')],
+  career: ['career', 50, 55000, 1, true, true,
+    L('Career & Direction Reading', '직업·진로운 상담', '事业与方向解读', '仕事・進路リーディング', 'Lectura de carrera y rumbo'),
+    L('Job changes, starting a business and which years favour a move, built around the decision you are facing.', '이직, 창업, 움직이기 좋은 해를 지금 고민 중인 결정에 맞춰 봐 드립니다.', '围绕您正在面对的决定，解读跳槽、创业以及适合行动的年份。', '転職や起業、動くのに良い年を、いま迷っている決断に沿って読みます。', 'Cambios de trabajo, emprender y qué años favorecen un cambio, centrado en la decisión que tienes delante.')],
+  wealth: ['wealth', 45, 50000, 1, true, true,
+    L('Money Flow & Timing', '재물운 상담', '财运与时机', '金運リーディング', 'Flujo de dinero y momentos'),
+    L('How money tends to move through your chart, good years to save or invest, and habits worth watching.', '재물이 들어오고 나가는 흐름, 모으거나 투자하기 좋은 해, 주의할 습관을 짚어 드립니다.', '命盘中的财富流向、适合储蓄或投资的年份，以及需要留意的习惯。', 'お金の流れ方、貯蓄や投資に向く年、気をつけたい習慣を読みます。', 'Cómo se mueve el dinero en tu carta, buenos años para ahorrar o invertir y hábitos a vigilar.')],
+  year: ['general', 45, 50000, 1, true, false,
+    L('Year-Ahead Reading', '신년운세', '流年运势', '年運リーディング', 'Lectura del año que viene'),
+    L('A month-by-month outlook for the next twelve months: when to push forward and when to rest.', '앞으로 12개월의 흐름을 월별로 짚어, 나아갈 때와 쉬어갈 때를 알려 드립니다.', '逐月解读未来十二个月：何时进取，何时休整。', 'これからの12か月を月ごとに読み、進む時期と休む時期をお伝えします。', 'Una previsión mes a mes de los próximos doce meses: cuándo avanzar y cuándo descansar.')],
+  couple: ['compatibility', 75, 90000, 2, true, true,
+    L('Couple Compatibility (2 guests)', '커플 궁합 (2인)', '情侣合盘（2人）', 'カップル相性（2名）', 'Compatibilidad de pareja (2 personas)'),
+    L('Both charts side by side: where you balance each other, likely friction points and the timing you share.', '두 사람의 사주를 나란히 놓고 서로 채워 주는 부분, 부딪히기 쉬운 부분, 함께하는 시기를 봐 드립니다.', '双方命盘并列解读：互补之处、可能的摩擦，以及共同的时机。', 'おふたりの命式を並べ、補い合う点、ぶつかりやすい点、共通の時期を読みます。', 'Las dos cartas lado a lado: dónde os equilibráis, posibles roces y los momentos que compartís.')],
+  friends: ['general', 90, 120000, 4, true, false,
+    L('Friends Group Reading (up to 4)', '친구 단체 상담 (최대 4인)', '好友团体解读（最多4人）', '友だちグループ（最大4名）', 'Lectura en grupo de amigos (hasta 4)'),
+    L('A relaxed shared session: each person’s day master and how the elements in your group mix.', '함께 듣는 편안한 상담. 한 사람씩 일간을 보고, 일행의 오행이 어떻게 어우러지는지 풀어 드립니다.', '轻松的共享解读：每个人的日主，以及大家五行如何搭配。', 'みんなで聞く気軽なセッション。一人ずつの日主と、グループ内の五行の相性を読みます。', 'Una sesión compartida y relajada: el maestro del día de cada uno y cómo se mezclan los elementos del grupo.')],
+  tarot: ['tarot', 30, 30000, 1, false, false,
+    L('Tarot Reading', '타로 상담', '塔罗占卜', 'タロットリーディング', 'Lectura de tarot'),
+    L('A card spread around one question, with time to ask follow-ups. No birth details needed.', '질문 하나를 두고 카드를 펼쳐 풀어 드리며, 추가 질문 시간도 있습니다. 생년월일은 필요 없습니다.', '围绕一个问题展开牌阵，并留有追问时间。无需出生信息。', 'ひとつの質問についてカードを展開し、追加の質問も受け付けます。生年月日は不要です。', 'Una tirada sobre una pregunta, con tiempo para repreguntar. No hace falta fecha de nacimiento.')],
+  tarotSaju: ['tarot', 60, 65000, 1, true, false,
+    L('Saju + Tarot', '사주 + 타로', '四柱 + 塔罗', '四柱推命 + タロット', 'Saju + tarot'),
+    L('Your Saju for the big picture, then a tarot spread for the question on your mind right now.', '사주로 큰 흐름을 보고, 지금 고민하는 질문은 타로로 한 번 더 짚어 드립니다.', '先用四柱看整体走势，再用塔罗解答您当下的问题。', '四柱推命で大きな流れを見て、いまの悩みはタロットでもう一度読みます。', 'Tu Saju para la visión general y una tirada de tarot para la pregunta que tienes ahora.')],
+  name: ['name_creation', 60, 70000, 1, true, true,
+    L('Korean Name Creation', '한국 이름 짓기', '韩文名字创作', '韓国名づけ', 'Creación de nombre coreano'),
+    L('A Korean name chosen to balance your elements, with the hanja meanings written out on a keepsake card.', '오행의 균형에 맞춘 한국 이름을 지어 드리고, 한자 뜻을 기념 카드에 적어 드립니다.', '根据五行平衡为您取韩文名字，并把汉字含义写在纪念卡上。', '五行のバランスに合わせた韓国名を考え、漢字の意味を記念カードに書いてお渡しします。', 'Un nombre coreano elegido para equilibrar tus elementos, con el significado de los hanja en una tarjeta de recuerdo.')],
+  face: ['general', 30, 35000, 1, false, false,
+    L('Face Reading (Gwansang)', '관상', '面相（观相）', '観相（顔相占い）', 'Lectura del rostro (gwansang)'),
+    L('Traditional Korean face reading: what your features are said to show about temperament and fortune.', '얼굴의 생김새로 성향과 운의 흐름을 보는 전통 관상입니다.', '韩国传统面相：从五官看性格与运势。', '顔立ちから気質や運勢を読む、韓国伝統の観相です。', 'Lectura tradicional coreana del rostro: lo que tus rasgos dirían de tu carácter y tu suerte.')],
+};
+
+// Tier multipliers for service prices.
+export const tiers = { budget: 0.75, mid: 1, premium: 1.6 };

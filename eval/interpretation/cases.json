@@ -1,0 +1,26 @@
+{
+  "description": "T-VOICE: scripted lines for live interpretation (QA-01 latency, QA-02 meaning). Korean lines are what a reader says; English lines are what a visitor says. expect lists glossary terms that must survive translation; each entry is a list of acceptable renderings (case-insensitive).",
+  "targetLanguage": "English",
+  "cases": [
+    { "id": "ko-01", "speaker": "reader", "text": "손님 사주를 보니 올해 재운이 아주 좋습니다.", "expect": [["four pillars", "saju"], ["financial luck", "wealth luck", "financial fortune"]] },
+    { "id": "ko-02", "speaker": "reader", "text": "오행 중에 불의 기운이 강하고 물의 기운이 부족해요.", "expect": [["five elements"], ["fire"], ["water"]] },
+    { "id": "ko-03", "speaker": "reader", "text": "내년부터 십 년 동안 좋은 대운이 들어옵니다.", "expect": [["major fortune period", "major luck cycle", "ten-year"]] },
+    { "id": "ko-04", "speaker": "reader", "text": "두 분 궁합은 서로 부족한 부분을 채워 주는 관계예요.", "expect": [["compatibility"]] },
+    { "id": "ko-05", "speaker": "reader", "text": "가을쯤 연애운이 강해지니 새로운 만남을 기대해 보세요.", "expect": [["love fortune", "love luck"], ["autumn", "fall"]] },
+    { "id": "ko-06", "speaker": "reader", "text": "천간과 지지를 함께 보면 성격이 차분하고 꼼꼼한 편입니다.", "expect": [["heavenly stems", "heavenly stem"], ["earthly branches", "earthly branch"]] },
+    { "id": "ko-07", "speaker": "reader", "text": "올해 년운은 이직보다는 지금 자리를 지키는 게 좋습니다.", "expect": [["yearly fortune", "this year's fortune", "fortune for this year"]] },
+    { "id": "ko-08", "speaker": "reader", "text": "건강운은 무난하지만 겨울에는 잠을 충분히 주무세요.", "expect": [["health fortune", "health luck"], ["winter"]] },
+    { "id": "ko-09", "speaker": "reader", "text": "태어난 시간을 알면 사주를 더 정확하게 볼 수 있어요.", "expect": [["four pillars", "saju"], ["time"]] },
+    { "id": "ko-10", "speaker": "reader", "text": "이번 달 월운은 돈 관리에 조금 신경 쓰셔야 합니다.", "expect": [["monthly fortune", "this month's fortune", "fortune this month"], ["money"]] },
+    { "id": "en-01", "speaker": "visitor", "text": "I was born on March fourteenth, nineteen ninety-two, around seven in the morning.", "expect": [["1992", "천구백구십이"], ["3월 14일", "삼월 십사일"]] },
+    { "id": "en-02", "speaker": "visitor", "text": "Is this a good year for me to change jobs?", "expect": [["이직", "직장", "일자리"]] },
+    { "id": "en-03", "speaker": "visitor", "text": "What does my chart say about my love life?", "expect": [["연애", "사랑"]] },
+    { "id": "en-04", "speaker": "visitor", "text": "Can you check our compatibility? My partner was born in nineteen ninety.", "expect": [["궁합"], ["1990", "구십"]] },
+    { "id": "en-05", "speaker": "visitor", "text": "Which of the five elements am I missing?", "expect": [["오행"]] },
+    { "id": "en-06", "speaker": "visitor", "text": "I don't know my exact birth time. Is that a problem?", "expect": [["시간", "태어난 시"]] },
+    { "id": "en-07", "speaker": "visitor", "text": "Should I be careful with money this year?", "expect": [["돈", "재물", "금전", "재운"], ["올해"]] },
+    { "id": "en-08", "speaker": "visitor", "text": "My friend wants a reading too. Can she join us?", "expect": [["친구"]] },
+    { "id": "en-09", "speaker": "visitor", "text": "What is my fortune for next month?", "expect": [["다음 달"], ["운세", "운"]] },
+    { "id": "en-10", "speaker": "visitor", "text": "Thank you so much, that was really helpful.", "expect": [["감사", "고맙"]] }
+  ]
+}

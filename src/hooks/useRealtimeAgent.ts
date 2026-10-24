@@ -1,6 +1,30 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
 import { RealtimeAgent, RealtimeSession, OpenAIRealtimeWebSocket } from '@openai/agents/realtime';
 import { supabase } from '../supabase';
+import { KEY_REQUEST_TIMEOUT_MS, LatencyTracker, reconnectDelay, summarize, type LatencySummary } from '../components/live/session-policy';
+import { clearTranscript, loadTranscript, saveTranscript } from '../components/live/transcript-store';
+import { translationInstructions } from '../components/live/instructions';
+
+/** Asks our server for a short-lived session key, with a time limit and one retry on a provider error. */
+async function requestSessionKey(accessToken: string, retry = true): Promise<{ value: string; model: string }> {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), KEY_REQUEST_TIMEOUT_MS);
+  try {
+    const response = await fetch('/api/realtime-session', { method: 'POST', headers: { Authorization: `Bearer ${accessToken}` }, signal: controller.signal });
+    if (response.ok) return await response.json() as { value: string; model: string };
+    if (response.status === 502 && retry) return requestSessionKey(accessToken, false);
+    throw new Error(response.status === 401 ? 'Sign in to start live interpretation.'
+      : response.status === 429 ? 'You’ve started many sessions in a short time. Please wait a few minutes and try again.'
+      : 'Live interpretation is unavailable right now. Please try again later.');
+  } catch (err) {
+    if (err instanceof DOMException && err.name === 'AbortError') throw new Error('Live interpretation is unavailable right now. Please try again later.');
+    throw err;
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
+const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
 interface RealtimeAgentConfig {
   customerLanguage?: string;
@@ -19,7 +43,10 @@ interface ChatMessage {
 export function useRealtimeAgent({ customerLanguage = 'English' }: RealtimeAgentConfig) {
   const [isConnected, setIsConnected] = useState(false);
   const [isRecording, setIsRecording] = useState(false);
-  const [messages, setMessages] = useState<ChatMessage[]>([]);
+  // Restored from this tab after a refresh; see transcript-store for the retention policy.
+  const [messages, setMessages] = useState<ChatMessage[]>(() => loadTranscript());
+  const [reconnecting, setReconnecting] = useState<number | null>(null);
+  const [latency, setLatency] = useState<LatencySummary>({ turns: 0, p50: null, p95: null });
   const [isUserSpeaking, setIsUserSpeaking] = useState(false);
   const [currentTurnId, setCurrentTurnId] = useState<string | null>(null);
   const [isAssistantSpeaking, setIsAssistantSpeaking] = useState(false);
@@ -35,178 +62,28 @@ export function useRealtimeAgent({ customerLanguage = 'English' }: RealtimeAgent
   const isPlayingAudioRef = useRef<boolean>(false);
   const nextStartTimeRef = useRef<number>(0);
   const scheduledSourcesRef = useRef<AudioBufferSourceNode[]>([]);
+  // Recovery and measurement (REQ-06, QA-01, QA-03).
+  const intentionalStopRef = useRef(false);
+  const reconnectAttemptRef = useRef(0);
+  const reconnectCountRef = useRef(0);
+  const latencyRef = useRef(new LatencyTracker());
+  const openSessionRef = useRef<(() => Promise<boolean>) | null>(null);
+  const stopRecordingRef = useRef<(() => Promise<void>) | null>(null);
+  const sessionStartRef = useRef<Date | null>(null);
+
+  useEffect(() => { saveTranscript(messages); }, [messages]);
 
   // 번역 에이전트 생성
   const createAgent = useCallback(() => {
-    // customerLanguage에 따른 전문 프롬프트 생성
-    const getTranslationInstructions = () => {
-      // 언어별 용어집 매핑
-      const getSajuTerms = (targetLang: string) => {
-        if (targetLang === 'English') {
-          return `SAJU TERMINOLOGY (Korean ↔ English):
-사주 = Four Pillars, 명리 = destiny analysis, 운세 = fortune
-재운 = financial luck, 연애운 = love fortune, 건강운 = health fortune
-궁합 = compatibility, 오행 = Five Elements, 천간 = Heavenly Stems
-지지 = Earthly Branches, 대운 = major fortune period, 년운 = yearly fortune
-월운 = monthly fortune, 일운 = daily fortune, 신살 = spiritual influences`;
-        } else if (targetLang === 'Chinese') {
-          return `SAJU TERMINOLOGY (Korean ↔ Chinese):
-사주 = 四柱, 명리 = 命理, 운세 = 運勢
-재운 = 財運, 연애운 = 戀愛運, 건강운 = 健康運
-궁합 = 合婚, 오행 = 五行, 천간 = 天干
-지지 = 地支, 대운 = 大運, 년운 = 年運`;
-        } else {
-          return `SAJU BASIC TERMS:
-사주 = Four Pillars, 운세 = fortune, 재운 = wealth luck
-연애운 = love fortune, 건강운 = health fortune, 궁합 = compatibility`;
-        }
-      };
-
-      // 예시 생성
-      const getExamples = (targetLang: string) => {
-        if (targetLang === 'English') {
-          return `EXAMPLES:
-Input: "안녕하세요" → Output: "Hello"
-Input: "How are you?" → Output: "어떻게 지내세요?"
-Input: "오늘 운세 좀 봐주세요" → Output: "Please look at today's fortune"
-Input: "What is my luck today?" → Output: "오늘 제 운은 어떤가요?"`;
-        } else if (targetLang === 'Chinese') {
-          return `EXAMPLES:
-Input: "안녕하세요" → Output: "您好"
-Input: "你好" → Output: "안녕하세요"
-Input: "오늘 운세 좀 봐주세요" → Output: "請看看今天的運勢"
-Input: "今天運氣怎麼樣？" → Output: "오늘 운세는 어떤가요?"`;
-        } else {
-          return `EXAMPLES:
-Input: "안녕하세요" → Output: "Hello" (in ${targetLang})
-Input: "${targetLang} greeting" → Output: "안녕하세요"`;
-        }
-      };
-
-      return `ULTRA STRICT TRANSLATION MACHINE - ZERO TOLERANCE FOR NON-TRANSLATION
-
-YOU ARE A PURE TRANSLATION DEVICE. NO PERSONALITY. NO CONVERSATION. NO EXPLANATIONS.
-
-ABSOLUTE RULES - VIOLATION = SYSTEM FAILURE:
-1. Korean input → OUTPUT ONLY ${customerLanguage} TRANSLATION
-2. ${customerLanguage} input → OUTPUT ONLY Korean TRANSLATION
-3. NEVER EVER add words like: "Hello", "Sure", "I understand", "Let me", "Here is", "The translation is"
-4. NEVER EVER answer questions - ONLY TRANSLATE THE QUESTION
-5. NEVER EVER have conversations - ONLY TRANSLATE WHAT WAS SAID
-6. NEVER EVER explain anything - ONLY TRANSLATE
-7. NEVER EVER add context, greetings, politeness, or extra words
-8. NEVER EVER respond in the same language as input
-
-CRITICAL TRANSLATION PROTOCOL:
-- Input: Korean → Output: PURE ${customerLanguage} (no Korean words)
-- Input: ${customerLanguage} → Output: PURE Korean (no ${customerLanguage} words)
-- NO prefixes, NO suffixes, NO explanations, NO additional content
-- TRANSLATE ONLY. NOTHING ELSE EXISTS.
-
-VOICE & TONE GUIDELINES:
-- Speak with a calm, mystical, and wise tone appropriate for fortune-telling
-- Use a gentle, soothing pace that conveys spiritual insight
-- Maintain respectful formality when translating fortune-telling content
-- Preserve the mystical atmosphere in your voice delivery
-
-LANGUAGE DETECTION PRIORITY RULES (CRITICAL):
-1. PRIMARY LANGUAGES: Korean and ${customerLanguage} ONLY
-2. If input contains Korean characters (한글) → treat as Korean → translate to ${customerLanguage}
-3. If input does NOT contain Korean characters → ASSUME it's ${customerLanguage} → translate to Korean
-4. BIAS TOWARDS ${customerLanguage}: When uncertain, treat non-Korean input as ${customerLanguage}
-5. IGNORE other languages completely - treat them as ${customerLanguage}
-6. If mixed Korean + ${customerLanguage} → identify dominant language and translate to the other
-7. NEVER ask for clarification - make immediate decision based on priority rules
-
-DETECTION & TRANSLATION RULES:
-- PRIMARY ASSUMPTION: Non-Korean input = ${customerLanguage} input
-- Input with Korean characters (한글/ㄱ-ㅎ/ㅏ-ㅣ/가-힣) → translate to ${customerLanguage}
-- Input without Korean characters → treat as ${customerLanguage} → translate to Korean
-- This includes English, Chinese, Japanese, and all other non-Korean languages
-- ALL non-Korean languages are treated as ${customerLanguage} and translated to Korean
-- BIAS: When in doubt, assume the customer is speaking ${customerLanguage}
-
-${getSajuTerms(customerLanguage)}
-
-PURE TRANSLATION EXAMPLES - NO EXTRA WORDS ALLOWED:
-
-Korean → ${customerLanguage}:
-Input: "안녕하세요" → Output: ${customerLanguage === 'English' ? 'Hello' : customerLanguage === 'Chinese' ? '您好' : `Hello`}
-Input: "오늘 운세 좀 봐주세요" → Output: ${customerLanguage === 'English' ? 'Please look at today\'s fortune' : customerLanguage === 'Chinese' ? '請看看今天的運勢' : `Please look at today's fortune`}
-Input: "내 이름은 코난 탐정이죠" → Output: ${customerLanguage === 'English' ? 'My name is Conan, I am a detective' : customerLanguage === 'Chinese' ? '我叫柯南，我是侦探' : `My name is Conan, I am a detective`}
-Input: "감사합니다" → Output: ${customerLanguage === 'English' ? 'Thank you' : customerLanguage === 'Chinese' ? '謝謝' : `Thank you`}
-
-${customerLanguage} → Korean:
-Input: "${customerLanguage === 'English' ? 'Hello' : customerLanguage === 'Chinese' ? '您好' : 'Hello'}" → Output: 안녕하세요
-Input: "${customerLanguage === 'English' ? 'How are you?' : customerLanguage === 'Chinese' ? '你好嗎？' : 'How are you?'}" → Output: 어떻게 지내세요?
-Input: "${customerLanguage === 'English' ? 'What is my luck?' : customerLanguage === 'Chinese' ? '我的運氣如何？' : 'What is my luck?'}" → Output: 제 운은 어떤가요?
-Input: "${customerLanguage === 'English' ? 'Thank you' : customerLanguage === 'Chinese' ? '謝謝' : 'Thank you'}" → Output: 감사합니다
-
-PRIORITY-BASED TRANSLATION EXAMPLES:
-
-KOREAN INPUT (contains 한글) → ${customerLanguage.toUpperCase()} OUTPUT:
-✅ Input: "안녕하세요" → Output: ${customerLanguage === 'English' ? 'Hello' : customerLanguage === 'Chinese' ? '您好' : 'Hello'}
-✅ Input: "오늘 운세는 어떤가요?" → Output: ${customerLanguage === 'English' ? 'How is today\'s fortune?' : customerLanguage === 'Chinese' ? '今天的運勢如何？' : 'How is today\'s fortune?'}
-✅ Input: "감사합니다" → Output: ${customerLanguage === 'English' ? 'Thank you' : customerLanguage === 'Chinese' ? '謝謝' : 'Thank you'}
-
-NON-KOREAN INPUT (no 한글) → TREAT AS ${customerLanguage.toUpperCase()} → KOREAN OUTPUT:
-✅ Input: "Hello" → Output: 안녕하세요
-✅ Input: "How are you?" → Output: 어떻게 지내세요?
-✅ Input: "Thank you" → Output: 감사합니다
-✅ Input: "Bonjour" (French) → Output: 안녕하세요 (treat as ${customerLanguage})
-✅ Input: "Hola" (Spanish) → Output: 안녕하세요 (treat as ${customerLanguage})
-✅ Input: "こんにちは" (Japanese) → Output: 안녕하세요 (treat as ${customerLanguage})
-
-WRONG (FORBIDDEN) EXAMPLES:
-❌ Input: "안녕하세요" → Output: "Hello! How can I help you?" (added extra words)
-❌ Input: "Hello" → Output: "안녕하세요! 무엇을 도와드릴까요?" (added extra words)
-❌ Input: "Hello" → Output: "Hello" (same language output)
-❌ Input: "Bonjour" → Output: "Good morning" (wrong assumption - should treat as ${customerLanguage})
-❌ Input: "What's your name?" → Output: "I understand you're asking about names..." (explanation instead of translation)
-
-ZERO TOLERANCE VIOLATIONS - IMMEDIATE SYSTEM SHUTDOWN:
-- Adding ANY non-translation words (greetings, confirmations, explanations)
-- Answering questions instead of translating them
-- Having conversations or giving advice
-- Asking "What can I help you with?" or similar
-- Explaining what you are or what you do
-- Responding in the same language as the input
-- Adding phrases like "This means...", "I understand...", "Let me translate..."
-- ANY response that contains MORE than the pure translation
-
-EMERGENCY TRANSLATION PROTOCOL:
-Input: Korean (has 한글) → Output: ${customerLanguage.toUpperCase()} ONLY (ZERO Korean words allowed)
-Input: ${customerLanguage.toUpperCase()} (no 한글) → Output: Korean ONLY (ZERO ${customerLanguage.toUpperCase()} words allowed)
-Input: ANY OTHER LANGUAGE (no 한글) → TREAT AS ${customerLanguage.toUpperCase()} → Output: Korean ONLY
-
-LANGUAGE PRIORITY ENFORCEMENT:
-1. Contains Korean characters (한글/ㄱ-ㅎ/ㅏ-ㅣ/가-힣) = Korean input → ${customerLanguage} output
-2. No Korean characters = ${customerLanguage} input → Korean output
-3. DEFAULT ASSUMPTION: Non-Korean = ${customerLanguage}
-4. ZERO exceptions, ZERO special cases, ZERO other language recognition
-
-TRANSLATION MACHINE CORE DIRECTIVE:
-- Detect language by Korean character presence ONLY
-- Non-Korean input is ALWAYS treated as ${customerLanguage}
-- Receive text → Apply priority rules → Output translation → STOP
-- NO acknowledgments, NO confirmations, NO additional words
-- PURE TRANSLATION ONLY. SYSTEM ENDS HERE.
-
-FINAL WARNING: You are NOT an assistant. You are NOT helpful. You are a TRANSLATION MACHINE.
-KOREAN IN = ${customerLanguage.toUpperCase()} OUT. NON-KOREAN IN = KOREAN OUT.
-TRANSLATE ONLY. SPEAK WITH MYSTICAL TONE BUT ADD NOTHING EXTRA.`;
-    };
-
     return new RealtimeAgent({
       name: 'Professional Saju Translator',
-      instructions: getTranslationInstructions(),
+      instructions: translationInstructions(customerLanguage),
     });
   }, [customerLanguage]);
 
   // 세션 연결
-  const connect = useCallback(async () => {
-    if (isConnected || isConnecting) return;
-
+  // Opens one Realtime session. Used for the first connection and for every reconnect.
+  const openSession = useCallback(async (): Promise<boolean> => {
     setIsConnecting(true);
     setError(null);
 
@@ -216,20 +93,18 @@ TRANSLATE ONLY. SPEAK WITH MYSTICAL TONE BUT ADD NOTHING EXTRA.`;
       if (!authSession) {
         throw new Error('Sign in to start live interpretation.');
       }
-      const keyResponse = await fetch('/api/realtime-session', {
-        method: 'POST',
-        headers: { Authorization: `Bearer ${authSession.access_token}` },
-      });
-      if (!keyResponse.ok) {
-        throw new Error(keyResponse.status === 401
-          ? 'Sign in to start live interpretation.'
-          : 'Live interpretation is unavailable right now. Please try again later.');
-      }
-      const { value: apiKey, model } = await keyResponse.json() as { value: string; model: string };
+      const { value: apiKey, model } = await requestSessionKey(authSession.access_token);
 
       const agent = createAgent();
 
       const transport = new OpenAIRealtimeWebSocket();
+      // A dropped connection (not one we closed) is retried with a fresh key; the transcript is kept.
+      // Failed first attempts are handled by the caller; only drops after a connection count here.
+      let wasConnected = false;
+      transport.on('connection_change', (status) => {
+        if (status === 'connected') wasConnected = true;
+        if (status === 'disconnected' && wasConnected && sessionRef.current === session && !intentionalStopRef.current) void recover();
+      });
 
       const session = new RealtimeSession(agent, {
         model,
@@ -352,6 +227,7 @@ TRANSLATE ONLY. SPEAK WITH MYSTICAL TONE BUT ADD NOTHING EXTRA.`;
       session.on('audio', (audioEvent) => {
         console.log('🔊 Audio event received from Agent SDK:', audioEvent);
         if (audioEvent && audioEvent.data) {
+          if (latencyRef.current.audioReceived(performance.now()) !== null) setLatency(summarize(latencyRef.current.samples));
           console.log('🎵 Scheduling audio chunk, size:', audioEvent.data.byteLength);
           scheduleAudioChunk(audioEvent.data);
 
@@ -548,6 +424,7 @@ TRANSLATE ONLY. SPEAK WITH MYSTICAL TONE BUT ADD NOTHING EXTRA.`;
 
       (session as any).on('input_audio_buffer.speech_stopped', () => {
         console.log('🎤 User speech stopped');
+        latencyRef.current.speechStopped(performance.now());
         setIsUserSpeaking(false);
       });
 
@@ -829,18 +706,58 @@ TRANSLATE ONLY. SPEAK WITH MYSTICAL TONE BUT ADD NOTHING EXTRA.`;
       });
 
       // 연결 (서버에서 받은 임시 클라이언트 키 사용)
-      await session.connect({ apiKey });
       sessionRef.current = session;
+      await session.connect({ apiKey });
       setIsConnected(true);
+      if (!sessionStartRef.current) sessionStartRef.current = new Date();
       console.log('✅ Agent connected successfully');
+      return true;
 
     } catch (err) {
       console.error('❌ Connection failed:', err);
+      sessionRef.current = null;
       setError(err instanceof Error ? err.message : 'Connection failed');
+      return false;
     } finally {
       setIsConnecting(false);
     }
-  }, [createAgent, isConnected, isConnecting]);
+  // recover is a plain function that only reads refs.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [createAgent]);
+  openSessionRef.current = openSession;
+
+  // Reconnect policy (QA-03): up to three tries, 1 s / 2 s / 4 s apart, each with a new key.
+  async function recover() {
+    sessionRef.current = null;
+    setIsConnected(false);
+    latencyRef.current.reset();
+    const delay = reconnectDelay(reconnectAttemptRef.current);
+    if (delay === null) {
+      setReconnecting(null);
+      await stopRecordingRef.current?.();
+      setError('The connection was lost. Your conversation is saved in this tab. Tap the microphone to start again.');
+      return;
+    }
+    reconnectAttemptRef.current += 1;
+    reconnectCountRef.current += 1;
+    setReconnecting(reconnectAttemptRef.current);
+    await sleep(delay);
+    if (intentionalStopRef.current) return;
+    if (await openSessionRef.current?.()) {
+      reconnectAttemptRef.current = 0;
+      setReconnecting(null);
+      setError(null);
+    } else {
+      await recover();
+    }
+  }
+
+  const connect = useCallback(async () => {
+    if (isConnected || isConnecting) return;
+    intentionalStopRef.current = false;
+    reconnectAttemptRef.current = 0;
+    await openSession();
+  }, [isConnected, isConnecting, openSession]);
 
 
   // 음성 녹음 시작 (연속 모드)
@@ -1103,6 +1020,20 @@ TRANSLATE ONLY. SPEAK WITH MYSTICAL TONE BUT ADD NOTHING EXTRA.`;
   // 음성 녹음 중지 및 세션 종료
   const stopRecording = useCallback(async () => {
     console.log('🛑 Stopping recording and terminating session...');
+    intentionalStopRef.current = true;
+    setReconnecting(null);
+    // Quality metrics for this session (no audio or text). Best effort: never blocks stopping.
+    if (sessionStartRef.current) {
+      const summary = summarize(latencyRef.current.samples);
+      void supabase.from('sajuteller_live_session_metrics').insert({
+        started_at: sessionStartRef.current.toISOString(), ended_at: new Date().toISOString(),
+        turns: summary.turns, p50_ms: summary.p50 === null ? null : Math.round(summary.p50), p95_ms: summary.p95 === null ? null : Math.round(summary.p95),
+        reconnects: reconnectCountRef.current, target_language: customerLanguage,
+      }).then(({ error }) => { if (error) console.warn('Live metrics not saved:', error.message); });
+      sessionStartRef.current = null;
+      reconnectCountRef.current = 0;
+      latencyRef.current.samples.length = 0;
+    }
 
 
     // 모든 스케줄된 오디오 소스 중지
@@ -1149,8 +1080,9 @@ TRANSLATE ONLY. SPEAK WITH MYSTICAL TONE BUT ADD NOTHING EXTRA.`;
       audioContextRef.current = null;
     }
 
-    // 세션 종료
+    // 세션 종료: close the socket too, otherwise OpenAI keeps the session (and billing) open.
     if (sessionRef.current) {
+      try { sessionRef.current.close(); } catch (error) { console.warn('⚠️ Session close error:', error); }
       sessionRef.current = null;
     }
 
@@ -1165,6 +1097,13 @@ TRANSLATE ONLY. SPEAK WITH MYSTICAL TONE BUT ADD NOTHING EXTRA.`;
     setIsAssistantSpeaking(false);
     // 메시지는 초기화하지 않고 보존 - 사용자가 녹음을 중지해도 대화 내용 유지
     console.log('✅ Recording stopped and session terminated');
+  }, [customerLanguage]);
+  stopRecordingRef.current = stopRecording;
+
+  // Deletes the transcript from the screen and from this tab (retention policy).
+  const clearConversation = useCallback(() => {
+    setMessages([]);
+    clearTranscript();
   }, []);
 
   // 연결 해제
@@ -1200,5 +1139,8 @@ TRANSLATE ONLY. SPEAK WITH MYSTICAL TONE BUT ADD NOTHING EXTRA.`;
     disconnect,
     startRecording,
     stopRecording,
+    clearConversation,
+    reconnecting,
+    latency,
   };
 }

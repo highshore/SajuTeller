@@ -131,6 +131,8 @@ const Sheet = styled.footer`
   justify-items: center;
   gap: 10px;
   .label { font-size: 14px; line-height: 20px; font-weight: 600; color: var(--st-ink); }
+  .metric { font-size: 12px; line-height: 17px; color: var(--st-muted); font-variant-numeric: tabular-nums; }
+  .clear { min-height: 44px; padding: 0 12px; border: 0; background: none; color: var(--st-ink); font-size: 13px; font-weight: 600; text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
   .privacy { max-width: 320px; margin-top: 4px; text-align: center; font-size: 12px; line-height: 17px; color: var(--st-muted); }
 `;
 
@@ -170,6 +172,7 @@ export default function LiveTranslation() {
   const {
     isConnected, isRecording, messages, error, isConnecting,
     isUserSpeaking, isAssistantSpeaking, startRecording, stopRecording,
+    clearConversation, reconnecting, latency,
   } = useRealtimeAgent({
     customerLanguage: customerLanguage
   });
@@ -215,7 +218,9 @@ export default function LiveTranslation() {
   };
 
   const active = isRecording || isConnected;
-  const status = isConnecting
+  const status = reconnecting
+    ? t("Connection dropped. Reconnecting ({n} of 3)…").replace("{n}", String(reconnecting))
+    : isConnecting
     ? t("Connecting…")
     : isRecording
       ? isAssistantSpeaking
@@ -224,7 +229,7 @@ export default function LiveTranslation() {
           ? t("Listening…")
           : t("Listening · speak in Korean or {language}").replace("{language}", langName)
       : messages.length > 0
-        ? t("Session ended. The transcript stays until you leave this page.")
+        ? t("Session ended. The transcript stays in this tab until you close it or clear it.")
         : null;
 
   return (
@@ -290,7 +295,9 @@ export default function LiveTranslation() {
         <span className="label" aria-hidden="true">
           {isConnecting ? t("Connecting…") : isRecording ? t("Tap to stop") : t("Tap to start")}
         </span>
-        <p className="privacy">{t("Speech is sent to OpenAI for live translation. The transcript stays on this screen and clears when you leave.")}</p>
+        {latency.turns > 0 && <p className="metric">{t("Response time: typical {a}s · slowest 5% {b}s ({n} turns)").replace("{a}", ((latency.p50 ?? 0) / 1000).toFixed(1)).replace("{b}", ((latency.p95 ?? 0) / 1000).toFixed(1)).replace("{n}", String(latency.turns))}</p>}
+        <p className="privacy">{t("Audio is never saved. Speech goes to OpenAI only to translate it. The text stays in this browser tab until you close the tab or clear it.")}</p>
+        {messages.length > 0 && !active && <button type="button" className="clear" onClick={clearConversation}>{t("Clear conversation")}</button>}
       </Sheet>
     </Page>
   );

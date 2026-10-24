@@ -102,8 +102,9 @@ try {
       route + ' @ ' + width + ': page horizontal overflow (' + metrics.page + ')');
     assert.ok(metrics.shellScroll <= metrics.shellClient + 1,
       route + ' @ ' + width + ': app column overflows');
-    assert.equal(Math.round(metrics.shellWidth), route === '/map' ? width : Math.min(width, 430),
-      route + ' @ ' + width + ': app shell width changed unexpectedly');
+    // SajuTeller is mobile-only: every route stays in the 430px app column at every viewport.
+    assert.equal(Math.round(metrics.shellWidth), Math.min(width, 430),
+      route + ' @ ' + width + ': app shell must stay mobile width');
     for (const control of metrics.visibleControls) {
       assert.ok(control.left >= -1 && control.right <= width + 1,
         route + ' @ ' + width + ': a form field extends outside the viewport');
@@ -114,7 +115,7 @@ try {
       await map.waitFor({ timeout: 10000 });
       const rect = await map.boundingBox();
       assert.ok(rect && rect.height >= 320, 'Reading map should be tall enough for pins and labels');
-      if (width >= 900) assert.ok(rect.width >= 850, 'Reading map should expand on desktop');
+      assert.ok(rect.width <= 431, 'Reading map must stay inside the mobile app column');
     }
     if (route.endsWith('/booking')) {
       const checkout = page.locator('[data-booking-checkout]');

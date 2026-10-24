@@ -37,13 +37,6 @@ const Stage = styled.div`
   .note a{color:var(--st-brand);text-decoration:underline;text-underline-offset:3px;}
   .loading{display:grid;gap:14px;padding:8px 0;}
   .loading>div{height:72px;border-radius:12px;}
-  @container saju (min-width:851px){
-    height:calc(100dvh - var(--ks-header-height,60px));min-height:560px;
-    .map{left:400px;bottom:0;}
-    .sheet{right:auto;width:400px;height:100%;border-radius:0;box-shadow:none;border-right:1px solid var(--st-line);}
-    .grip,.toggle{display:none;}
-    .sheet-head{padding-top:20px;}
-  }
 `;
 
 const Floating = styled.div`
@@ -66,7 +59,6 @@ const Floating = styled.div`
   .area{justify-self:center;display:inline-flex;align-items:center;min-height:40px;padding:0 16px;border-radius:999px;border:0;background:var(--st-surface);color:var(--st-ink);font-size:14px;font-weight:600;cursor:pointer;box-shadow:0 2px 10px rgb(27 20 32 / 16%);}
   .panel{background:var(--st-surface);border-radius:16px;padding:16px;display:grid;gap:12px;box-shadow:0 8px 24px rgb(27 20 32 / 16%);}
   .panel .done{min-height:44px;border:0;border-radius:12px;background:var(--st-action);color:var(--st-on-action);font-size:14px;font-weight:600;cursor:pointer;}
-  @container saju (min-width:851px){max-width:560px;}
 `;
 
 const Crosshair = () => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" aria-hidden="true"><circle cx="12" cy="12" r="7"/><circle cx="12" cy="12" r="2.5" fill="currentColor"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/></svg>;

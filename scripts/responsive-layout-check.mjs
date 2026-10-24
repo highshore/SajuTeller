@@ -102,7 +102,7 @@ try {
       route + ' @ ' + width + ': page horizontal overflow (' + metrics.page + ')');
     assert.ok(metrics.shellScroll <= metrics.shellClient + 1,
       route + ' @ ' + width + ': app column overflows');
-    // SajuTeller is mobile-only: every route stays in the 430px app column at every viewport.
+    // [QA-07] SajuTeller is mobile-only: every route stays in the 430px app column at every viewport.
     assert.equal(Math.round(metrics.shellWidth), Math.min(width, 430),
       route + ' @ ' + width + ': app shell must stay mobile width');
     for (const control of metrics.visibleControls) {
@@ -110,14 +110,20 @@ try {
         route + ' @ ' + width + ': a form field extends outside the viewport');
     }
     if (route === '/map') {
-      // CI has no Maps key, so the map renders its keyless fallback (data-map-provider="none") with the same pins.
+      // [AC-03b] CI has no Maps key, so the map renders its keyless fallback (data-map-provider="none") with the same pins.
       const map = page.locator('[data-map-provider]');
       await map.waitFor({ timeout: 10000 });
       const rect = await map.boundingBox();
       assert.ok(rect && rect.height >= 320, 'Reading map should be tall enough for pins and labels');
       assert.ok(rect.width <= 431, 'Reading map must stay inside the mobile app column');
     }
+    if (/^\/business\/[^/]+$/.test(route)) {
+      // [AC-04a] A sample studio is labelled as one and never offers payment.
+      await page.getByText('Sample studio', { exact: true }).first().waitFor({ timeout: 10000 });
+      assert.equal(await page.getByRole('button', { name: /pay/i }).count(), 0, 'Sample studio page must not offer payment');
+    }
     if (route.endsWith('/booking')) {
+      // [AC-04a] [AC-05a]
       const checkout = page.locator('[data-booking-checkout]');
       await checkout.waitFor({ timeout: 10000 });
       assert.equal(await page.getByRole('button', { name: /pay/i }).count(), 0,
@@ -150,6 +156,7 @@ try {
 
   await page.setViewportSize({ width: 320, height: 844 });
   await visit('/business/' + id + '/booking');
+  // [AC-02b] Every language keeps the request screen inside the mobile column.
   for (const name of ['한국어', '日本語', '简体中文', 'Español', 'English']) {
     await page.locator('[data-global-header] button[aria-haspopup=dialog]').click();
     await page.getByRole('dialog').getByRole('button', { name, exact: true }).click();
@@ -158,7 +165,7 @@ try {
   await page.locator('[role=group][aria-label=Date] button:not([disabled])').nth(1).click();
   await page.locator('[role=group][aria-label=Time] button:not([disabled])').first().click();
   await page.getByRole('button', { name: 'Continue' }).click();
-  // Preview studios take labelled demo requests; signed out, sending asks for sign-in first.
+  // [AC-05a] [AC-01a] Preview studios take labelled demo requests; signed out, sending asks for sign-in first.
   await page.getByText('This is a demo request.', { exact: false }).waitFor();
   await page.getByRole('button', { name: 'Send demo request' }).click();
   await page.getByRole('dialog', { name: 'Sign in to send your request' }).waitFor();

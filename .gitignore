@@ -17,3 +17,7 @@ dist
 supabase/.temp/
 
 !.env.example
+
+# Interpretation evaluation: generated speech and results stay local
+eval/interpretation/audio/
+eval/interpretation/results/

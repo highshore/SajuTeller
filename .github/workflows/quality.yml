@@ -1,0 +1,28 @@
+name: Tests and traceability
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  quality:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+      # Unit and API tests, each tagged with the acceptance criteria it proves.
+      - run: npm test
+      # Every acceptance criterion in requirements/requirements.json must have a check.
+      - run: npm run trace -- --check
+      # Type check + build, then make sure no secret reached the client bundle (QA-06).
+      - run: npm run build
+      - run: npm run check:secrets

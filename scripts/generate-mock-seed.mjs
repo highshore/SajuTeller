@@ -5,7 +5,7 @@
 //
 // The SQL runs in one transaction. It deletes every is_mock studio (and its services, readers, slots, images,
 // reviews) and every is_mock profile, then inserts the studios from scripts/mock-data. Studios with keepSlug are
-// updated in place so their ids (and any existing demo chat conversations) survive. Real (is_mock = false) rows
+// updated in place (matched by old or current slug) so their ids and existing demo chat conversations survive. Real (is_mock = false) rows
 // are never touched. Output is deterministic: same input, same SQL.
 import { writeFileSync } from 'node:fs';
 import { areas, hours, photos, services, tiers } from './mock-data/catalog.mjs';
@@ -55,7 +55,7 @@ begin;
 -- 1. Remove existing mock data. Studios kept by id lose their children and are rewritten below.
 -- Demo requests point at mock services, so they go first.
 delete from public.sajuteller_booking_requests where studio_id in (select id from public.saju_studios where is_mock);
-delete from public.saju_studios where is_mock and slug not in (${keep.map(s => q(s.keepSlug)).join(',')});
+delete from public.saju_studios where is_mock and slug not in (${keep.flatMap(s => [q(s.keepSlug), q(s.slug)]).join(',')});
 delete from public.studio_availability_slots where studio_id in (select id from public.saju_studios where is_mock);
 delete from public.studio_reviews where studio_id in (select id from public.saju_studios where is_mock);
 delete from public.studio_images where studio_id in (select id from public.saju_studios where is_mock);
@@ -87,7 +87,7 @@ for (const s of studios) {
     Math.min(...prices), q('KRW'), Math.min(...svc.map(t => t[1])), Math.max(s.guests || 1, ...svc.map(t => t[3])), 0,
     arr(s.specialties), arr(s.modalities), s.ai ? 'true' : 'false', s.wheel ? 'true' : 'false', s.walkIns ? 'true' : 'false', 'false', 'null', 'null', 'null'];
   if (s.keepSlug) {
-    w(`update public.saju_studios set (${cols.join(',')}, updated_at) = (${values.join(',')}, now()) where slug=${q(s.keepSlug)} and is_mock;`);
+    w(`update public.saju_studios set (${cols.join(',')}, updated_at) = (${values.join(',')}, now()) where slug in (${q(s.keepSlug)},${q(s.slug)}) and is_mock;`);
   } else {
     w(`insert into public.saju_studios (${cols.join(',')}) values (${values.join(',')});`);
   }
@@ -138,6 +138,7 @@ for (const s of studios) {
   const kind = s.modalities[0] === 'tarot' ? 'tarot' : s.services.includes('couple') || s.services.includes('friends') ? 'couple' : 'saju';
   const count = s.featured ? int(14, 24) : int(3, 18);
   const used = new Set();
+  const reviewed = new Set();
   const reader = s.readers[0][0].split(' ')[0];
   for (let i = 0; i < count; i++) {
     const rating = ratingFor();
@@ -150,7 +151,11 @@ for (const s of studios) {
     if (!fresh.length) continue;
     const [title, body] = pick(fresh);
     used.add(title);
-    const guest = pick(travellers.filter(t => t[3] === lang));
+    // One review per traveller per studio.
+    const guests = travellers.filter(t => t[3] === lang && !reviewed.has(t));
+    if (!guests.length) continue;
+    const guest = pick(guests);
+    reviewed.add(guest);
     const visit = new Date(start + rand() * (end - start));
     const created = new Date(visit.getTime() + int(1, 4) * 86400000 + int(8, 22) * 3600000);
     const service = pick(s.services.map(k => services[k][6].en));

@@ -49,7 +49,7 @@ export const pools = {
       ['Fun with friends', 'Four of us shared a session and it was hilarious hearing how our elements mix. Great value split four ways.'],
     ],
     mixed: [
-      ['Good, but a bit short', 'The reading itself was interesting but 30 minutes went fast. I would book the longer session next time.'],
+      ['Good, but a bit short', 'The reading itself was interesting but it went by fast. I would book a longer session next time.'],
       ['Interpretation could be smoother', 'The reader was clearly knowledgeable, but some answers lost detail in translation. Still worth trying.'],
       ['Hard to find', 'Took us a while to find the entrance in {area}. Once inside it was lovely, but give yourself extra time.'],
       ['Mixed feelings', 'Some parts felt spot on, others quite general. Nice experience overall, just manage your expectations.'],
@@ -65,7 +65,7 @@ export const pools = {
     ],
     tarot: [['気軽に楽しめました', '予約なしで入れて、恋愛について短くタロットを見てもらいました。思ったより当たっていて驚きました。']],
     couple: [['カップルで受けました', 'ふたりの命式を並べて相性を見てもらいました。笑いながら聞けて、いい記念になりました。']],
-    mixed: [['少し短く感じました', '内容は良かったのですが、30分だとあっという間でした。次は長いコースにします。'], ['場所が分かりにくい', '入口を探すのに時間がかかりました。中はとても素敵でした。']],
+    mixed: [['少し短く感じました', '内容は良かったのですが、あっという間でした。次は長いコースにします。'], ['場所が分かりにくい', '入口を探すのに時間がかかりました。中はとても素敵でした。']],
   },
   zh: {
     saju: [
@@ -76,7 +76,7 @@ export const pools = {
     ],
     tarot: [['轻松有趣', '晚上路过直接进去抽了一次塔罗，老师很幽默但回答很认真。']],
     couple: [['和男朋友一起来的', '两个人的命盘放在一起看，互补的地方和容易吵架的地方都说中了，很有意思。']],
-    mixed: [['时间有点短', '内容不错，但30分钟过得太快了，下次会选长一点的。'], ['翻译偶尔有点慢', '老师很专业，只是有些细节翻译时丢失了一点。']],
+    mixed: [['时间有点短', '内容不错，但时间过得太快了，下次会选长一点的。'], ['翻译偶尔有点慢', '老师很专业，只是有些细节翻译时丢失了一点。']],
   },
   es: {
     saju: [
@@ -86,7 +86,7 @@ export const pools = {
     ],
     tarot: [['Divertido y certero', 'Una tirada rápida de tarot por la noche. Muy cercana y sincera con mi pregunta sobre el amor.']],
     couple: [['Ideal en pareja', 'Hicimos la lectura de compatibilidad juntos y nos reímos mucho. Un recuerdo precioso de Seúl.']],
-    mixed: [['Bien, pero corto', 'Interesante, aunque media hora se hace muy corta. La próxima vez reservaré la sesión larga.']],
+    mixed: [['Bien, pero corto', 'Interesante, aunque se hace muy corta. La próxima vez reservaré una sesión más larga.']],
   },
   ko: {
     saju: [
@@ -97,6 +97,6 @@ export const pools = {
     ],
     tarot: [['가볍게 보기 좋아요', '저녁 먹고 예약 없이 들렀는데 금방 봐 주셨어요. 솔직하게 말씀해 주셔서 좋았습니다.']],
     couple: [['커플 궁합 추천', '남자친구랑 같이 봤는데 서로 맞는 부분, 부딪히는 부분을 짚어 주셔서 재미있었어요.']],
-    mixed: [['조금 짧았어요', '내용은 좋았는데 30분은 금방 지나가네요. 다음엔 긴 상담으로 볼게요.']],
+    mixed: [['조금 짧았어요', '내용은 좋았는데 시간이 금방 지나가네요. 다음엔 더 긴 상담으로 볼게요.']],
   },
 };

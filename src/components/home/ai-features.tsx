@@ -4,7 +4,7 @@ import { styled } from 'styled-components';
 import { ArrowRightIcon } from '@heroicons/react/24/outline';
 import { useI18n } from '../../i18n/i18n';
 
-// Figma: Home "AI features" (160:341) — four product previews in a scroll-snap rail.
+// Figma: Home "AI features" (160:341) — product previews in a scroll-snap rail. Face reading added Oct 2026.
 const Section = styled.section`
   padding:40px 0 36px;background:#f7f4f1;color:#1b1420;
   .head{display:flex;align-items:flex-end;justify-content:space-between;gap:16px;padding:0 20px;}
@@ -44,7 +44,14 @@ const Card = styled(Link)<{ $tone: 'night' | 'plum' | 'light' }>`
   .bubble small{display:block;font-family:'Noto Sans KR',sans-serif;font-size:12px;line-height:16px;font-weight:400;}
   .bubble.them{background:#f7f4f1;border-top-left-radius:4px;}.bubble.them small{color:#857c8d;}
   .bubble.you{background:#4b2d5a;color:#fff;justify-self:end;border-top-right-radius:4px;}.bubble.you small{color:#b8acbf;}
+  .face{width:150px;height:150px;}
+  .face .face-shape{fill:rgb(41 26 56 / 60%);stroke:#c9a76a;stroke-width:1.4;}
+  .face .feat{fill:none;stroke:#e9cf98;stroke-width:1.5;stroke-linecap:round;}
+  .face line{stroke:rgb(201 167 106 / 55%);stroke-dasharray:3 4;}
+  .face text{font:600 10px 'Noto Serif KR',serif;fill:#e9cf98;}
 `;
+
+const CARDS = 5;
 
 export default function AiFeatures() {
   const { t } = useI18n();
@@ -54,7 +61,7 @@ export default function AiFeatures() {
   useEffect(() => {
     const node = rail.current;
     if (!node) return;
-    const sync = () => setActive(Math.min(3, Math.round(node.scrollLeft / 268)));
+    const sync = () => setActive(Math.min(CARDS - 1, Math.round(node.scrollLeft / 268)));
     node.addEventListener('scroll', sync, { passive: true });
     return () => node.removeEventListener('scroll', sync);
   }, []);
@@ -62,9 +69,22 @@ export default function AiFeatures() {
   return <Section aria-labelledby="ai-features-title">
     <div className="head">
       <div><div className="kicker">{t('Free · powered by AI')}</div><h2 id="ai-features-title">{t('Try Saju in a minute')}</h2></div>
-      <span className="count" aria-hidden="true">{active + 1} / 4</span>
+      <span className="count" aria-hidden="true">{active + 1} / {CARDS}</span>
     </div>
     <div className="rail" ref={rail} role="region" aria-label={t('AI readings')} tabIndex={0}>
+      <Card to="/face-reading" $tone="plum">
+        <span className="chip">{t('New · free')}</span>
+        <div className="visual" aria-hidden="true">
+          <svg className="face" viewBox="0 0 150 150">
+            <path className="face-shape" d="M75 14c-30 0-48 23-48 55 0 28 8 50 22 65 8 9 17 14 26 14s18-5 26-14c14-15 22-37 22-65 0-32-18-55-48-55z"/>
+            <path className="feat" d="M50 62q9-5 18-1M82 61q9-4 18 1M53 74q8-5 16 0q-8 4-16 0zM81 74q8-5 16 0q-8 4-16 0zM75 75v19q-4 3-8 3M75 94q4 3 8 3M64 112q11 6 22 0"/>
+            <line x1="22" x2="128" y1="50" y2="50"/><line x1="22" x2="128" y1="86" y2="86"/><line x1="22" x2="128" y1="122" y2="122"/>
+            <text x="131" y="70">中</text><text x="131" y="106">下</text><text x="131" y="40">上</text>
+          </svg>
+        </div>
+        <h3>{t('AI face reading')}</h3><p>{t('Gwansang from one selfie. Never saved.')}</p>
+        <span className="go">{t('Try it')}<ArrowRightIcon/></span>
+      </Card>
       <Card to="/today-fortune" $tone="night">
         <span className="chip">{t('Free · 1 min')}</span>
         <div className="visual" aria-hidden="true">
@@ -104,6 +124,6 @@ export default function AiFeatures() {
         <span className="go">{t('How it works')}<ArrowRightIcon/></span>
       </Card>
     </div>
-    <div className="dots" aria-hidden="true">{[0, 1, 2, 3].map(i => <i key={i} className={i === active ? 'on' : undefined}/>)}</div>
+    <div className="dots" aria-hidden="true">{Array.from({ length: CARDS }, (_, i) => <i key={i} className={i === active ? 'on' : undefined}/>)}</div>
   </Section>;
 }

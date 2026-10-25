@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { styled } from 'styled-components';
 import { ArrowRightIcon, PauseIcon, PlayIcon } from '@heroicons/react/24/solid';
 import { useI18n } from '../../i18n/i18n';
+import GalaxyCanvas from './galaxy-canvas';
 
 // Figma: "ST v2 / Hero carousel" (162:3084). Five slides share one CTA; only art and copy rotate.
 const ADVANCE_MS = 4500;
@@ -71,32 +72,43 @@ function ElementsArt() {
   </svg>;
 }
 
-function roof(x: number, y: number, w: number) {
-  return `M${x} ${y} C${x + w * .12} ${y - 4} ${x + w * .2} ${y - 16} ${x + w * .26} ${y - 26} L${x + w * .74} ${y - 26} C${x + w * .8} ${y - 16} ${x + w * .88} ${y - 4} ${x + w} ${y} L${x + w} ${y + 8} L${x} ${y + 8} Z M${x + w * .08} ${y + 8} L${x + w * .92} ${y + 8} L${x + w * .92} ${y + 70} L${x + w * .08} ${y + 70} Z`;
-}
-
-function SeoulArt() {
-  return <svg className="seoul-art" viewBox="0 0 390 390" aria-hidden="true">
-    <defs><linearGradient id="seoul-dusk" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stopColor="#281438" stopOpacity="0"/><stop offset=".45" stopColor="#6c3456"/><stop offset=".75" stopColor="#aa6060"/><stop offset="1" stopColor="#c88c6e"/></linearGradient></defs>
-    <rect width="390" height="300" fill="url(#seoul-dusk)"/>
-    <g transform="translate(0 -72)">
-    <circle className="moon" cx="300" cy="150" r="52" fill="#fbe9c6"/>
-    <path d="M0 270 C40 230 80 220 120 242 C160 262 190 230 230 215 C262 202 300 190 330 205 C360 220 375 230 390 228 L390 390 L0 390 Z" fill="#3a1e45"/>
-    <rect x="309" y="135" width="4" height="62" fill="#3a1e45"/><rect x="302" y="160" width="18" height="10" rx="3" fill="#3a1e45"/><rect x="305" y="150" width="12" height="8" rx="2" fill="#3a1e45"/><circle cx="311" cy="133" r="2.5" fill="#f2c27a"/>
-    <path d={`${roof(-30, 300, 190)} ${roof(140, 320, 170)} ${roof(290, 290, 150)}`} fill="#1b0f24"/>
-    <rect y="370" width="390" height="92" fill="#140a1b"/>
-    {[[40, 330], [86, 330], [200, 348], [245, 348], [330, 318], [360, 318]].map(([x, y]) => <rect key={`${x}-${y}`} className="window" x={x} y={y} width="16" height="22" rx="2" fill="#ffc773"/>)}
+// AI face reading (관상): the three zones of the face and the five features, drawn as a scan.
+function FaceArt() {
+  const { t } = useI18n();
+  // SVG-native animation: a CSS transform on a clipped SVG child leaves a box artefact in WebKit.
+  const still = typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const zones = [[96, 152, '上停', 'Early years'], [152, 214, '中停', 'Mid-life'], [214, 276, '下停', 'Later years']] as const;
+  return <svg className="face-art" viewBox="0 0 390 390" aria-hidden="true">
+    <defs>
+      <radialGradient id="face-glow" cx="50%" cy="45%" r="55%"><stop offset="0" stopColor="#7a4890" stopOpacity=".55"/><stop offset="1" stopColor="#7a4890" stopOpacity="0"/></radialGradient>
+      <linearGradient id="face-scan" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stopColor="#c9a76a" stopOpacity="0"/><stop offset=".5" stopColor="#e9cf98" stopOpacity=".55"/><stop offset="1" stopColor="#c9a76a" stopOpacity="0"/></linearGradient>
+      <clipPath id="face-clip"><path d="M195 70c-52 0-84 40-84 96 0 48 14 86 38 112 14 15 30 24 46 24s32-9 46-24c24-26 38-64 38-112 0-56-32-96-84-96z"/></clipPath>
+    </defs>
+    <circle cx="195" cy="180" r="190" fill="url(#face-glow)"/>
+    <path className="face-shape" d="M195 70c-52 0-84 40-84 96 0 48 14 86 38 112 14 15 30 24 46 24s32-9 46-24c24-26 38-64 38-112 0-56-32-96-84-96z"/>
+    <g className="features">
+      <path d="M150 150q16-9 32-2M208 148q16-7 32 2"/>
+      <path d="M154 170q14-8 28 0q-14 7-28 0zM208 170q14-8 28 0q-14 7-28 0z"/>
+      <path d="M195 172v34q-8 6-14 6M195 206q8 6 14 6"/>
+      <path d="M174 240q21 12 42 0"/>
     </g>
-    <rect y="298" width="390" height="92" fill="#140a1b"/>
+    {zones.map(([y1, y2, hanja, label]) => <g key={hanja} className="zone">
+      <line x1="96" x2="294" y1={y1} y2={y1}/>
+      <text x="300" y={(y1 + y2) / 2 - 2} className="hanja">{hanja}</text>
+      <text x="300" y={(y1 + y2) / 2 + 14} className="label">{t(label)}</text>
+    </g>)}
+    <line className="zone-end" x1="96" x2="294" y1="276" y2="276"/>
+    {[[166, 170], [222, 170], [195, 206], [195, 240], [195, 112]].map(([x, y], i) => <circle key={i} className="point" cx={x} cy={y} r="3.5" style={{ animationDelay: `${i * .35}s` } as CSSProperties}/>)}
+    {!still && <g clipPath="url(#face-clip)"><rect x="100" y="60" width="190" height="46" fill="url(#face-scan)"><animate attributeName="y" values="60;272;60" dur="3.6s" repeatCount="indefinite" calcMode="spline" keySplines=".45 0 .55 1;.45 0 .55 1"/></rect></g>}
   </svg>;
 }
 
 const slides: Slide[] = [
-  { id: 'galaxy', head: 'Discover your\nKorean fortune', gold: 'Korean fortune', sub: 'Saju reads your life from your birth.', bg: '#0b0610', art: <img className="galaxy-art" src="/figma/galaxy-header.svg" width="358" height="230" alt=""/> },
+  { id: 'galaxy', head: 'Discover your\nKorean fortune', gold: 'Korean fortune', sub: 'Saju reads your life from your birth.', bg: '#0b0610', art: null },
   { id: 'pillars', head: 'Four pillars,\nread in Seoul', gold: 'read in Seoul', sub: 'Private readings with a Korean Saju master.', bg: 'linear-gradient(180deg,#130a1b,#281638 45%,#160c20)', art: <PillarsArt/> },
   { id: 'cards', head: 'Eight characters\nthat are you', gold: 'that are you', sub: 'Year, month, day and hour — the heart of Saju.', bg: 'radial-gradient(ellipse 90% 60% at 50% 32%,#4d2b61,#0d0814 72%)', art: <CardsArt/> },
   { id: 'elements', head: 'Five elements.\nOne you.', gold: 'One you.', sub: 'Find your element free, in ten seconds.', bg: 'linear-gradient(180deg,#100918,#22122f)', art: <ElementsArt/> },
-  { id: 'seoul', head: 'A night in Seoul,\nread by a master', gold: 'read by a master', sub: 'Live interpretation, both ways.', bg: 'linear-gradient(180deg,#0e0816,#1d0f2a 40%,#140a1b 60%)', art: <SeoulArt/> },
+  { id: 'face', head: 'Your face,\nread by AI', gold: 'read by AI', sub: 'Gwansang, the Korean art of face reading. Free, and your photo is never saved.', bg: 'linear-gradient(180deg,#0e0816,#22112f 50%,#140a1b)', art: <FaceArt/> },
 ];
 
 function Headline({ head, gold }: { head: string; gold: string }) {
@@ -107,7 +119,8 @@ function Headline({ head, gold }: { head: string; gold: string }) {
 }
 
 const Hero = styled.section`
-  position:relative;isolation:isolate;overflow:hidden;color:#f4eee7;background:#0b0610;display:flex;flex-direction:column;touch-action:pan-y;
+  /* clip, not hidden: a hidden box can still be scrolled sideways when a control inside it gets focus. */
+  position:relative;isolation:isolate;overflow:hidden;overflow:clip;color:#f4eee7;background:#0b0610;display:flex;flex-direction:column;touch-action:pan-y;
   /* Fill the visible screen between the sticky header and the mobile dock (svh is stable while iOS toolbars move). */
   min-height:max(440px,calc(100svh - var(--ks-header-height) - 76px - env(safe-area-inset-bottom)));
   .layer{position:absolute;inset:0;z-index:-1;opacity:0;transition:opacity .7s cubic-bezier(.23,1,.32,1);}
@@ -135,16 +148,25 @@ const Hero = styled.section`
   .card{position:absolute;left:calc(50% - 42px);top:96px;width:84px;height:176px;padding:16px 8px;border-radius:16px;display:flex;flex-direction:column;align-items:center;justify-content:space-between;text-align:center;background:#211428;border:1px solid rgb(201 167 106 / 60%);box-shadow:0 14px 28px rgb(0 0 0 / 50%);}
   .card small{font:600 11px/14px 'Noto Serif KR',serif;letter-spacing:.8px;text-transform:uppercase;color:#c9a76a;}.card b{font:600 32px/38px 'Noto Serif KR',serif;}.card em{font-style:normal;font-size:11px;line-height:14px;color:#b8acbf;}
   .card.you{background:linear-gradient(180deg,#f2dba3,#bd9452);border:0;color:#1b1420;box-shadow:0 0 44px rgb(230 179 102 / 60%);}.card.you small,.card.you em{color:#1b1420;}
-  .elements-art,.seoul-art{position:absolute;inset:0;width:100%;height:100%;}
+  .elements-art,.face-art{position:absolute;inset:0;width:100%;height:100%;}
+  /* Above the bottom fade: the galaxy drifts behind the copy as you scroll (dimmed in the shader). */
+  .galaxy-canvas{position:absolute;inset:0;width:100%;height:100%;display:block;z-index:1;}
+  .galaxy-core{position:absolute;z-index:1;left:50%;top:0;width:420px;height:300px;border-radius:50%;pointer-events:none;background:radial-gradient(closest-side,rgb(255 226 180 / 40%),rgb(150 96 190 / 22%) 30%,rgb(90 50 130 / 12%) 60%,transparent);will-change:transform;}
+  .face-art .face-shape{fill:rgb(41 26 56 / 55%);stroke:#c9a76a;stroke-width:1.5;}
+  .face-art .features path{fill:none;stroke:#e9cf98;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round;opacity:.9;}
+  .face-art .zone line,.face-art .zone-end{stroke:rgb(201 167 106 / 55%);stroke-width:1;stroke-dasharray:3 5;}
+  .face-art .hanja{font:600 15px 'Noto Serif KR',serif;fill:#e9cf98;}.face-art .label{font:600 10px Inter,sans-serif;fill:#b8acbf;}
+  .face-art .point{fill:#f4eee7;animation:face-pulse 2.4s ease-in-out infinite;}
+  @keyframes face-pulse{0%,100%{opacity:.35;}50%{opacity:1;}}
   .elements-art .hanja{font-family:'Noto Serif KR',serif;font-weight:600;fill:#fffaf3;}.elements-art .label{font:600 12px Inter,sans-serif;fill:#b8acbf;}.elements-art .label.gold{fill:#c9a76a;}
   .node circle{filter:drop-shadow(0 0 14px var(--glow));}.node.you circle{filter:drop-shadow(0 0 24px var(--glow));}
-  .moon{filter:drop-shadow(0 0 30px rgb(255 217 153 / 80%));}.window{filter:drop-shadow(0 0 8px rgb(255 179 89 / 90%));}
-  .content{position:relative;margin-top:auto;padding:0 20px 32px;display:grid;gap:14px;}
+    .content{position:relative;margin-top:auto;padding:0 20px 32px;display:grid;gap:14px;}
   .eyebrow{font-size:12px;font-weight:600;letter-spacing:1.2px;text-transform:uppercase;color:#c9a76a;}.eyebrow span{font-family:'Noto Sans KR',sans-serif;letter-spacing:0;}
   .copies{display:grid;}
   .copy{grid-area:1/1;opacity:0;transform:translateY(16px);transition:opacity .7s cubic-bezier(.23,1,.32,1),transform .7s cubic-bezier(.23,1,.32,1);}
   .copy[data-state=current]{opacity:1;transform:none;}.copy[data-state=previous]{transform:translateY(-16px);}
-  .copy h2{font:600 46px/48px 'Cormorant Garamond',serif;letter-spacing:-.4px;}.copy .gold{color:#c9a76a;}
+  .copy h2{font:600 46px/48px 'Cormorant Garamond',serif;letter-spacing:-.4px;text-shadow:0 2px 24px rgb(11 6 16 / 85%);}
+  .copy p,.eyebrow{text-shadow:0 1px 14px rgb(11 6 16 / 90%);}.copy .gold{color:#c9a76a;}
   html[lang=ko] & .copy h2,html[lang=ja] & .copy h2,html[lang|=zh] & .copy h2{font:600 34px/44px 'Noto Serif KR',serif;letter-spacing:-.5px;}
   .copy p{margin-top:10px;font-size:15px;line-height:22px;color:#b8acbf;}
   .controls{display:flex;align-items:center;gap:6px;margin-top:6px;}
@@ -156,7 +178,7 @@ const Hero = styled.section`
   .free{display:flex;align-items:center;justify-content:center;gap:6px;min-height:44px;font-size:15px;font-weight:600;}.free svg{width:16px;}
   /* Short viewports (iPhone Safari with toolbars, SE): tighten copy so the CTA stays above the dock. */
   @media (max-height:700px){.art{height:calc(100% - 286px);}.content{gap:10px;padding-bottom:20px;}.copy h2{font-size:38px;line-height:40px;}.copy p{margin-top:6px;}.controls{margin-top:0;}.free{min-height:36px;}}
-  @media (prefers-reduced-motion:reduce){.art,.copy,.layer,.dot::before{transition-duration:.01s;}.art,.copy{transform:none!important;}.twinkle{animation:none;}}
+  @media (prefers-reduced-motion:reduce){.art,.copy,.layer,.dot::before{transition-duration:.01s;}.art,.copy{transform:none!important;}.twinkle,.face-art .point{animation:none;}}
 `;
 
 export default function HeroCarousel() {
@@ -166,6 +188,18 @@ export default function HeroCarousel() {
   const [holding, setHolding] = useState(false);
   const [reduced, setReduced] = useState(() => typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
   const drag = useRef<number | null>(null);
+  // The galaxy centres itself in the space above the copy.
+  const content = useRef<HTMLDivElement>(null);
+  const [reserve, setReserve] = useState(320);
+  useEffect(() => {
+    const node = content.current;
+    if (!node) return;
+    const measure = () => setReserve(Math.round(node.offsetHeight));
+    measure();
+    const observer = new ResizeObserver(measure);
+    observer.observe(node);
+    return () => observer.disconnect();
+  }, []);
   const go = useCallback((next: number) => setIndex((next + slides.length) % slides.length), []);
 
   useEffect(() => {
@@ -188,8 +222,10 @@ export default function HeroCarousel() {
     onFocus={() => setHolding(true)} onBlur={() => setHolding(false)}
     onPointerDown={e => { drag.current = e.clientX; }}
     onPointerUp={e => { if (drag.current === null) return; const dx = e.clientX - drag.current; drag.current = null; if (Math.abs(dx) > 40) go(index + (dx < 0 ? 1 : -1)); }}>
-    {slides.map((s, i) => <div key={s.id} className="layer" data-state={state(i)} style={{ background: s.bg }} aria-hidden="true"><Starfield/><div className="art">{s.id === 'galaxy' ? s.art : <div className="stage">{s.art}</div>}</div></div>)}
-    <div className="content">
+    {slides.map((s, i) => <div key={s.id} className="layer" data-state={state(i)} style={{ background: s.bg }} aria-hidden="true"><Starfield/>{s.id === 'galaxy'
+      ? <GalaxyCanvas active={i === index} reserveBottom={reserve}/>
+      : <div className="art"><div className="stage">{s.art}</div></div>}</div>)}
+    <div className="content" ref={content}>
       <h1 className="eyebrow">{t('Korean fortune-telling')} · <span lang="ko">사주</span></h1>
       <div className="copies" aria-live={paused || reduced ? 'polite' : 'off'}>
         {slides.map((s, i) => <div key={s.id} className="copy" data-state={state(i)} aria-hidden={i !== index} role="group" aria-roledescription="slide" aria-label={`${i + 1} / ${slides.length}`}>

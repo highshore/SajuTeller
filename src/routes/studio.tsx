@@ -26,6 +26,7 @@ const Root = styled.div`
   .note{font-size:13px;line-height:1.55;color:var(--st-faint);margin-top:16px;}
 `;
 const tools = [
+  ['/face-reading', '相', 'AI face reading', 'Gwansang from one selfie. Never saved.', 'Free'],
   ['/name-creation', '名', 'Korean name', 'By sound, meaning, or both.', 'Free'],
   ['/live-translation', '譯', 'Live interpreter', 'Korean ⇄ your language, both ways.', 'In every session'],
   ['/couple', '緣', 'Couple match', 'Two birth dates, one reading.', 'Free'],

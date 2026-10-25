@@ -25,6 +25,7 @@ const Booking = lazy(() => import("./routes/request-visit"));
 
 const TodayFortune = lazy(() => import("./routes/today-fortune"));
 const NameCreation = lazy(() => import("./routes/name-creation"));
+const FaceReading = lazy(() => import("./routes/face-reading"));
 const Learn = lazy(() => import("./routes/learn"));
 const Experiences = lazy(() => import("./routes/experiences"));
 const Match = lazy(() => import("./routes/match"));
@@ -76,6 +77,7 @@ const router = createBrowserRouter([
       { path: "map", element: <Locations /> },
       { path: "today-fortune", element: <TodayFortune /> },
       { path: "name-creation", element: <NameCreation /> },
+      { path: "face-reading", element: <FaceReading /> },
       { path: "couple", element: <Couple /> },
       { path: "business", element: <Navigate to="/experiences" replace /> },
       { path: "business/:id", element: <BusinessDetail /> },

@@ -64,7 +64,8 @@ try {
   });
 
   const publicRoutes = [
-    '/', '/experiences', '/search', '/map', '/trips', '/saved',
+    // [AC-09e] [AC-10d] Home (galaxy hero) and the face reading page stay in the mobile column.
+    '/', '/experiences', '/search', '/map', '/trips', '/saved', '/face-reading',
     '/studio', '/find-my-reading', '/host', '/support', '/faq', '/learn',
     '/today-fortune', '/name-creation', '/live-translation',
     '/sign-in', '/sign-up', '/privacy', '/terms', '/refund-policy',

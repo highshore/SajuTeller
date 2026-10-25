@@ -104,7 +104,7 @@ function FaceArt() {
 }
 
 const slides: Slide[] = [
-  { id: 'galaxy', head: 'Discover your\nKorean fortune', gold: 'Korean fortune', sub: 'Saju reads your life from your birth.', bg: '#0b0610', art: null },
+  { id: 'galaxy', head: 'Discover your\nKorean fortune', gold: 'Korean fortune', sub: 'Saju reads your life from your birth.', bg: 'radial-gradient(ellipse 120% 80% at 50% 35%,#0c1020,#06070d 70%)', art: null },
   { id: 'pillars', head: 'Four pillars,\nread in Seoul', gold: 'read in Seoul', sub: 'Private readings with a Korean Saju master.', bg: 'linear-gradient(180deg,#130a1b,#281638 45%,#160c20)', art: <PillarsArt/> },
   { id: 'cards', head: 'Eight characters\nthat are you', gold: 'that are you', sub: 'Year, month, day and hour — the heart of Saju.', bg: 'radial-gradient(ellipse 90% 60% at 50% 32%,#4d2b61,#0d0814 72%)', art: <CardsArt/> },
   { id: 'elements', head: 'Five elements.\nOne you.', gold: 'One you.', sub: 'Find your element free, in ten seconds.', bg: 'linear-gradient(180deg,#100918,#22122f)', art: <ElementsArt/> },
@@ -151,7 +151,7 @@ const Hero = styled.section`
   .elements-art,.face-art{position:absolute;inset:0;width:100%;height:100%;}
   /* Above the bottom fade: the galaxy drifts behind the copy as you scroll (dimmed in the shader). */
   .galaxy-canvas{position:absolute;inset:0;width:100%;height:100%;display:block;z-index:1;}
-  .galaxy-core{position:absolute;z-index:1;left:50%;top:0;width:420px;height:300px;border-radius:50%;pointer-events:none;background:radial-gradient(closest-side,rgb(255 226 180 / 40%),rgb(150 96 190 / 22%) 30%,rgb(90 50 130 / 12%) 60%,transparent);will-change:transform;}
+  .galaxy-core{position:absolute;z-index:1;left:50%;top:0;width:220px;height:220px;border-radius:50%;pointer-events:none;background:radial-gradient(closest-side,rgb(255 246 230 / 55%),rgb(200 215 255 / 14%) 45%,transparent);will-change:transform;}
   .face-art .face-shape{fill:rgb(41 26 56 / 55%);stroke:#c9a76a;stroke-width:1.5;}
   .face-art .features path{fill:none;stroke:#e9cf98;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round;opacity:.9;}
   .face-art .zone line,.face-art .zone-end{stroke:rgb(201 167 106 / 55%);stroke-width:1;stroke-dasharray:3 5;}

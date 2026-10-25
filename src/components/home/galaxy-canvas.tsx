@@ -1,17 +1,22 @@
 import { useEffect, useRef, useState } from 'react';
-import { buildGalaxy, cameraFor, GalaxyMotion } from './galaxy';
+import { buildGalaxy, GalaxyMotion, sceneFor } from './galaxy';
 
-// Hero galaxy (WebGL points, additive glow). Spins with scrolling, tilts and zooms as the hero leaves.
-// Falls back to the original illustration without WebGL, and holds still for reduced motion.
+// Hero galaxy (WebGL points, additive light), modelled on scroll-scrubbed galaxy heroes:
+// gathers from scattered stars on load, unwinds into a clean spiral as you scroll, tilts, then dissolves.
+// Scroll direction also spins it. Falls back to the original illustration without WebGL; holds still
+// (fully formed, no intro) for reduced motion.
+const INTRO_MS = 1800;
 
 const VERTEX = `
-attribute vec3 aPos; attribute vec3 aColor; attribute float aSize; attribute float aPhase;
-uniform float uAngle, uTilt, uScale, uRadius, uTime, uDpr, uLift, uFade;
+attribute vec3 aA; attribute vec3 aB; attribute vec3 aC; attribute vec3 aColor; attribute float aSize; attribute float aPhase;
+uniform float uAngle, uTilt, uScale, uRadius, uTime, uDpr, uLift, uFade, uGather, uUnwind, uDissolve;
 uniform vec2 uView, uCenter;
 varying vec3 vColor; varying float vAlpha;
 void main() {
+  // Shape blend: scattered -> clumpy (load), clumpy -> spiral (scroll), spiral -> scattered (scroll on).
+  vec3 pos = mix(mix(mix(aC, aA, uGather), aB, uUnwind), aC, uDissolve);
   float c = cos(uAngle), s = sin(uAngle);
-  vec3 p = vec3(aPos.x * c - aPos.y * s, aPos.x * s + aPos.y * c, aPos.z);
+  vec3 p = vec3(pos.x * c - pos.y * s, pos.x * s + pos.y * c, pos.z);
   float ct = cos(uTilt), st = sin(uTilt);
   float y = p.y * ct - p.z * st;
   float z = p.y * st + p.z * ct;
@@ -19,9 +24,10 @@ void main() {
   vec2 px = uCenter + vec2(p.x, -y) * persp * uRadius * uScale - vec2(0.0, uLift);
   gl_Position = vec4(px / uView * 2.0 - 1.0, 0.0, 1.0);
   gl_Position.y = -gl_Position.y;
-  gl_PointSize = aSize * uDpr * persp * uScale * (uRadius / 260.0);
+  // Bright stars get room for their halo; scattered stars shrink a little.
+  gl_PointSize = aSize * uDpr * persp * uScale * (uRadius / 230.0) * (1.0 - 0.3 * uDissolve) * 2.0;
   vColor = aColor;
-  vAlpha = (0.7 + 0.3 * sin(uTime * 1.6 + aPhase)) * (0.45 + 0.4 * persp) * uFade;
+  vAlpha = (0.65 + 0.25 * sin(uTime * 1.3 + aPhase)) * min(1.1, persp) * uFade * 0.95;
 }`;
 
 const FRAGMENT = `
@@ -29,8 +35,11 @@ precision mediump float;
 varying vec3 vColor; varying float vAlpha;
 void main() {
   vec2 c = gl_PointCoord - 0.5;
-  float a = exp(-dot(c, c) * 26.0) * vAlpha;
-  gl_FragColor = vec4(vColor * a, a);
+  float d = dot(c, c) * 4.0;               // 0 at the centre, 1 at the edge
+  float core = exp(-d * 60.0);             // sharp bright core
+  float halo = exp(-d * 10.0) * 0.26;      // soft bloom around it
+  float a = (core + halo) * vAlpha * (1.0 - smoothstep(0.8, 1.0, d));
+  gl_FragColor = vec4(mix(vColor, vec3(1.0), core * 0.6) * a, a);
 }`;
 
 function compile(gl: WebGLRenderingContext, type: number, source: string) {
@@ -64,7 +73,7 @@ export default function GalaxyCanvas({ active, reserveBottom }: { active: boolea
     } catch { setFallback(true); return; }
     gl.useProgram(program);
 
-    const galaxy = buildGalaxy(window.innerWidth < 600 ? 11000 : 18000);
+    const galaxy = buildGalaxy(window.innerWidth < 600 ? 6000 : 9000);
     const attr = (name: string, data: Float32Array, size: number) => {
       const buffer = gl.createBuffer();
       gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
@@ -73,15 +82,16 @@ export default function GalaxyCanvas({ active, reserveBottom }: { active: boolea
       gl.enableVertexAttribArray(loc);
       gl.vertexAttribPointer(loc, size, gl.FLOAT, false, 0, 0);
     };
-    attr('aPos', galaxy.positions, 3); attr('aColor', galaxy.colors, 3); attr('aSize', galaxy.sizes, 1); attr('aPhase', galaxy.phases, 1);
+    attr('aA', galaxy.a, 3); attr('aB', galaxy.b, 3); attr('aC', galaxy.c, 3); attr('aColor', galaxy.colors, 3); attr('aSize', galaxy.sizes, 1); attr('aPhase', galaxy.phases, 1);
     const u = (name: string) => gl.getUniformLocation(program, name);
-    const U = { angle: u('uAngle'), tilt: u('uTilt'), scale: u('uScale'), radius: u('uRadius'), time: u('uTime'), dpr: u('uDpr'), lift: u('uLift'), fade: u('uFade'), view: u('uView'), center: u('uCenter') };
+    const U = { angle: u('uAngle'), tilt: u('uTilt'), scale: u('uScale'), radius: u('uRadius'), time: u('uTime'), dpr: u('uDpr'), lift: u('uLift'), fade: u('uFade'), gather: u('uGather'), unwind: u('uUnwind'), dissolve: u('uDissolve'), view: u('uView'), center: u('uCenter') };
     gl.enable(gl.BLEND);
     gl.blendFunc(gl.ONE, gl.ONE); // additive light
 
     const reduced = window.matchMedia('(prefers-reduced-motion: reduce)');
     const motion = new GalaxyMotion();
     let width = 0, height = 0, dpr = 1, visible = true, frame = 0, last = performance.now(), lastScroll = window.scrollY;
+    const born = performance.now();
 
     const resize = () => {
       dpr = Math.min(window.devicePixelRatio || 1, 2);
@@ -98,18 +108,20 @@ export default function GalaxyCanvas({ active, reserveBottom }: { active: boolea
       const dt = (now - last) / 1000; last = now;
       const angle = reduced.matches ? motion.angle : motion.step(dt);
       const p = progress();
-      const cam = cameraFor(p);
-      const radius = Math.min(width * 0.6, (height - reserveBottom) * 0.9, 340);
-      const centerY = Math.max(radius * 0.55, (height - reserveBottom) * 0.54);
+      const t = Math.min(1, (now - born) / INTRO_MS);
+      const cam = sceneFor(p, reduced.matches ? 1 : 1 - Math.pow(1 - t, 3));
+      const radius = Math.min(width * 0.72, (height - reserveBottom) * 1.0, 360);
+      const centerY = Math.max(radius * 0.6, (height - reserveBottom) * 0.56);
       gl.clearColor(0, 0, 0, 0);
       gl.clear(gl.COLOR_BUFFER_BIT);
       gl.uniform1f(U.angle, angle); gl.uniform1f(U.tilt, cam.tilt); gl.uniform1f(U.scale, cam.scale);
       gl.uniform1f(U.radius, radius * dpr); gl.uniform1f(U.time, reduced.matches ? 0 : now / 1000); gl.uniform1f(U.dpr, dpr);
-      gl.uniform1f(U.lift, cam.lift * height * dpr); gl.uniform1f(U.fade, 1 - p * 0.55); gl.uniform2f(U.view, el.width, el.height); gl.uniform2f(U.center, el.width / 2, centerY * dpr);
+      gl.uniform1f(U.lift, cam.lift * height * dpr); gl.uniform1f(U.fade, cam.fade);
+      gl.uniform1f(U.gather, cam.gather); gl.uniform1f(U.unwind, cam.unwind); gl.uniform1f(U.dissolve, cam.dissolve); gl.uniform2f(U.view, el.width, el.height); gl.uniform2f(U.center, el.width / 2, centerY * dpr);
       gl.drawArrays(gl.POINTS, 0, galaxy.count);
       if (core.current) {
         core.current.style.transform = `translate(-50%, -50%) translateY(${centerY - cam.lift * height}px) scale(${cam.scale})`;
-        core.current.style.opacity = String(activeRef.current ? 1 - p * 0.55 : 0);
+        core.current.style.opacity = String(activeRef.current ? cam.gather * cam.fade * (1 - cam.dissolve) : 0);
       }
     };
     const loop = (now: number) => {

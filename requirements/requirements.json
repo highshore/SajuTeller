@@ -242,7 +242,7 @@
         },
         {
           "id": "AC-10c",
-          "text": "As the hero scrolls away the galaxy tilts open and draws closer, within fixed limits."
+          "text": "Stars gather into a clumpy galaxy on load, unwind into a clean spiral as you scroll, tilt, then dissolve as the hero leaves; the galaxy stays pinned on screen meanwhile."
         },
         {
           "id": "AC-10d",

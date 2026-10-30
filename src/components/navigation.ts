@@ -10,7 +10,7 @@ export const navigation = [
 ];
 
 export function siteLayout(path: string) {
-  const immersive = /^\/(live-translation|onboarding)(?:\/|$)/.test(path);
+  const immersive = /^\/(live-translation|live\/watch|onboarding)(?:\/|$)/.test(path);
   // Every page stays in the phone-width app column (--st-app-width), at every viewport.
   const booking = /^\/business\//.test(path);
   return { header: !immersive, footer: !immersive, bottomNav: !immersive && !booking, compactFooter: path === '/' || /^\/(sign-|auth-|onboarding)/.test(path) };
@@ -18,5 +18,5 @@ export function siteLayout(path: string) {
 
 // Brand routes keep the night header (Figma: Home hero, live interpretation).
 export function nightRoute(path: string) {
-  return path === '/' || /^\/live-translation(?:\/|$)/.test(path);
+  return path === '/' || /^\/(live-translation|live\/watch)(?:\/|$)/.test(path);
 }

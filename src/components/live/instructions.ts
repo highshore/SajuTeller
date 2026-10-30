@@ -1,7 +1,13 @@
 // Instructions for the live interpretation agent (ALG-03 prompt policy + Saju glossary).
 // Shared by the app (useRealtimeAgent) and the evaluation script (scripts/eval-interpretation.ts),
-// so what is measured is exactly what users get.
-export function translationInstructions(customerLanguage: string): string {
+// so what is measured is exactly what users get. Custom terms (REQ-11) are appended last.
+import { customTermsInstruction, type CustomTerm } from './glossary';
+
+export function translationInstructions(customerLanguage: string, customTerms: CustomTerm[] = []): string {
+  return baseInstructions(customerLanguage) + customTermsInstruction(customTerms, customerLanguage);
+}
+
+function baseInstructions(customerLanguage: string): string {
   // 언어별 용어집 매핑
   const getSajuTerms = (targetLang: string) => {
     if (targetLang === 'English') {

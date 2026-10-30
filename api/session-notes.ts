@@ -48,8 +48,8 @@ export async function POST(req: Request) {
   const language = LANGUAGES.find(l => l === body?.language);
   const turns = validateTurns(body?.turns);
   if (!language || !turns) return reply(400, { code: 'invalid_request' });
-  const supabaseUrl = process.env.VITE_SUPABASE_URL;
-  const anonKey = process.env.VITE_SUPABASE_PUBLISHABLE_KEY || process.env.VITE_SUPABASE_ANON_KEY;
+  const supabaseUrl = process.env.VITE_SUPABASE_URL?.trim();
+  const anonKey = (process.env.VITE_SUPABASE_PUBLISHABLE_KEY || process.env.VITE_SUPABASE_ANON_KEY)?.trim();
   const key = openaiKey();
   if (!supabaseUrl || !anonKey || !key) return reply(503, { code: 'not_configured' });
   try {

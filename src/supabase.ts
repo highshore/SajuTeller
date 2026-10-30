@@ -1,7 +1,8 @@
 import { createClient } from "@supabase/supabase-js";
 
-const configuredUrl = import.meta.env.VITE_SUPABASE_URL as string | undefined;
-const configuredAnonKey = (import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY || import.meta.env.VITE_SUPABASE_ANON_KEY) as string | undefined;
+// Trim: a stray newline in a deployment variable breaks the Realtime websocket URL (REST tolerates it).
+const configuredUrl = (import.meta.env.VITE_SUPABASE_URL as string | undefined)?.trim() || undefined;
+const configuredAnonKey = ((import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY || import.meta.env.VITE_SUPABASE_ANON_KEY) as string | undefined)?.trim() || undefined;
 
 export const isSupabaseConfigured = Boolean(configuredUrl && configuredAnonKey);
 

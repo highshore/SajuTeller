@@ -4,6 +4,7 @@ import { supabase } from '../supabase';
 import { KEY_REQUEST_TIMEOUT_MS, LatencyTracker, reconnectDelay, summarize, type LatencySummary } from '../components/live/session-policy';
 import { clearTranscript, loadTranscript, saveTranscript } from '../components/live/transcript-store';
 import { translationInstructions } from '../components/live/instructions';
+import type { CustomTerm } from '../components/live/glossary';
 
 /** Asks our server for a short-lived session key, with a time limit and one retry on a provider error. */
 async function requestSessionKey(accessToken: string, retry = true): Promise<{ value: string; model: string }> {
@@ -28,6 +29,10 @@ const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
 interface RealtimeAgentConfig {
   customerLanguage?: string;
+  /** User glossary, applied when a session opens (REQ-11). */
+  customTerms?: CustomTerm[];
+  /** false = captions only: translated audio is received but not played (REQ-11). */
+  speechOutput?: boolean;
 }
 
 interface ChatMessage {
@@ -40,7 +45,11 @@ interface ChatMessage {
   audioData?: ArrayBuffer; // 오디오 데이터 저장 (선택적)
 }
 
-export function useRealtimeAgent({ customerLanguage = 'English' }: RealtimeAgentConfig) {
+export function useRealtimeAgent({ customerLanguage = 'English', customTerms = [], speechOutput = true }: RealtimeAgentConfig) {
+  const customTermsRef = useRef<CustomTerm[]>(customTerms);
+  customTermsRef.current = customTerms;
+  const speechOutputRef = useRef(speechOutput);
+  speechOutputRef.current = speechOutput;
   const [isConnected, setIsConnected] = useState(false);
   const [isRecording, setIsRecording] = useState(false);
   // Restored from this tab after a refresh; see transcript-store for the retention policy.
@@ -77,7 +86,7 @@ export function useRealtimeAgent({ customerLanguage = 'English' }: RealtimeAgent
   const createAgent = useCallback(() => {
     return new RealtimeAgent({
       name: 'Professional Saju Translator',
-      instructions: translationInstructions(customerLanguage),
+      instructions: translationInstructions(customerLanguage, customTermsRef.current),
     });
   }, [customerLanguage]);
 
@@ -171,6 +180,7 @@ export function useRealtimeAgent({ customerLanguage = 'English' }: RealtimeAgent
 
       // 연속적인 오디오 스케줄링 함수
       const scheduleAudioChunk = async (pcm16Data: ArrayBuffer) => {
+        if (!speechOutputRef.current) return; // captions-only mode
         try {
           const audioContext = createPlaybackContext();
 

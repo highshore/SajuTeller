@@ -19,6 +19,7 @@ const Notifications = lazy(() => import("./routes/notifications"));
 const Support = lazy(() => import("./routes/support"));
 const FAQ = lazy(() => import("./routes/faq"));
 const LiveTranslation = lazy(() => import("./routes/live_translation.tsx"));
+const LiveWatch = lazy(() => import("./routes/live-watch"));
 const Locations = lazy(() => import("./routes/reading-map"));
 const BusinessDetail = lazy(() => import("./routes/experience"));
 const Booking = lazy(() => import("./routes/request-visit"));
@@ -73,6 +74,7 @@ const router = createBrowserRouter([
       { path: "support", element: <Support /> },
       { path: "faq", element: <FAQ /> },
       { path: "live-translation", element: <LiveTranslation /> },
+      { path: "live/watch/:room", element: <LiveWatch /> },
       { path: "locations", element: <Navigate to="/experiences" replace /> },
       { path: "map", element: <Locations /> },
       { path: "today-fortune", element: <TodayFortune /> },

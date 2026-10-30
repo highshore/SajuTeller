@@ -249,6 +249,78 @@
           "text": "The home hero stays inside the mobile column at every width."
         }
       ]
+    },
+    {
+      "id": "REQ-11",
+      "behavior": "BH-11",
+      "title": "Face-to-face interpretation, output and glossary settings",
+      "design": [
+        "COM-4",
+        "DCOM-4",
+        "ALG-03"
+      ],
+      "criteria": [
+        {
+          "id": "AC-11a",
+          "text": "In face-to-face view the reader's half (turned towards the reader) shows every turn in Korean and the visitor's half shows it in the visitor's language; an untranslated turn shows as pending."
+        },
+        {
+          "id": "AC-11b",
+          "text": "Custom terms are cleaned (no line breaks, at most 30 terms of 40 characters, no duplicates) and are always appended to the interpreter's instructions after the built-in Saju glossary."
+        },
+        {
+          "id": "AC-11c",
+          "text": "Output (voice + captions or captions only) and transcript (original + translation or translation only) settings and custom terms are remembered on this device, with safe defaults when storage is unavailable or invalid."
+        }
+      ]
+    },
+    {
+      "id": "REQ-12",
+      "behavior": "BH-12",
+      "title": "Reading notes after a session",
+      "design": [
+        "COM-4",
+        "DCOM-6",
+        "OP-09"
+      ],
+      "criteria": [
+        {
+          "id": "AC-12a",
+          "text": "Notes are built from finished turns only; 'translation only' leaves out the original lines, and only the most recent turns that fit the server limit are sent for a summary."
+        },
+        {
+          "id": "AC-12b",
+          "text": "The notes server accepts only signed-in, same-origin requests with a supported language, at most 80 turns and 16,000 characters, before calling the AI."
+        },
+        {
+          "id": "AC-12c",
+          "text": "A summary always has a title, a summary and 3–6 key points; incomplete AI output or a provider error is reported as 502 without details, and the transcript is not stored."
+        }
+      ]
+    },
+    {
+      "id": "REQ-13",
+      "behavior": "BH-13",
+      "title": "Companion captions over a QR link",
+      "design": [
+        "COM-4",
+        "DCOM-4",
+        "OBJ-13"
+      ],
+      "criteria": [
+        {
+          "id": "AC-13a",
+          "text": "A caption room has a random 96-bit id and a 256-bit key; the key travels only in the link's #fragment, never in the path or the channel name."
+        },
+        {
+          "id": "AC-13b",
+          "text": "Captions are encrypted with AES-GCM (room id as additional data) before they are broadcast; a wrong key, another room or a tampered message is rejected."
+        },
+        {
+          "id": "AC-13c",
+          "text": "The share-link QR code is generated on the device (the link is never sent to a QR service) and matches a verified reference and the ISO 18004 error-correction example."
+        }
+      ]
     }
   ],
   "quality": [

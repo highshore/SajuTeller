@@ -25,7 +25,8 @@ const Readings = styled.section`
   .chips{display:flex;gap:8px;overflow-x:auto;margin:18px -20px 4px;padding:0 20px 4px;scrollbar-width:none;}
   .chips a{flex:none;display:flex;align-items:center;min-height:38px;padding:0 14px;border-radius:999px;border:1px solid #d3cbd8;font-size:14px;font-weight:600;white-space:nowrap;}
   .chips a:first-child{background:#1b1420;border-color:#1b1420;color:#fff;}
-  .rail{display:grid;grid-auto-flow:column;grid-auto-columns:min(286px,calc(100% - 24px));gap:12px;margin-right:-20px;padding-right:20px;scroll-snap-type:x mandatory;}.rail>article{scroll-snap-align:start;}
+  /* Full-bleed rail with room above and below so card shadows aren't clipped by the scroller. */
+  .scroll-viewport.rail{display:grid;grid-auto-flow:column;grid-auto-columns:min(286px,calc(100% - 64px));gap:14px;max-width:none;width:calc(100% + 40px);margin:0 -20px;padding:6px 20px 18px;scroll-padding:0 20px;scroll-snap-type:x mandatory;}.rail>article{scroll-snap-align:start;}
   .preview-note{font-size:13px;line-height:19px;color:#857c8d;margin-top:14px;}
 `;
 const Steps = styled.section`
@@ -79,7 +80,7 @@ export function Home() {
         : loading ? <HorizontalScroller label={t('Curated readings')} viewportClassName="rail">{[0, 1, 2].map(n => <CardSkeleton key={n}/>)}</HorizontalScroller>
         : studios.length ? <HorizontalScroller label={t('Curated readings')} viewportClassName="rail">{studios.slice(0, 6).map(s => <ExperienceCard key={s.id} studio={s}/>)}</HorizontalScroller>
         : <Empty title={t('Readings are on their way')} body="We’re preparing our collection of local readers." to="/learn" action="Learn about Saju"/>}
-      {studios.some(s => s.is_mock) && <p className="preview-note">{t('Studios marked Preview are samples while we sign up real partners. You can’t send them a request yet.')}</p>}
+      {studios.some(s => s.is_mock) && <p className="preview-note">{t('Studios marked Preview are samples while we sign up real partners. Requests and chat with them get automated demo replies.')}</p>}
     </Readings>
     <Steps className="section" aria-labelledby="steps-title">
       <span className="kicker">{t('How it works')}</span><h2 id="steps-title">{t('From request to reading')}</h2>

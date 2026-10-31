@@ -30,6 +30,9 @@ const phrases: Record<string, readonly [string, string, string, string]> = {
   "The sample studio replies automatically in about two minutes": ["샘플 스튜디오가 약 2분 뒤 자동으로 답장해요", "示例工作室会在约两分钟后自动回复", "サンプルスタジオが約2分後に自動で返信します", "El estudio de muestra responde automáticamente en unos dos minutos"],
   "You’ll also get a notification": ["알림으로도 알려 드려요", "您也会收到通知", "通知でもお知らせします", "También recibirás una notificación"],
   "Demo request to a sample studio. The reply is automated, nothing is booked and no studio expects you.": ["샘플 스튜디오에 보낸 데모 요청이에요. 답장은 자동이며, 예약되지 않고 방문을 기다리는 스튜디오도 없어요.", "这是发给示例工作室的演示请求。自动回复，不会产生预约，也没有工作室在等您。", "サンプルスタジオへのデモリクエストです。返信は自動で、予約は発生せず、来店を待つスタジオもありません。", "Solicitud de demo a un estudio de muestra. La respuesta es automática, no se reserva nada y ningún estudio te espera."],
+  // Studio cards and home note
+  "View": ["보기", "查看", "見る", "Ver"],
+  "Studios marked Preview are samples while we sign up real partners. Requests and chat with them get automated demo replies.": ["‘미리보기’ 스튜디오는 실제 파트너를 모집하는 동안 보여 드리는 샘플이에요. 요청과 채팅에는 자동 데모 답장이 와요.", "标有“预览”的工作室是我们招募真实合作伙伴期间的示例。向它们发送的请求和聊天会收到自动演示回复。", "「プレビュー」のスタジオは、実際のパートナーを募集している間のサンプルです。リクエストやチャットには自動のデモ返信が届きます。", "Los estudios marcados como Vista previa son muestras mientras sumamos socios reales. Las solicitudes y el chat reciben respuestas automáticas de demo."],
 };
 
 export default phrases;

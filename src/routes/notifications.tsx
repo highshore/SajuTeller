@@ -8,7 +8,7 @@ import { Page, Wrap, Notice, Button, ButtonLink, Chips, Chip } from '../product/
 import { TextSkeleton } from '../components/skeleton';
 const Content=styled.div`
  display:grid;gap:20px;min-width:0;.intro{color:var(--st-muted);font-size:15px;line-height:1.55;}header h1{font-size:40px!important;}
- .toolbar{display:flex;align-items:center;justify-content:space-between;gap:8px;}.toolbar>button{border:0;background:none;color:var(--st-brand);font-weight:600;font-size:13px;white-space:nowrap;min-height:44px;cursor:pointer;}.toolbar>button:disabled{opacity:.4;cursor:default;}
+ .toolbar{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:0 8px;}.toolbar>button{margin-left:auto;border:0;background:none;color:var(--st-brand);font-weight:600;font-size:13px;white-space:nowrap;min-height:44px;cursor:pointer;}.toolbar>button:disabled{opacity:.4;cursor:default;}
  @container saju (max-width:360px){.toolbar{flex-direction:column;align-items:stretch;gap:0;}.toolbar>button{align-self:flex-end;}}
  [role=alert] button{margin-left:6px;border:0;background:none;color:var(--st-brand);font-weight:600;font-size:13px;min-height:32px;cursor:pointer;text-decoration:underline;}
  .feed{display:grid;gap:12px;}.card{border:1px solid var(--st-line);border-radius:16px;background:var(--st-surface);padding:16px;display:grid;gap:10px;min-width:0;}.card.unread{border-color:var(--st-accent-line);background:var(--st-accent);}

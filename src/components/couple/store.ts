@@ -1,4 +1,6 @@
 // "Your people" — kept ONLY in this browser's localStorage. Nothing is sent to a server.
+import { isCalendarDate } from '../../product/saju';
+
 export type CoupleRelation = 'partners' | 'dating' | 'friends' | 'family';
 export const RELATIONS: readonly [CoupleRelation, string][] = [['partners', 'Partners'], ['dating', 'Dating'], ['friends', 'Friends'], ['family', 'Family']];
 
@@ -50,4 +52,4 @@ export function forgetAll(): CoupleSaved {
 }
 
 export const today = () => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`; };
-export const validDate = (date: string) => /^\d{4}-\d{2}-\d{2}$/.test(date) && date >= '1900-01-01' && date <= today();
+export const validDate = (date: string) => /^\d{4}-\d{2}-\d{2}$/.test(date) && isCalendarDate(...date.split('-').map(Number) as [number, number, number]) && date >= '1900-01-01' && date <= today();

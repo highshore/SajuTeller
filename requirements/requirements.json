@@ -97,6 +97,14 @@
         {
           "id": "AC-05b",
           "text": "The database marks requests to sample studios as demo, schedules the automated reply, and leaves real requests untouched."
+        },
+        {
+          "id": "AC-05c",
+          "text": "The notes sent with a request (birth details first, then the message) never exceed the database's 2,000-character limit, and the date picker lists real consecutive calendar days."
+        },
+        {
+          "id": "AC-05d",
+          "text": "A request moves only along requested → confirmed / declined / cancelled: a traveller can create it only as requested, within the guest limit and not in the past, and can only cancel it while it is still requested; finished requests never reopen."
         }
       ]
     },
@@ -319,6 +327,40 @@
         {
           "id": "AC-13c",
           "text": "The share-link QR code is generated on the device (the link is never sent to a QR service) and matches a verified reference and the ISO 18004 error-correction example."
+        }
+      ]
+    },
+    {
+      "id": "REQ-14",
+      "behavior": "BH-14",
+      "title": "Free couple reading",
+      "design": [
+        "COM-5"
+      ],
+      "criteria": [
+        {
+          "id": "AC-14a",
+          "text": "The same birth date always gives the same pillars, and known reference dates give the documented day pillars."
+        },
+        {
+          "id": "AC-14b",
+          "text": "The Saju year changes on 4 February (Lichun approximation), not on 1 January."
+        },
+        {
+          "id": "AC-14c",
+          "text": "The hour pillar uses 2-hour blocks starting at 23:00 (子), with the stem from 五鼠遁; no time means no hour pillar."
+        },
+        {
+          "id": "AC-14d",
+          "text": "Only real calendar dates from 1900-01-01 to today are accepted; impossible dates such as 30 February give no chart."
+        },
+        {
+          "id": "AC-14e",
+          "text": "\"Your spark\" scores follow the published rules (stem element relation, spouse palace, stem combination, hour pillars) and stay within 1–5."
+        },
+        {
+          "id": "AC-14f",
+          "text": "Week-ahead days are real consecutive dates, and the tone changes exactly at scores 3 (plan), 1 (easy), 0 (steady) and −1 (space)."
         }
       ]
     }

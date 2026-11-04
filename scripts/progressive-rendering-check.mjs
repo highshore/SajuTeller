@@ -48,7 +48,7 @@ try {
  const boot=gate();await page.route('**/src/main.tsx',async r=>{await boot.promise;await r.continue();});
  const initial=page.goto(base+'/experiences',{waitUntil:'commit'});await initial;
  await page.locator('.boot').waitFor();assert.ok((await page.locator('.boot').innerText()).includes('🔮'));
- boot.release();await page.getByRole('heading',{name:'Experiences',exact:true}).waitFor();
+ boot.release();await page.getByRole('heading',{name:'Readings in Seoul',exact:true}).waitFor();
  await page.locator('[aria-label="Loading experiences"]').waitFor();assert.ok(await page.getByRole('textbox',{name:'Search experiences'}).isEnabled());
  await geometry();await page.screenshot({path:out+'/catalog-loading.png'});
  catalog.release();await page.locator('[data-experience-card]').waitFor();
@@ -57,10 +57,10 @@ try {
  image.release();await photo.locator('img[data-ready=true]').waitFor();const after=await photo.boundingBox();assert.equal(before.height,after.height);assert.ok((await photo.locator('img').getAttribute('src')).endsWith('reading-atmosphere.svg'));
  // Slow reviews do not block the service price, action, or rest of the detail page.
  await page.locator('[data-experience-card] a').click();await page.locator('[data-booking-action]').waitFor();
- const reviewSection=page.locator('section').filter({has:page.getByRole('heading',{name:'Traveler reviews'})});
- await reviewSection.locator('[data-text-skeleton]').waitFor();assert.ok(!(await reviewSection.innerText()).includes('No traveler reviews'));
- assert.ok(await page.getByRole('link',{name:'Try demo chat',exact:true}).isVisible());
- reviews.release();await reviewSection.getByRole('alert').waitFor();failReviews=false;await reviewSection.getByRole('button',{name:'Retry'}).click();await reviewSection.getByText('No traveler reviews to share yet.').waitFor();
+ const reviewSection=page.locator('section').filter({has:page.getByRole('heading',{name:'Reviews',exact:true})});
+ await reviewSection.locator('[data-text-skeleton]').waitFor();assert.ok(!(await reviewSection.innerText()).includes('No reviews yet'));
+ assert.ok(await page.locator('[data-booking-action]').getByRole('link',{name:'Send a demo request',exact:true}).isVisible());
+ reviews.release();await reviewSection.getByRole('alert').waitFor();failReviews=false;await reviewSection.getByRole('button',{name:'Retry'}).click();await reviewSection.getByText('No reviews yet',{exact:true}).waitFor();
  // Pause a route chunk: the crystal ball overlays the viewport while the shell stays mounted.
  const chunk=gate();await page.route('**/src/routes/saved.tsx',async r=>{await chunk.promise;await r.continue();});
  await go('/saved');await page.locator('[data-loading-screen] [data-emoji="crystal-ball"] svg').waitFor();

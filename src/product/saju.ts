@@ -64,12 +64,20 @@ export function hourPillar(dayStem: number, hour: number): Pillar {
 
 export type Chart = { year: Pillar; day: Pillar; hour: Pillar | null };
 
+const isLeapYear = (y: number) => y % 4 === 0 && (y % 100 !== 0 || y % 400 === 0);
+/** A real Gregorian date: 2024-02-29 yes, 2026-02-29 / 2026-02-30 / 2026-04-31 no. */
+export function isCalendarDate(y: number, m: number, d: number) {
+  if (m < 1 || m > 12 || d < 1) return false;
+  const days = [31, isLeapYear(y) ? 29 : 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
+  return d <= days[m - 1];
+}
+
 /** date "YYYY-MM-DD", optional time "HH:MM". Returns null for invalid input. */
 export function chartFor(date: string, time?: string): Chart | null {
   const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(date);
   if (!match) return null;
   const [y, m, d] = [Number(match[1]), Number(match[2]), Number(match[3])];
-  if (m < 1 || m > 12 || d < 1 || d > 31) return null;
+  if (!isCalendarDate(y, m, d)) return null;
   const day = dayPillar(y, m, d);
   const tm = time ? /^(\d{2}):(\d{2})/.exec(time) : null;
   return { year: yearPillar(y, m, d), day, hour: tm ? hourPillar(day.stem, Number(tm[1])) : null };

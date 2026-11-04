@@ -37,6 +37,7 @@ const Stage = styled.div`
   .note a{color:var(--st-brand);text-decoration:underline;text-underline-offset:3px;}
   .loading{display:grid;gap:14px;padding:8px 0;}
   .loading>div{height:72px;border-radius:12px;}
+  .sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap;}
 `;
 
 const Floating = styled.div`
@@ -154,6 +155,7 @@ export default function ReadingMap() {
   </Floating>;
 
   return <Stage data-list={listOpen}>
+    <h1 className="sr-only">{t('Readings in Seoul')}</h1>
     <div className="map">
       {error ? null : <StudioMap studios={loading ? [] : found} selectedId={selectedId} onSelect={select} fitKey={fitKey} focusId={initialFocus} apiKey={apiKey} me={me} onMoved={onMoved} top={top}
         controls={<button type="button" onClick={locate} aria-label={t('Show my location')}><Crosshair/></button>}/>}

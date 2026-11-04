@@ -246,7 +246,7 @@ export default function TodayFortune() {
           <Starfield/>
           <PageBar title={t('Today’s fortune')} onBack={handleBack}/>
           <Kicker>{t('Free · 1 minute · no account')}</Kicker>
-          <Display>{t('When were you born?')}</Display>
+          <Display as="h1">{t('When were you born?')}</Display>
           <Lede>{t('Your birth date sets your element. Each day, we read how it meets the day’s energy.')}</Lede>
         </Night>
 
@@ -300,7 +300,7 @@ export default function TodayFortune() {
       <div lang={language}>
         <Night className="st-night">
           <PageBar title={t('Today’s fortune')} onBack={handleBack}/>
-          <Display>{t('cannotLoadFortune')}</Display>
+          <Display as="h1">{t('cannotLoadFortune')}</Display>
           <Lede>{t('pleaseTryAgainLater')}</Lede>
         </Night>
         <Body><Primary type="button" onClick={() => window.location.reload()}>{t('Try again')}</Primary></Body>
@@ -321,7 +321,7 @@ export default function TodayFortune() {
         <Starfield/>
         <PageBar title={t('Today’s fortune')} onBack={handleBack}/>
         <Kicker>{dateLabel}</Kicker>
-        <Display>{t(headline)}</Display>
+        <Display as="h1">{t(headline)}</Display>
         {pairing && <>
           <Orbs aria-label={`${t('You')}: ${element(pairing.you.element)} · ${t('Today')}: ${element(pairing.today.element)}`}>
             <figure>

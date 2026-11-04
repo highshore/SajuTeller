@@ -2,7 +2,7 @@
 import {createServer} from 'vite';import {createRequire} from 'node:module';import {mkdir} from 'node:fs/promises';import assert from 'node:assert/strict';
 const require=createRequire(import.meta.url);const{chromium}=require(process.env.PLAYWRIGHT_MODULE||'playwright');
 const server=await createServer({server:{host:'127.0.0.1',port:5184}});await server.listen();
-const browser=await chromium.launch({headless:true,executablePath:process.env.CHROMIUM_PATH,args:['--no-sandbox']});const base='http://127.0.0.1:5184';const out='/tmp/saju-notifications-qa';await mkdir(out,{recursive:true});
+const browser=await chromium.launch({headless:true,executablePath:process.env.CHROMIUM_PATH,args:['--no-sandbox']});const base='http://127.0.0.1:5184';const out=process.env.QA_OUTPUT_DIR||'/tmp/saju-notifications-qa';await mkdir(out,{recursive:true});
 const user={id:'33333333-3333-4333-8333-333333333333',aud:'authenticated',role:'authenticated',email:'fixture@example.invalid',app_metadata:{provider:'email'},user_metadata:{}};
 const seed=[{id:'notice-one',category:'update',title:'Your Seoul reading guide',body:'A little preparation makes room for a meaningful reading.',translations:{ko:{title:'서울 사주 여행 안내',body:'편안한 상담을 위해 준비해 보세요.'},ja:{title:'ソウルの鑑定ガイド',body:'鑑定の準備をしましょう。'},zh:{title:'首尔命理指南',body:'为你的体验做好准备。'},es:{title:'Tu guía de lecturas en Seúl',body:'Prepara tu visita.'}},action_path:'/learn',published_at:'2026-10-10T01:00:00Z',status:'published'},
 {id:'notice-two',category:'offer',title:'A new chapter awaits',body:'Explore the studios in our demo collection. No real payment or reservation.',translations:{},action_path:'/experiences',published_at:'2026-10-09T01:00:00Z',status:'published'}];

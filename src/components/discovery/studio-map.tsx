@@ -105,7 +105,9 @@ export default function StudioMap({ studios, selectedId, onSelect, fitKey, focus
   // Fit all (or focus one) whenever the studio set changes or the map is first measured.
   const fittedFor = useRef('');
   useEffect(() => {
-    if (!size.w || !size.h) return;
+    // Wait for studios too: a shared /map?studio= link measures the map before they load,
+    // and fitting an empty set would use up the one-time focus.
+    if (!size.w || !size.h || !located.length) return;
     const key = `${fitKey}|${size.w}x${size.h}|${topInset}`;
     if (fittedFor.current === key) return;
     const first = !fittedFor.current;

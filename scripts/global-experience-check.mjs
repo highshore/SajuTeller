@@ -29,7 +29,7 @@ try{
  const geometry=async()=>{assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1));assert.ok(await page.locator('[data-app-shell]').evaluate(e=>e.scrollWidth<=e.clientWidth+1));};
  const change=async(name)=>{await page.locator('[data-global-header] button[aria-haspopup="dialog"]').click();await page.getByRole('dialog').getByRole('button',{name,exact:true}).click();};
  await go('/experiences?topic=all');await page.locator('[data-experience-card]').first().waitFor();
- for(const [locale,name,title]of[['ko','한국어','사주 체험'],['zh-Hans','简体中文','命理体验'],['ja','日本語','四柱推命体験'],['es','Español','Experiencias'],['en','English','Experiences']]){
+ for(const [locale,name,title]of[['ko','한국어','서울의 사주 체험'],['zh-Hans','简体中文','首尔命理体验'],['ja','日本語','ソウルの四柱推命'],['es','Español','Lecturas en Seúl'],['en','English','Readings in Seoul']]){
  await change(name);assert.equal(await page.locator('html').getAttribute('lang'),locale);await page.getByRole('heading',{name:title,exact:true}).waitFor();assert.ok(page.url().includes('topic=all'));await geometry();await page.screenshot({path:`${output}/catalog-${locale}.png`,fullPage:true});
  }
  for(const name of ['한국어','简体中文','日本語','Español']){
@@ -43,11 +43,11 @@ try{
  await page.getByRole('button',{name:'Filters',exact:true}).click();await page.getByLabel('Price per person').selectOption('50000');assert.ok(page.url().includes('budget=50000'));
  await page.locator('[data-experience-card] .save').first().click();assert.equal(await page.locator('[data-experience-card] .save').first().getAttribute('aria-pressed'),'true');
  await page.locator('[data-experience-card] a').first().click();await page.locator('[data-booking-action]').waitFor();await geometry();await page.getByRole('button',{name:'Next photo'}).click();await page.getByText('2 / 2',{exact:true}).waitFor();
- await page.getByRole('button',{name:'Chat with the business'}).click();await page.getByRole('status').filter({hasText:'Preview studios cannot receive messages'}).waitFor();assert.equal(chatCalls,0);
+ assert.equal(await page.locator(`a[href^="/messages?studio=${studio.id}"]`).count(),0);assert.equal(chatCalls,0);
  await page.evaluate(()=>scrollTo(0,0));await page.screenshot({path:`${output}/detail-mobile.png`,fullPage:true});
- await change('日本語');await page.reload();await page.getByRole('heading',{name:'この体験について'}).waitFor();assert.equal(await page.locator('html').getAttribute('lang'),'ja');await geometry();
+ await change('日本語');await page.reload();await page.getByRole('heading',{name:'セッションの流れ'}).waitFor();assert.equal(await page.locator('html').getAttribute('lang'),'ja');await geometry();
  await change('English');for(const width of [320,430,1440]){await page.setViewportSize({width,height:844});await geometry();assert.equal(await page.locator('[data-app-shell]').evaluate(e=>e.getBoundingClientRect().width),Math.min(width,430));await page.screenshot({path:`${output}/detail-${width}.png`,fullPage:true});}
- await go('/business/'+real.id);await page.getByRole('link',{name:'Chat with the business'}).click();await page.waitForURL('**/sign-in?next=*');assert.ok(decodeURIComponent(page.url()).includes('/messages?studio='+real.id));
+ await go('/business/'+real.id);await page.getByRole('link',{name:'Message the studio'}).click();await page.waitForURL('**/sign-in?next=*');assert.ok(decodeURIComponent(page.url()).includes('/messages?studio='+real.id));
  await page.getByRole('button',{name:'Continue with Kakao'}).click();await page.waitForURL('**/auth/v1/authorize?*');assert.equal(oauth.searchParams.get('provider'),'kakao');assert.equal(oauth.searchParams.get('scope'),'profile_nickname profile_image');assert.ok(!oauth.searchParams.get('scope').includes('account_email'));
  await go('/');await page.evaluate(user=>{const token=btoa('{}')+'.'+btoa(JSON.stringify({sub:user.id,exp:Math.floor(Date.now()/1000)+3600}))+'.qa';localStorage.setItem('sb-jbwuefecydjkieplftia-auth-token',JSON.stringify({access_token:token,refresh_token:'qa',expires_at:Math.floor(Date.now()/1000)+3600,token_type:'bearer',user}));},user);
  await go('/messages');await page.getByRole('alert').filter({hasText:'Business chat is being prepared'}).waitFor();const calls=chatCalls;await page.getByRole('button',{name:'Try again',exact:true}).click();await page.waitForFunction(()=>document.querySelector('[role=alert]')?.textContent?.includes('Business chat'));assert.ok(chatCalls>calls);await geometry();assert.deepEqual(errors,[]);

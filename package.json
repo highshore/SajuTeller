@@ -9,6 +9,7 @@
     "lint": "eslint .",
     "preview": "vite preview",
     "qa:responsive": "node scripts/responsive-layout-check.mjs",
+    "qa:e2e": "node scripts/run-e2e.mjs",
     "predeploy": "npm run build",
     "deploy": "vercel --prod --yes",
     "test": "vitest run",

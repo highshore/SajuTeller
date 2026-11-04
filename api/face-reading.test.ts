@@ -28,6 +28,22 @@ describe('POST /api/face-reading', () => {
     expect((await POST(req({ image: IMAGE }, 'https://evil.example'))).status).toBe(403);
     expect(fetchSpy).not.toHaveBeenCalled();
   });
+  // Equivalence partitions: the three accepted image types vs. everything else.
+  it.each(['jpeg', 'png', 'webp'])('[AC-09a] accepts a %s data URL', async type => {
+    ai(full);
+    expect((await POST(req({ image: `data:image/${type};base64,AAAA` }))).status).toBe(200);
+  });
+  it.each(['gif', 'svg+xml', 'bmp', 'heic', 'jpg', 'JPEG'])('[AC-09a] refuses image/%s before calling the AI', async type => {
+    const fetchSpy = vi.fn(); vi.stubGlobal('fetch', fetchSpy);
+    expect((await POST(req({ image: `data:image/${type};base64,AAAA` }))).status).toBe(400);
+    expect(fetchSpy).not.toHaveBeenCalled();
+  });
+  // Boundary value analysis on the size limit (1,600,000 characters of data URL).
+  it.each([[1_599_999, 200], [1_600_000, 200], [1_600_001, 400]] as const)('[AC-09a] a %i-character photo → %i', async (length, status) => {
+    ai(full);
+    const prefix = 'data:image/jpeg;base64,';
+    expect((await POST(req({ image: prefix + 'A'.repeat(length - prefix.length) }))).status).toBe(status);
+  });
   it('[AC-09b] returns a complete reading: summary, three zones, five features, advice', async () => {
     ai(full);
     const res = await POST(req({ image: IMAGE, language: 'ko' }));

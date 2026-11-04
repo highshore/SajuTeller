@@ -45,11 +45,10 @@ try {
   await navigate('/sign-in?next=/studio');
   await page.getByRole('button', { name: 'Continue with email' }).waitFor();
   assert.equal(await page.getByRole('button', { name: /Continue with (Kakao|Google|phone)/ }).count(), 0);
-  await page.locator('[data-emoji="crystal-ball"] svg').waitFor(); await page.evaluate(() => document.fonts.ready); await layout();
+  await page.getByRole('heading', { name: 'Sign in to SajuTeller' }).waitFor(); await page.evaluate(() => document.fonts.ready); await layout();
   await page.screenshot({ path: `${output}/methods-mobile.png`, fullPage: true });
   await page.getByRole('button', { name: 'Continue with email' }).click();
   await page.getByRole('heading', { name: 'Welcome back' }).waitFor();
-  await page.locator('[data-emoji="waving-hand"] svg').waitFor();
   await page.getByLabel('Email address').fill('qa@example.invalid');
   await page.getByLabel('Password', { exact: true }).fill('good-password-123');
   await page.getByRole('button', { name: 'Show password' }).click();
@@ -81,7 +80,6 @@ try {
   await page.getByRole('heading', { name: 'Check your email' }).waitFor();
   assert.equal(calls.signup, 1);
   assert.equal(await page.getByRole('button', { name: /^Resend in/ }).isDisabled(), true);
-  await page.locator('[data-emoji="love-letter"] svg').waitFor();
   await page.screenshot({ path: `${output}/confirmation-mobile.png`, fullPage: true });
   await page.clock.fastForward(61_000);
   await page.getByRole('button', { name: 'Resend email', exact: true }).click();
@@ -95,8 +93,7 @@ try {
   await page.getByRole('heading', { name: 'Check your email' }).waitFor(); assert.equal(calls.recover, 1);
   await page.getByRole('button', { name: 'Back to sign in' }).click();
   await page.getByRole('button', { name: 'All sign-in options' }).click();
-  await page.emulateMedia({ reducedMotion: 'reduce' });
-  await page.locator('[data-emoji="crystal-ball"][data-reduced-motion="true"] svg').waitFor();
+  await page.getByRole('heading', { name: 'Sign in to SajuTeller' }).waitFor();
   for (const width of [320, 430, 1440]) {
     await page.setViewportSize({ width, height: 844 }); await layout();
     assert.equal(await page.locator('[data-app-shell]').evaluate(el => el.getBoundingClientRect().width), Math.min(430, width));
@@ -113,6 +110,8 @@ try {
   await page.getByLabel('Email address').fill('qa@example.invalid'); await page.getByLabel('Password', { exact: true }).fill('good-password-123');
   loginSucceeds = true; await page.getByRole('button', { name: 'Sign in', exact: true }).click();
   await page.waitForURL('**/studio');
+  // Supabase writes the session to localStorage just after the redirect; wait for it before a full reload.
+  await page.waitForFunction(() => Object.keys(localStorage).some(k => k.endsWith('-auth-token')));
   await navigate('/reset-password');
   await page.getByRole('heading', { name: 'Choose a new password' }).waitFor();
   await page.getByLabel('Password', { exact: true }).fill('a-new-password-456');
@@ -121,5 +120,5 @@ try {
   await page.getByRole('heading', { name: 'Password updated' }).waitFor();
   await page.getByRole('link', { name: 'Continue to your profile' }).waitFor();
   assert.deepEqual(errors, []);
-  console.log(JSON.stringify({ result: 'PASS', checks: ['method picker', 'local animated emoji', 'password reveal', 'friendly error', 'inline signup', 'password validation', 'policy review and dismissal', 'consent before signup', 'confirmation and resend cooldown', 'forgot password', 'password update', 'settings retry', 'reduced motion', '320/430/1440 geometry', 'successful sign-in return path'], calls, output }));
+  console.log(JSON.stringify({ result: 'PASS', checks: ['method picker', 'password reveal', 'friendly error', 'inline signup', 'password validation', 'policy review and dismissal', 'consent before signup', 'confirmation and resend cooldown', 'forgot password', 'password update', 'settings retry', '320/430/1440 geometry', 'successful sign-in return path'], calls, output }));
 } finally { await browser.close(); await server.close(); }

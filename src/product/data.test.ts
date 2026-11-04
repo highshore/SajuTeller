@@ -23,6 +23,23 @@ describe('filterStudios', () => {
     expect(slugs('topic=career')).toEqual(['career-insadong']);
     expect(slugs('topic=tarot')).toEqual(['tarot']);
   });
+  // Decision table: one studio (love · Hongdae · Japanese · ₩30,000) against every combination of
+  // four filters, each set to a matching (Y) or non-matching (N) value. Shown only when all four match.
+  const target = studio({ slug: 'target', neighborhood: 'Hongdae', specialties: ['love'], base_price: 30000, studio_languages: [{ language_code: 'ja', support_type: 'native' }] });
+  const rules = Array.from({ length: 16 }, (_, i) => [8, 4, 2, 1].map(bit => (i & bit ? 'Y' : 'N')) as ['Y' | 'N', 'Y' | 'N', 'Y' | 'N', 'Y' | 'N']);
+  it.each(rules)('[AC-03a] topic %s · area %s · language %s · budget %s', (topic, area, language, budget) => {
+    const q = new URLSearchParams({ topic: topic === 'Y' ? 'love' : 'career', area: area === 'Y' ? 'Hongdae' : 'Insadong', language: language === 'Y' ? 'ja' : 'es', budget: budget === 'Y' ? '50000' : '20000' });
+    const shown = filterStudios([target], q).length === 1;
+    expect(shown).toBe([topic, area, language, budget].every(c => c === 'Y'));
+  });
+  // Boundary value analysis on the budget: a studio priced exactly at the budget is included.
+  it.each([['29999', false], ['30000', true], ['30001', true]] as const)('[AC-03a] budget ₩%s shows a ₩30,000 studio: %s', (budget, shown) => {
+    expect(filterStudios([target], new URLSearchParams({ budget })).length === 1).toBe(shown);
+  });
+  // Equivalence partition: a missing or non-numeric budget means "any price".
+  it.each(['', 'abc'])('[AC-03a] budget %j is ignored', budget => {
+    expect(filterStudios([target], new URLSearchParams({ budget }))).toHaveLength(1);
+  });
   it('[AC-03a] returns everything with no filters, and nothing for an impossible budget', () => {
     expect(slugs('')).toHaveLength(4);
     expect(slugs('budget=1000')).toEqual([]);
